@@ -4,24 +4,16 @@ Managers can publish official announcements, while residents can share informati
 The system is designed using a modern microservices architecture to demonstrate enterprise backend and DevOps skills.
 
 # Tech Stack
-* Backend
-* Java 17 / Spring Boot
+* Java 17, Spring Boot
 * Spring Security (JWT)
-* Spring Data JPA / Hibernate
-* SQL (PostgreSQL)
+* JPA / Hibernate, PostgreSQL
 * Apache Kafka (event-driven communication)
-* Frontend
-* Angular
-* DevOps & Infra
-* Docker & Docker Compose
-* GitHub Actions (CI)
-* Jenkins (CD)
-* Prometheus & Grafana (monitoring)
-* Kubernetes & Terraform (infrastructure as code)
-* Testing
-* JUnit 5
-* Mockito
-* Integration tests with Testcontainers
+* Angular (frontend)
+* Docker, Docker Compose
+* GitHub Actions, Jenkins
+* Prometheus & Grafana
+* Kubernetes & Terraform
+* JUnit 5, Mockito, Testcontainers
 
 # Microservices
 * bm-gateway-service – API Gateway (routing, security)
@@ -43,5 +35,12 @@ The system is designed using a modern microservices architecture to demonstrate 
 * Event-driven notifications using Kafka
 * Fully containerized & observable system
 
-# Goal
-- This project is built as a portfolio-grade reference system, demonstrating real-world backend architecture, clean code, testing strategies, and DevOps workflows.
+# Highlights
+* Role-based access control
+* Clean microservices boundaries
+* Unit & integration testing
+* CI pipelines + CD with Jenkins
+* Metrics, monitoring & observability
+
+# Purpose
+This project is built as a production-style reference project, demonstrating real-world backend architecture, clean code, testing strategies, and DevOps workflows.
