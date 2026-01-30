@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.example.buildingmanagement</groupId>
+    <groupId>com.why.buildingmanagement</groupId>
     <artifactId>building-management</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
@@ -25,9 +25,10 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
-    <!--  List of child modules (we start with bm-auth-service) -->
+    <!--  List of child modules -->
     <modules>
         <module>bm-auth-service</module>
+        <module>bm-gateway-service</module>
     </modules>
 
     <!--  Central place for dependency versions -->
@@ -58,6 +59,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.13.0</version>
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>

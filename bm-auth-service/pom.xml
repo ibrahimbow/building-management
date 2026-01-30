@@ -6,7 +6,7 @@
 
     <!-- Inherit from the parent -->
     <parent>
-        <groupId>com.example.buildingmanagement</groupId>
+        <groupId>com.why.buildingmanagement</groupId>
         <artifactId>building-management</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
