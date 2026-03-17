@@ -4,8 +4,9 @@ Managers can publish official announcements, while residents can share informati
 The system is designed using a modern microservices architecture to demonstrate enterprise backend and DevOps skills.
 
 # Tech Stack
-* Java 17, Spring Boot
+* Java 21, Spring Boot
 * Spring Security (JWT)
+* JUnit 5, Mockito, Testcontainers
 * JPA / Hibernate, PostgreSQL
 * Apache Kafka (event-driven communication)
 * Angular (frontend)
@@ -13,7 +14,6 @@ The system is designed using a modern microservices architecture to demonstrate 
 * GitHub Actions, Jenkins
 * Prometheus & Grafana
 * Kubernetes & Terraform
-* JUnit 5, Mockito, Testcontainers
 
 # Microservices
 * bm-gateway-service – API Gateway (routing, security)
@@ -43,4 +43,4 @@ The system is designed using a modern microservices architecture to demonstrate 
 * Metrics, monitoring & observability
 
 # Purpose
-This project is built as a production-style reference project, demonstrating real-world backend architecture, clean code, testing strategies, and DevOps workflows.
+This project is built as a production-style reference project, demonstrating real-world backend architecture, clean code, testing strategies, and DevOps workflows in order to develop and improve my skills.
