@@ -4,9 +4,9 @@ import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserComm
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.AuthResponse;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.LoginRequest;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.RegisterRequest;
+import com.why.buildingmanagement.auth.infrastructure.web.dto.response.AuthResponse;
+import com.why.buildingmanagement.auth.infrastructure.web.dto.request.LoginRequest;
+import com.why.buildingmanagement.auth.infrastructure.web.dto.request.RegisterRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.auth.infrastructure.web.dto;
+package com.why.buildingmanagement.auth.infrastructure.web.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

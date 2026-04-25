@@ -18,7 +18,7 @@ The system is designed using a modern microservices architecture to demonstrate 
 # Microservices
 * bm-gateway-service – API Gateway (routing, security)
 * bm-auth-service – Authentication & authorization
-* bm-building-service – Buildings & user membership
+* bm-building-service – Buildings & buildingUser membership
 * bm-announcement-service – Official building announcements
 * bm-community-service – Community “Share & Help” posts
 * bm-notification-service – Kafka-based notifications
