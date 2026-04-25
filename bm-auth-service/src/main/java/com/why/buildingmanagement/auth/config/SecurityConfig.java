@@ -1,19 +1,12 @@
-package com.why.buildingmanagement.auth.infrastructure.security;
+package com.why.buildingmanagement.auth.config;
 
-import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
-import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.stereotype.Component;
 
-@Component
-public class FakeTokenProvider implements TokenProviderPort {
-
-    @Override
-    public String generateToken(BuildingUser buildingUser) {
-        return "FAKE_TOKEN_FOR_" + buildingUser.getUsername();
-    }
+@Configuration
+public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

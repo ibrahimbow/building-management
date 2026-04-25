@@ -8,6 +8,8 @@ import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AuthBuildingUserServiceTest {
 
     @Test
@@ -30,8 +33,8 @@ class AuthBuildingUserServiceTest {
         when(encoder.encode("secret")).thenReturn("HASH");
 
         when(saveUserPort.save(any())).thenAnswer(inv -> {
-            BuildingUser user = inv.getArgument(0);
-            return new BuildingUser(1L, user.getUsername(), user.getEmail(), user.getPasswordHash(), user.getRole(), user.getCreatedAt(), user.isEnabled());
+            BuildingUser buildingUser = inv.getArgument(0);
+            return new BuildingUser(1L, buildingUser.getUsername(), buildingUser.getEmail(), buildingUser.getPasswordHash(), buildingUser.getRole(), buildingUser.getCreatedAt(), buildingUser.isEnabled());
         });
 
         AuthBuildingUserService service = new AuthBuildingUserService(loadUserPort, saveUserPort, tokenProvider, encoder);
@@ -40,6 +43,8 @@ class AuthBuildingUserServiceTest {
 
         assertEquals(1L, id);
         verify(saveUserPort, times(1)).save(any());
+
+        
     }
 
     @Test
@@ -49,11 +54,11 @@ class AuthBuildingUserServiceTest {
         TokenProviderPort tokenProvider = mock(TokenProviderPort.class);
         PasswordEncoder encoder = mock(PasswordEncoder.class);
 
-        BuildingUser user = new BuildingUser(1L, "ibrahim", "ib@test.com", "HASH", BuildingUserRole.MANAGER, java.time.Instant.now(), true);
+        BuildingUser buildingUser = new BuildingUser(1L, "ibrahim", "ib@test.com", "HASH", BuildingUserRole.MANAGER, java.time.Instant.now(), true);
 
-        when(loadUserPort.loadByUsernameOrEmail("ibrahim")).thenReturn(Optional.of(user));
+        when(loadUserPort.loadByUsernameOrEmail("ibrahim")).thenReturn(Optional.of(buildingUser));
         when(encoder.matches("secret", "HASH")).thenReturn(true);
-        when(tokenProvider.generateToken(user)).thenReturn("TOKEN");
+        when(tokenProvider.generateToken(buildingUser)).thenReturn("TOKEN");
 
         AuthBuildingUserService service = new AuthBuildingUserService(loadUserPort, saveUserPort, tokenProvider, encoder);
 

@@ -4,3 +4,14 @@ server:
 spring:
   application:
     name: bm-auth-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/building_management_db
+    username: postgres
+    password: admin123
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true

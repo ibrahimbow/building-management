@@ -1,7 +1,12 @@
 package com.why.buildingmanagement.auth.domain.model;
 
+import lombok.Builder;
+import lombok.Getter;
+
 import java.time.Instant;
 
+@Getter
+@Builder
 public class BuildingUser {
 
     private Long id;
@@ -20,34 +25,5 @@ public class BuildingUser {
         this.role = role;
         this.createdAt = createdAt;
         this.enabled = enabled;
-    }
-
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPasswordHash() {
-        return passwordHash;
-    }
-
-    public BuildingUserRole getRole() {
-        return role;
-    }
-
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public boolean isEnabled() {
-        return enabled;
     }
 }
