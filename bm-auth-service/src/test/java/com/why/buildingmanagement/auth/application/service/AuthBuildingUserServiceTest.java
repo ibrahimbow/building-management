@@ -5,66 +5,180 @@ import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserC
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
+import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
+import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.Instant;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthBuildingUserServiceTest {
 
+    @Mock
+    private LoadBuildingUserPort loadBuildingUserPort;
+
+    @Mock
+    private SaveBuildingUserPort saveBuildingUserPort;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private TokenProviderPort tokenProviderPort;
+
+    private AuthBuildingUserService authService;
+
+    @BeforeEach
+    void setUp() {
+        authService = new AuthBuildingUserService(
+                loadBuildingUserPort,
+                saveBuildingUserPort,
+                tokenProviderPort,
+                passwordEncoder);
+    }
+
     @Test
-    void register_shouldSaveUser_whenUsernameAndEmailAreFree() {
-        LoadBuildingUserPort loadUserPort = mock(LoadBuildingUserPort.class);
-        SaveBuildingUserPort saveUserPort = mock(SaveBuildingUserPort.class);
-        TokenProviderPort tokenProvider = mock(TokenProviderPort.class);
-        PasswordEncoder encoder = mock(PasswordEncoder.class);
+    void register_shouldCreateUserSuccessfully() {
+        RegisterBuildingUserCommand command = registerCommand();
 
-        when(loadUserPort.existsByUsername("ibrahim")).thenReturn(false);
-        when(loadUserPort.existsByEmail("ibrahim@test.com")).thenReturn(false);
-        when(encoder.encode("secret")).thenReturn("HASH");
+        when(loadBuildingUserPort.existsByUsername(command.username())).thenReturn(false);
+        when(loadBuildingUserPort.existsByEmail(command.email())).thenReturn(false);
+        when(passwordEncoder.encode(command.password())).thenReturn("HASHED_PASSWORD");
+        when(saveBuildingUserPort.save(any(BuildingUser.class))).thenReturn(savedUser());
 
-        when(saveUserPort.save(any())).thenAnswer(inv -> {
-            BuildingUser buildingUser = inv.getArgument(0);
-            return new BuildingUser(1L, buildingUser.getUsername(), buildingUser.getEmail(), buildingUser.getPasswordHash(), buildingUser.getRole(), buildingUser.getCreatedAt(), buildingUser.isEnabled());
-        });
+        Long result = authService.register(command);
 
-        AuthBuildingUserService service = new AuthBuildingUserService(loadUserPort, saveUserPort, tokenProvider, encoder);
+        assertNotNull(result);
+        assertEquals(1L, result);
 
-        Long id = service.register(new RegisterBuildingUserCommand("ibrahim", "ibrahim@test.com", "secret", "MANAGER"));
+        verify(saveBuildingUserPort).save(any(BuildingUser.class));
+    }
 
-        assertEquals(1L, id);
-        verify(saveUserPort, times(1)).save(any());
+    @Test
+    void register_shouldThrowDuplicateUsernameException_whenUsernameAlreadyExists() {
+        RegisterBuildingUserCommand command = registerCommand();
 
-        
+        when(loadBuildingUserPort.existsByUsername(command.username())).thenReturn(true);
+
+        assertThrows(
+                DuplicateUsernameException.class,
+                () -> authService.register(command)
+        );
+
+        verify(loadBuildingUserPort).existsByUsername(command.username());
+        verify(loadBuildingUserPort, never()).existsByEmail(anyString());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(saveBuildingUserPort, never()).save(any());
+    }
+
+    @Test
+    void register_shouldThrowDuplicateEmailException_whenEmailAlreadyExists() {
+        RegisterBuildingUserCommand command = registerCommand();
+
+        when(loadBuildingUserPort.existsByUsername(command.username())).thenReturn(false);
+        when(loadBuildingUserPort.existsByEmail(command.email())).thenReturn(true);
+
+        assertThrows(DuplicateEmailException.class, () -> authService.register(command));
+
+        verify(loadBuildingUserPort).existsByUsername(command.username());
+        verify(loadBuildingUserPort).existsByEmail(command.email());
+        verify(passwordEncoder, never()).encode(anyString());
+        verify(saveBuildingUserPort, never()).save(any());
     }
 
     @Test
     void login_shouldReturnToken_whenCredentialsAreValid() {
-        LoadBuildingUserPort loadUserPort = mock(LoadBuildingUserPort.class);
-        SaveBuildingUserPort saveUserPort = mock(SaveBuildingUserPort.class);
-        TokenProviderPort tokenProvider = mock(TokenProviderPort.class);
-        PasswordEncoder encoder = mock(PasswordEncoder.class);
+        LoginBuildingUserCommand command = loginCommand();
+        BuildingUser user = savedUser();
 
-        BuildingUser buildingUser = new BuildingUser(1L, "ibrahim", "ib@test.com", "HASH", BuildingUserRole.MANAGER, java.time.Instant.now(), true);
+        when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
+                .thenReturn(Optional.of(user));
 
-        when(loadUserPort.loadByUsernameOrEmail("ibrahim")).thenReturn(Optional.of(buildingUser));
-        when(encoder.matches("secret", "HASH")).thenReturn(true);
-        when(tokenProvider.generateToken(buildingUser)).thenReturn("TOKEN");
+        when(passwordEncoder.matches(command.password(), user.getPasswordHash()))
+                .thenReturn(true);
 
-        AuthBuildingUserService service = new AuthBuildingUserService(loadUserPort, saveUserPort, tokenProvider, encoder);
+        when(tokenProviderPort.generateToken(user))
+                .thenReturn("JWT_TOKEN");
 
-        String token = service.login(new LoginBuildingUserCommand("ibrahim", "secret"));
+        String token = authService.login(command);
 
-        assertEquals("TOKEN", token);
+        assertEquals("JWT_TOKEN", token);
+
+        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
+        verify(passwordEncoder).matches(command.password(), user.getPasswordHash());
+        verify(tokenProviderPort).generateToken(user);
+    }
+
+    @Test
+    void login_shouldThrowInvalidCredentialsException_whenUserNotFound() {
+        LoginBuildingUserCommand command = loginCommand();
+
+        when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(InvalidCredentialsException.class, () -> authService.login(command));
+
+        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
+        verify(passwordEncoder, never()).matches(anyString(), anyString());
+        verify(tokenProviderPort, never()).generateToken(any());
+    }
+
+    @Test
+    void login_shouldThrowInvalidCredentialsException_whenPasswordIsWrong() {
+        LoginBuildingUserCommand command = loginCommand();
+        BuildingUser user = savedUser();
+
+        when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
+                .thenReturn(Optional.of(user));
+
+        when(passwordEncoder.matches(command.password(), user.getPasswordHash()))
+                .thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class, () -> authService.login(command));
+
+        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
+        verify(passwordEncoder).matches(command.password(), user.getPasswordHash());
+        verify(tokenProviderPort, never()).generateToken(any());
+    }
+
+    private RegisterBuildingUserCommand registerCommand() {
+        return new RegisterBuildingUserCommand(
+                "ibrahim",
+                "ibrahim@test.com",
+                "12345678",
+                "TENANT"
+        );
+    }
+
+    private LoginBuildingUserCommand loginCommand() {
+        return new LoginBuildingUserCommand(
+                "ibrahim",
+                "12345678"
+        );
+    }
+
+    private BuildingUser savedUser() {
+        return new BuildingUser(
+                1L,
+                "ibrahim",
+                "ibrahim@test.com",
+                "HASHED_PASSWORD",
+                BuildingUserRole.TENANT,
+                Instant.now(),
+                true
+        );
     }
 
 }

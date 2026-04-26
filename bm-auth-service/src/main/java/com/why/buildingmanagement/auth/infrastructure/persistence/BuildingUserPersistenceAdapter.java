@@ -14,7 +14,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, SaveBuildingUserPort {
 
-    private final SpringDataBuildingUserRepository userRepository;
+    private final BuildingUserJpaRepository userRepository;
 
     @Override
     public Optional<BuildingUser> loadByUsernameOrEmail(String usernameOrEmail) {
@@ -47,7 +47,7 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
                 .email(entity.getEmail())
                 .passwordHash(entity.getPasswordHash())
                 .role(BuildingUserRole.valueOf(entity.getRole()))
-                .enabled(entity.getEnabled())
+                .enabled(entity.isEnabled())
                 .createdAt(entity.getCreatedAt())
                 .build();
     }

@@ -7,6 +7,9 @@ import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserU
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
+import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
+import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,15 +38,12 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
     @Override
     public String login(LoginBuildingUserCommand command) {
 
-        if (command.usernameOrEmail() == null || command.password() == null) {
-            throw new IllegalArgumentException("Username/email and password must be provided");
-        }
-
-        BuildingUser buildingUser = loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid credentials"));
+        BuildingUser buildingUser = loadBuildingUserPort
+                .loadByUsernameOrEmail(command.usernameOrEmail())
+                .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(command.password(), buildingUser.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid credentials");
+            throw new InvalidCredentialsException();
         }
 
         return tokenProviderPort.generateToken(buildingUser);
@@ -52,13 +52,15 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
     @Override
     public Long register(RegisterBuildingUserCommand command) {
         if (loadBuildingUserPort.existsByUsername(command.username())) {
-            throw new IllegalArgumentException("Username already taken");
+            throw new DuplicateUsernameException(command.username());
         }
         if (loadBuildingUserPort.existsByEmail(command.email())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new DuplicateEmailException(command.email());
         }
 
-        BuildingUserRole role = command.role() == null ? BuildingUserRole.TENANT : BuildingUserRole.valueOf(command.role());
+        BuildingUserRole role = command.role() == null || command.role().isBlank()
+                ? BuildingUserRole.TENANT : BuildingUserRole.valueOf(command.role().toUpperCase());
+
         String hash = passwordEncoder.encode(command.password());
 
         BuildingUser newBuildingUser = new BuildingUser(

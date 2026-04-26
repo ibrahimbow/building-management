@@ -40,7 +40,7 @@ public class BuildingUserEntity {
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean enabled = true;
+    private boolean enabled = true;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -49,9 +49,6 @@ public class BuildingUserEntity {
     public void prePersist() {
         if (createdAt == null) {
             createdAt = Instant.now();
-        }
-        if (enabled == null) {
-            enabled = true;
         }
     }
 }
