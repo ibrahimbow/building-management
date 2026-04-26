@@ -59,7 +59,7 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
-                .andExpect(content().string("User registered with id: 1"));
+                .andExpect(jsonPath("$.id").value(1));
 
         verify(registerBuildingUserUseCase)
                 .register(ArgumentMatchers.any(RegisterBuildingUserCommand.class));

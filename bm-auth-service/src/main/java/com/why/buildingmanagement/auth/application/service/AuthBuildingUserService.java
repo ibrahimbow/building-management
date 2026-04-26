@@ -63,14 +63,11 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
 
         String hash = passwordEncoder.encode(command.password());
 
-        BuildingUser newBuildingUser = new BuildingUser(
-                null,
+        BuildingUser newBuildingUser = BuildingUser.createNew(
                 command.username(),
                 command.email(),
                 hash,
-                role,
-                Instant.now(),
-                true
+                role
         );
 
         BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);

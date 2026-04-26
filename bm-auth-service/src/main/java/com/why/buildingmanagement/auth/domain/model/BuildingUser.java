@@ -26,4 +26,18 @@ public class BuildingUser {
         this.createdAt = createdAt;
         this.enabled = enabled;
     }
+
+    public static BuildingUser createNew(String username,
+                                         String email,
+                                         String passwordHash,
+                                         BuildingUserRole role) {
+        return new BuildingUser(
+                null,
+                username,
+                email,
+                passwordHash,
+                role,
+                Instant.now(),
+                true);
+    }
 }
