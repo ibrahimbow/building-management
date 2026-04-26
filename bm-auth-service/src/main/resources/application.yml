@@ -15,3 +15,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+security:
+  jwt:
+    secret: "local-dev-secret-key-for-building-management-auth-service-please-change-in-production-2026"
+    expiration-minutes: 60

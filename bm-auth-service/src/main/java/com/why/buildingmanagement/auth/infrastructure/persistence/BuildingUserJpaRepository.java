@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface SpringDataBuildingUserRepository extends JpaRepository<BuildingUserEntity,Long> {
+public interface BuildingUserJpaRepository extends JpaRepository<BuildingUserEntity,Long> {
 
     Optional<BuildingUserEntity> findByUsername(String username);
 

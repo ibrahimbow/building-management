@@ -1,12 +1,14 @@
-package com.why.buildingmanagement.auth.infrastructure.web.controller;
+package com.why.buildingmanagement.auth.infrastructure.api.controller;
 
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.response.AuthResponse;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.request.LoginRequest;
-import com.why.buildingmanagement.auth.infrastructure.web.dto.request.RegisterRequest;
+import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.request.LoginRequest;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.request.RegisterRequest;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.response.CurrentBuildingUserResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,10 +19,12 @@ public class AuthController {
 
     private final RegisterBuildingUserUseCase registerUserUseCase;
     private final LoginBuildingUserUseCase loginUserUseCase;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthController(RegisterBuildingUserUseCase registerUserUseCase, LoginBuildingUserUseCase loginUserUseCase) {
+    public AuthController(RegisterBuildingUserUseCase registerUserUseCase, LoginBuildingUserUseCase loginUserUseCase, JwtTokenProvider jwtTokenProvider) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @GetMapping("/welcome")
@@ -40,6 +44,18 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
         String token = loginUserUseCase.login(new LoginBuildingUserCommand(req.usernameOrEmail(), req.password()));
         return ResponseEntity.ok(new AuthResponse(token, "Bearer"));
+    }
+
+    @GetMapping("/me")
+    public CurrentBuildingUserResponse me(@RequestHeader("Authorization") String authorizationHeader) {
+        String token = authorizationHeader.substring(7);
+
+        return new CurrentBuildingUserResponse(
+                jwtTokenProvider.getUserId(token),
+                jwtTokenProvider.getUsername(token),
+                jwtTokenProvider.getEmail(token),
+                jwtTokenProvider.getRole(token)
+        );
     }
 
 }
