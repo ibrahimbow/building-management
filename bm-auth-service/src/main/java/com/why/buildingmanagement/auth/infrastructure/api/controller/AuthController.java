@@ -4,6 +4,7 @@ import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserComm
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.response.RegisterResponse;
 import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.request.LoginRequest;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.request.RegisterRequest;
@@ -33,11 +34,13 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest req) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
         Long id = registerUserUseCase.register(
-                new RegisterBuildingUserCommand(req.username(), req.email(), req.password(), req.role())
-        );
-        return ResponseEntity.ok("User registered with id: " + id);
+                new RegisterBuildingUserCommand(req.username(),
+                                                req.email(),
+                                                req.password(),
+                                                req.role()));
+        return ResponseEntity.ok(new RegisterResponse(id));
     }
 
     @PostMapping("/login")
