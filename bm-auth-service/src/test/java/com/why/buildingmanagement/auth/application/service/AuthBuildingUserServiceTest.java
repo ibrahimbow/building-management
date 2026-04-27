@@ -63,7 +63,12 @@ class AuthBuildingUserServiceTest {
         assertNotNull(result);
         assertEquals(1L, result);
 
-        verify(saveBuildingUserPort).save(any(BuildingUser.class));
+        verify(saveBuildingUserPort).save(argThat(user ->
+                user.getUsername().equals("ibrahim")
+                        && user.getEmail().equals("ibrahim@test.com")
+                        && user.getPasswordHash().equals("HASHED_PASSWORD")
+                        && user.getRole() == BuildingUserRole.TENANT
+                        && user.isEnabled()));
     }
 
     @Test
