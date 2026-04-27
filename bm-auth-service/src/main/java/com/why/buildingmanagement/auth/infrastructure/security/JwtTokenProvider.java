@@ -22,6 +22,9 @@ public class JwtTokenProvider implements TokenProviderPort {
     public JwtTokenProvider(
             @Value("${security.jwt.secret}") String secret,
             @Value("${security.jwt.expiration-minutes}") long expirationMinutes) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalArgumentException("JWT secret must be at least 32 bytes for HS256");
+        }
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.expirationMinutes = expirationMinutes;
     }

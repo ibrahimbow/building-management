@@ -58,7 +58,7 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
                 .username(buildingUser.getUsername())
                 .email(buildingUser.getEmail())
                 .passwordHash(buildingUser.getPasswordHash())
-                .role(String.valueOf(buildingUser.getRole()))
+                .role(buildingUser.getRole().name())
                 .enabled(buildingUser.isEnabled())
                 .createdAt(buildingUser.getCreatedAt())
                 .build();

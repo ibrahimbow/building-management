@@ -15,8 +15,6 @@ import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-
 @Service
 public class AuthBuildingUserService implements RegisterBuildingUserUseCase, LoginBuildingUserUseCase {
 
@@ -54,12 +52,10 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
         if (loadBuildingUserPort.existsByUsername(command.username())) {
             throw new DuplicateUsernameException(command.username());
         }
+
         if (loadBuildingUserPort.existsByEmail(command.email())) {
             throw new DuplicateEmailException(command.email());
         }
-
-        BuildingUserRole role = command.role() == null || command.role().isBlank()
-                ? BuildingUserRole.TENANT : BuildingUserRole.valueOf(command.role().toUpperCase());
 
         String hash = passwordEncoder.encode(command.password());
 
@@ -67,8 +63,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
                 command.username(),
                 command.email(),
                 hash,
-                role
-        );
+                BuildingUserRole.TENANT);
 
         BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
         return saved.getId();

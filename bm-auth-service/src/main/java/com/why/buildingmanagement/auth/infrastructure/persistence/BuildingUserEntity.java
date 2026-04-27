@@ -1,6 +1,5 @@
 package com.why.buildingmanagement.auth.infrastructure.persistence;
 
-
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,16 +11,18 @@ import java.time.Instant;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "buildingUser",
+@Table(name = "building_users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_users_username", columnNames = "username"),
-                @UniqueConstraint(name = "uk_users_email", columnNames = "email")
+                @UniqueConstraint(name = "uk_building_users_username", columnNames = "username"),
+                @UniqueConstraint(name = "uk_building_users_email", columnNames = "email")
         },
         indexes = {
-                @Index(name = "idx_users_username", columnList = "username"),
-                @Index(name = "idx_users_email", columnList = "email")
-        })
+                @Index(name = "idx_building_users_username", columnList = "username"),
+                @Index(name = "idx_building_users_email", columnList = "email")
+        }
+)
 public class BuildingUserEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -32,7 +33,7 @@ public class BuildingUserEntity {
     @Column(nullable = false, length = 120)
     private String email;
 
-    @Column(nullable = false)
+    @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
     @Column(nullable = false, length = 20)
@@ -42,7 +43,7 @@ public class BuildingUserEntity {
     @Builder.Default
     private boolean enabled = true;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @PrePersist

@@ -157,9 +157,7 @@ class AuthBuildingUserServiceTest {
         return new RegisterBuildingUserCommand(
                 "ibrahim",
                 "ibrahim@test.com",
-                "12345678",
-                "TENANT"
-        );
+                "12345678");
     }
 
     private LoginBuildingUserCommand loginCommand() {

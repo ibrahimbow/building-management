@@ -11,8 +11,10 @@ import com.why.buildingmanagement.auth.infrastructure.api.dto.request.RegisterRe
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.CurrentBuildingUserResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -38,8 +40,7 @@ public class AuthController {
         Long id = registerUserUseCase.register(
                 new RegisterBuildingUserCommand(req.username(),
                                                 req.email(),
-                                                req.password(),
-                                                req.role()));
+                                                req.password()));
         return ResponseEntity.ok(new RegisterResponse(id));
     }
 
@@ -49,9 +50,17 @@ public class AuthController {
         return ResponseEntity.ok(new AuthResponse(token, "Bearer"));
     }
 
-    @GetMapping("/me")
+    @GetMapping("/profile")
     public CurrentBuildingUserResponse me(@RequestHeader("Authorization") String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
+        }
+
         String token = authorizationHeader.substring(7);
+
+        if (!jwtTokenProvider.isTokenValid(token)) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
+        }
 
         return new CurrentBuildingUserResponse(
                 jwtTokenProvider.getUserId(token),

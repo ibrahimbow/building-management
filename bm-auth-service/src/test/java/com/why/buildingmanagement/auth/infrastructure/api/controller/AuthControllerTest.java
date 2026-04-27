@@ -1,6 +1,5 @@
 package com.why.buildingmanagement.auth.infrastructure.api.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
@@ -20,7 +19,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Import(SecurityConfig.class)
 @WebMvcTest(AuthController.class)
@@ -28,9 +28,6 @@ class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @MockitoBean
     private RegisterBuildingUserUseCase registerBuildingUserUseCase;
