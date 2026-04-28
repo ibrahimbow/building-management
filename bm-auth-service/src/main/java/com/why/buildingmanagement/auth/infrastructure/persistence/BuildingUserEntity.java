@@ -5,11 +5,6 @@ import lombok.*;
 
 import java.time.Instant;
 
-@Getter
-@Setter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
 @Entity
 @Table(name = "building_users",
         uniqueConstraints = {
@@ -21,6 +16,11 @@ import java.time.Instant;
                 @Index(name = "idx_building_users_email", columnList = "email")
         }
 )
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class BuildingUserEntity {
 
     @Id

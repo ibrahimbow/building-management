@@ -5,11 +5,13 @@ import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserC
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
+import com.why.buildingmanagement.auth.domain.model.RefreshToken;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,6 +40,9 @@ class AuthBuildingUserServiceTest {
     @Mock
     private TokenProviderPort tokenProviderPort;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     private AuthBuildingUserService authService;
 
     @BeforeEach
@@ -46,7 +51,8 @@ class AuthBuildingUserServiceTest {
                 loadBuildingUserPort,
                 saveBuildingUserPort,
                 tokenProviderPort,
-                passwordEncoder);
+                passwordEncoder,
+                refreshTokenService);
     }
 
     @Test
@@ -104,7 +110,7 @@ class AuthBuildingUserServiceTest {
     }
 
     @Test
-    void login_shouldReturnToken_whenCredentialsAreValid() {
+    void login_shouldReturnAccessAndRefreshToken_whenCredentialsAreValid() {
         LoginBuildingUserCommand command = loginCommand();
         BuildingUser user = savedUser();
 
@@ -117,9 +123,20 @@ class AuthBuildingUserServiceTest {
         when(tokenProviderPort.generateToken(user))
                 .thenReturn("JWT_TOKEN");
 
-        String token = authService.login(command);
+        RefreshToken refreshToken = RefreshToken.builder()
+                .userId(user.getId())
+                .token("REFRESH_TOKEN")
+                .build();
 
-        assertEquals("JWT_TOKEN", token);
+        when(refreshTokenService.createForUser(user.getId()))
+                .thenReturn(refreshToken);
+
+        LoginResult result = authService.login(command);
+
+        assertEquals("JWT_TOKEN", result.accessToken());
+        assertEquals("REFRESH_TOKEN", result.refreshToken());
+
+        verify(refreshTokenService).createForUser(user.getId());
 
         verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
         verify(passwordEncoder).matches(command.password(), user.getPasswordHash());

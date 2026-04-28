@@ -10,4 +10,6 @@ public interface LoadBuildingUserPort {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    Optional<BuildingUser> loadById(Long id);
 }

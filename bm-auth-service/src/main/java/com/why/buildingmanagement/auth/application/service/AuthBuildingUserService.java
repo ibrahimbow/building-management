@@ -1,40 +1,45 @@
 package com.why.buildingmanagement.auth.application.service;
 
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
+import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
+import com.why.buildingmanagement.auth.domain.model.RefreshToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class AuthBuildingUserService implements RegisterBuildingUserUseCase, LoginBuildingUserUseCase {
+public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
+        LoginBuildingUserUseCase,
+        RefreshAccessTokenUseCase,
+        LogoutUseCase{
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
     private final TokenProviderPort tokenProviderPort;
     private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
     public AuthBuildingUserService(LoadBuildingUserPort loadBuildingUserPort,
                                    SaveBuildingUserPort saveBuildingUserPort,
                                    TokenProviderPort tokenProviderPort,
-                                   PasswordEncoder passwordEncoder) {
+                                   PasswordEncoder passwordEncoder,
+                                   RefreshTokenService refreshTokenService) {
         this.loadBuildingUserPort = loadBuildingUserPort;
         this.saveBuildingUserPort = saveBuildingUserPort;
         this.tokenProviderPort = tokenProviderPort;
         this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @Override
-    public String login(LoginBuildingUserCommand command) {
+    public LoginResult login(LoginBuildingUserCommand command) {
 
         BuildingUser buildingUser = loadBuildingUserPort
                 .loadByUsernameOrEmail(command.usernameOrEmail())
@@ -44,7 +49,15 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
             throw new InvalidCredentialsException();
         }
 
-        return tokenProviderPort.generateToken(buildingUser);
+        String accessToken = tokenProviderPort.generateToken(buildingUser);
+
+        RefreshToken refreshToken =
+                refreshTokenService.createForUser(buildingUser.getId());
+
+        return new LoginResult(
+                accessToken,
+                refreshToken.getToken()
+        );
     }
 
     @Override
@@ -69,4 +82,30 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase, Log
         return saved.getId();
     }
 
+    @Override
+    public void logout(LogoutCommand command) {
+        RefreshToken refreshToken = refreshTokenService.validate(command.refreshToken());
+
+        refreshTokenService.deleteForUser(refreshToken.getUserId());
+    }
+
+
+    @Override
+    public LoginResult refresh(RefreshAccessTokenCommand command) {
+
+        RefreshToken refreshToken =
+                refreshTokenService.validate(command.refreshToken());
+
+        BuildingUser buildingUser = loadBuildingUserPort
+                .loadById(refreshToken.getUserId())
+                .orElseThrow(InvalidCredentialsException::new);
+
+        String accessToken =
+                tokenProviderPort.generateToken(buildingUser);
+
+        return new LoginResult(
+                accessToken,
+                refreshToken.getToken()
+        );
+    }
 }

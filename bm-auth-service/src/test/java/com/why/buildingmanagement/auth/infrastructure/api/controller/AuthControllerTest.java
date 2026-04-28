@@ -1,9 +1,7 @@
 package com.why.buildingmanagement.auth.infrastructure.api.controller;
 
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
+import com.why.buildingmanagement.auth.application.port.in.*;
+import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
 import com.why.buildingmanagement.auth.infrastructure.security.SecurityConfig;
@@ -37,6 +35,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private JwtTokenProvider jwtTokenProvider;
+
+    @MockitoBean
+    private RefreshAccessTokenUseCase refreshAccessTokenUseCase;
+
+    @MockitoBean
+    private LogoutUseCase logoutUseCase;
 
     @Test
     void register_shouldReturnCreatedUserId() throws Exception {
@@ -79,22 +83,23 @@ class AuthControllerTest {
     }
 
     @Test
-    void login_shouldReturnJwtToken() throws Exception {
+    void login_shouldReturnAccessAndRefreshToken() throws Exception {
         when(loginBuildingUserUseCase.login(ArgumentMatchers.any(LoginBuildingUserCommand.class)))
-                .thenReturn("JWT_TOKEN");
+                .thenReturn(new LoginResult("JWT_TOKEN", "REFRESH_TOKEN"));
 
         String body = """
-                {
-                  "usernameOrEmail": "ibrahim",
-                  "password": "12345678"
-                }
-                """;
+            {
+              "usernameOrEmail": "ibrahim",
+              "password": "12345678"
+            }
+            """;
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").value("JWT_TOKEN"))
+                .andExpect(jsonPath("$.refreshToken").value("REFRESH_TOKEN"))
                 .andExpect(jsonPath("$.tokenType").value("Bearer"));
 
         verify(loginBuildingUserUseCase)

@@ -14,7 +14,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, SaveBuildingUserPort {
 
-    private final BuildingUserJpaRepository userRepository;
+    private final BuildingUserRepository userRepository;
 
     @Override
     public Optional<BuildingUser> loadByUsernameOrEmail(String usernameOrEmail) {
@@ -31,6 +31,12 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public Optional<BuildingUser> loadById(Long id) {
+        return userRepository.findById(id)
+                .map(this::toDomain);
     }
 
     @Override

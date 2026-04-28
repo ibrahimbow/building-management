@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @Testcontainers
-class BuildingUserJpaRepositoryTest {
+class BuildingUserRepositoryTest {
 
     @Container
     static PostgreSQLContainer<?> postgres =
@@ -36,7 +36,7 @@ class BuildingUserJpaRepositoryTest {
     }
 
     @Autowired
-    private BuildingUserJpaRepository repository;
+    private BuildingUserRepository repository;
 
     @Test
     void save_shouldPersistBuildingUser() {

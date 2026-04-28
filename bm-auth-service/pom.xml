@@ -100,6 +100,13 @@
             <optional>true</optional>
         </dependency>
 
+
+<!--H2 test-->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!--Spring Security JWT-->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
