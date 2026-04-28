@@ -19,7 +19,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateUsernameException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiErrorResponse handleDuplicateUsername(DuplicateUsernameException ex, HttpServletRequest request) {
+    public ApiErrorResponse handleDuplicateUsername(final DuplicateUsernameException ex,
+                                                    final HttpServletRequest request) {
         return error(HttpStatus.CONFLICT,
                 "DUPLICATE_USERNAME",
                 ex.getMessage(),
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DuplicateEmailException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ApiErrorResponse handleDuplicateEmail(DuplicateEmailException ex, HttpServletRequest request) {
+    public ApiErrorResponse handleDuplicateEmail(final DuplicateEmailException ex, final HttpServletRequest request) {
         return error(
                 HttpStatus.CONFLICT,
                 "DUPLICATE_EMAIL",
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ApiErrorResponse handleInvalidCredentials(InvalidCredentialsException ex, HttpServletRequest request) {
+    public ApiErrorResponse handleInvalidCredentials(final InvalidCredentialsException ex, final HttpServletRequest request) {
         return error(HttpStatus.UNAUTHORIZED,
                 "INVALID_CREDENTIALS",
                 ex.getMessage(),
@@ -51,8 +52,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ApiErrorResponse handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        Map<String, String> validationErrors = new HashMap<>();
+    public ApiErrorResponse handleValidation(final MethodArgumentNotValidException ex, final HttpServletRequest request) {
+        final Map<String, String> validationErrors = new HashMap<>();
 
         ex.getBindingResult().getFieldErrors().forEach(fieldError ->
                 validationErrors.put(fieldError.getField(), fieldError.getDefaultMessage()));
@@ -66,7 +67,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ApiErrorResponse handleGenericException(Exception ex, HttpServletRequest request) {
+    public ApiErrorResponse handleGenericException(final Exception ex, final HttpServletRequest request) {
         return error(HttpStatus.INTERNAL_SERVER_ERROR,
                 "INTERNAL_SERVER_ERROR",
                 "Unexpected server error",
@@ -75,12 +76,11 @@ public class GlobalExceptionHandler {
     }
 
     private ApiErrorResponse error(
-            HttpStatus status,
-            String error,
-            String message,
-            String path,
-            Map<String, String> validationErrors
-    ) {
+            final HttpStatus status,
+            final String error,
+           final String message,
+            final String path,
+           final Map<String, String> validationErrors) {
         return new ApiErrorResponse(
                 Instant.now(),
                 status.value(),

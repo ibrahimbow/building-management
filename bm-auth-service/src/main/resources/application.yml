@@ -24,3 +24,19 @@ security:
   jwt:
     secret: ${AUTH_JWT_SECRET}
     expiration-minutes: ${AUTH_JWT_EXPIRATION_MINUTES:60}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: bm-auth-service
+    version: 1.0.0
+    description: Authentication service for Building Management

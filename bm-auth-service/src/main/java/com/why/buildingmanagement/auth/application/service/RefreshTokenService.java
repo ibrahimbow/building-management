@@ -3,6 +3,7 @@ package com.why.buildingmanagement.auth.application.service;
 import com.why.buildingmanagement.auth.application.port.out.DeleteRefreshTokenPort;
 import com.why.buildingmanagement.auth.application.port.out.LoadRefreshTokenPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveRefreshTokenPort;
+import com.why.buildingmanagement.auth.domain.exception.InvalidRefreshTokenException;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -20,9 +21,9 @@ public class RefreshTokenService {
     private final LoadRefreshTokenPort loadRefreshTokenPort;
     private final DeleteRefreshTokenPort deleteRefreshTokenPort;
 
-    public RefreshToken createForUser(Long userId) {
-        Instant now = Instant.now();
-        RefreshToken refreshToken = RefreshToken.builder()
+    public RefreshToken createForUser(final Long userId) {
+        final Instant now = Instant.now();
+        final RefreshToken refreshToken = RefreshToken.builder()
                 .userId(userId)
                 .token(UUID.randomUUID().toString())
                 .expiresAt(now.plus(REFRESH_TOKEN_VALIDITY))
@@ -33,19 +34,17 @@ public class RefreshTokenService {
         return saveRefreshTokenPort.save(refreshToken);
     }
 
-    public void deleteForUser(Long userId) {
+    public void deleteForUser(final Long userId) {
         deleteRefreshTokenPort.deleteByUserId(userId);
     }
 
 
-    public RefreshToken validate(String token) {
-        RefreshToken refreshToken = loadRefreshTokenPort.findByToken(token)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid refresh token"));
-
+    public RefreshToken validate(final String token) {
+        final RefreshToken refreshToken = loadRefreshTokenPort.findByToken(token)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Invalid refresh token"));
         if (!refreshToken.isActive()) {
-            throw new IllegalArgumentException("Refresh token is expired or revoked");
+            throw new InvalidRefreshTokenException("Refresh token is expired or revoked");
         }
-
         return refreshToken;
     }
 }

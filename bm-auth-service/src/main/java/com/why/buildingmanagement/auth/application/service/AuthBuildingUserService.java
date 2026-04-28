@@ -18,7 +18,7 @@ import org.springframework.stereotype.Service;
 public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         LoginBuildingUserUseCase,
         RefreshAccessTokenUseCase,
-        LogoutUseCase{
+        LogoutUseCase {
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
@@ -26,11 +26,11 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
-    public AuthBuildingUserService(LoadBuildingUserPort loadBuildingUserPort,
-                                   SaveBuildingUserPort saveBuildingUserPort,
-                                   TokenProviderPort tokenProviderPort,
-                                   PasswordEncoder passwordEncoder,
-                                   RefreshTokenService refreshTokenService) {
+    public AuthBuildingUserService(final LoadBuildingUserPort loadBuildingUserPort,
+                                   final SaveBuildingUserPort saveBuildingUserPort,
+                                   final TokenProviderPort tokenProviderPort,
+                                   final PasswordEncoder passwordEncoder,
+                                   final RefreshTokenService refreshTokenService) {
         this.loadBuildingUserPort = loadBuildingUserPort;
         this.saveBuildingUserPort = saveBuildingUserPort;
         this.tokenProviderPort = tokenProviderPort;
@@ -39,9 +39,9 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     }
 
     @Override
-    public LoginResult login(LoginBuildingUserCommand command) {
+    public LoginResult login(final LoginBuildingUserCommand command) {
 
-        BuildingUser buildingUser = loadBuildingUserPort
+        final BuildingUser buildingUser = loadBuildingUserPort
                 .loadByUsernameOrEmail(command.usernameOrEmail())
                 .orElseThrow(InvalidCredentialsException::new);
 
@@ -49,9 +49,9 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
             throw new InvalidCredentialsException();
         }
 
-        String accessToken = tokenProviderPort.generateToken(buildingUser);
+        final String accessToken = tokenProviderPort.generateToken(buildingUser);
 
-        RefreshToken refreshToken =
+        final RefreshToken refreshToken =
                 refreshTokenService.createForUser(buildingUser.getId());
 
         return new LoginResult(
@@ -61,7 +61,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     }
 
     @Override
-    public Long register(RegisterBuildingUserCommand command) {
+    public Long register(final RegisterBuildingUserCommand command) {
         if (loadBuildingUserPort.existsByUsername(command.username())) {
             throw new DuplicateUsernameException(command.username());
         }
@@ -70,37 +70,37 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
             throw new DuplicateEmailException(command.email());
         }
 
-        String hash = passwordEncoder.encode(command.password());
+        final String hash = passwordEncoder.encode(command.password());
 
-        BuildingUser newBuildingUser = BuildingUser.createNew(
+        final BuildingUser newBuildingUser = BuildingUser.createNew(
                 command.username(),
                 command.email(),
                 hash,
                 BuildingUserRole.TENANT);
 
-        BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
+        final BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
         return saved.getId();
     }
 
     @Override
-    public void logout(LogoutCommand command) {
-        RefreshToken refreshToken = refreshTokenService.validate(command.refreshToken());
+    public void logout(final LogoutCommand command) {
+        final RefreshToken refreshToken = refreshTokenService.validate(command.refreshToken());
 
         refreshTokenService.deleteForUser(refreshToken.getUserId());
     }
 
 
     @Override
-    public LoginResult refresh(RefreshAccessTokenCommand command) {
+    public LoginResult refresh(final RefreshAccessTokenCommand command) {
 
-        RefreshToken refreshToken =
+        final RefreshToken refreshToken =
                 refreshTokenService.validate(command.refreshToken());
 
-        BuildingUser buildingUser = loadBuildingUserPort
+        final BuildingUser buildingUser = loadBuildingUserPort
                 .loadById(refreshToken.getUserId())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        String accessToken =
+        final String accessToken =
                 tokenProviderPort.generateToken(buildingUser);
 
         return new LoginResult(

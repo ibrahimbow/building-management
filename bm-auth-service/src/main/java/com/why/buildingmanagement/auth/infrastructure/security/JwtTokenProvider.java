@@ -20,8 +20,8 @@ public class JwtTokenProvider implements TokenProviderPort {
     private final long expirationMinutes;
 
     public JwtTokenProvider(
-            @Value("${security.jwt.secret}") String secret,
-            @Value("${security.jwt.expiration-minutes}") long expirationMinutes) {
+            @Value("${security.jwt.secret}") final String secret,
+            @Value("${security.jwt.expiration-minutes}") final long expirationMinutes) {
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalArgumentException("JWT secret must be at least 32 bytes for HS256");
         }
@@ -30,9 +30,9 @@ public class JwtTokenProvider implements TokenProviderPort {
     }
 
     @Override
-    public String generateToken(BuildingUser buildingUser) {
-        Instant now = Instant.now();
-        Instant expiresAt = now.plusSeconds(expirationMinutes * 60);
+    public String generateToken(final BuildingUser buildingUser) {
+        final Instant now = Instant.now();
+        final Instant expiresAt = now.plusSeconds(expirationMinutes * 60);
 
         return Jwts.builder()
                 .subject(buildingUser.getUsername())
@@ -45,32 +45,32 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .compact();
     }
 
-    public boolean isTokenValid(String token) {
+    public boolean isTokenValid(final String token) {
         try {
             parseClaims(token);
             return true;
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             return false;
         }
     }
 
-    public String getUsername(String token) {
+    public String getUsername(final String token) {
         return parseClaims(token).getSubject();
     }
 
-    public Long getUserId(String token) {
+    public Long getUserId(final String token) {
         return parseClaims(token).get("userId", Long.class);
     }
 
-    public String getRole(String token) {
+    public String getRole(final String token) {
         return parseClaims(token).get("role", String.class);
     }
 
-    public String getEmail(String token) {
+    public String getEmail(final String token) {
         return parseClaims(token).get("email", String.class);
     }
 
-    private Claims parseClaims(String token) {
+    private Claims parseClaims(final String token) {
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
