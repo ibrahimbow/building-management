@@ -14,39 +14,39 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, SaveBuildingUserPort {
 
-    private final BuildingUserRepository userRepository;
+    private final BuildingUserRepository buildingUserRepository;
 
     @Override
-    public Optional<BuildingUser> loadByUsernameOrEmail(String usernameOrEmail) {
-        return userRepository
+    public Optional<BuildingUser> loadByUsernameOrEmail(final String usernameOrEmail) {
+        return buildingUserRepository
                 .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
                 .map(this::toDomain);
     }
 
     @Override
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
+    public boolean existsByUsername(final String username) {
+        return buildingUserRepository.existsByUsername(username);
     }
 
     @Override
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
+    public boolean existsByEmail(final String email) {
+        return buildingUserRepository.existsByEmail(email);
     }
 
     @Override
-    public Optional<BuildingUser> loadById(Long id) {
-        return userRepository.findById(id)
+    public Optional<BuildingUser> loadById(final Long id) {
+        return buildingUserRepository.findById(id)
                 .map(this::toDomain);
     }
 
     @Override
-    public BuildingUser save(BuildingUser buildingUser) {
-        BuildingUserEntity entity = toEntity(buildingUser);
-        BuildingUserEntity savedEntity = userRepository.save(entity);
+    public BuildingUser save(final BuildingUser buildingUser) {
+        final BuildingUserEntity entity = toEntity(buildingUser);
+        final BuildingUserEntity savedEntity = buildingUserRepository.save(entity);
         return toDomain(savedEntity);
     }
 
-    private BuildingUser toDomain(BuildingUserEntity entity) {
+    private BuildingUser toDomain(final BuildingUserEntity entity) {
         return BuildingUser.builder()
                 .id(entity.getId())
                 .username(entity.getUsername())
@@ -58,7 +58,7 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
                 .build();
     }
 
-    private BuildingUserEntity toEntity(BuildingUser buildingUser) {
+    private BuildingUserEntity toEntity(final BuildingUser buildingUser) {
         return BuildingUserEntity.builder()
                 .id(buildingUser.getId())
                 .username(buildingUser.getUsername())

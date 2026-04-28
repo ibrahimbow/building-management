@@ -11,33 +11,33 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort, LoadRefreshTokenPort , DeleteRefreshTokenPort {
+public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort, LoadRefreshTokenPort, DeleteRefreshTokenPort {
 
-    private final RefreshTokenRepository repository;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
-    public Optional<RefreshToken> findByToken(String token) {
-        return repository.findByToken(token)
+    public Optional<RefreshToken> findByToken(final String token) {
+        return refreshTokenRepository.findByToken(token)
                 .map(this::toDomain);
     }
 
     @Override
-    public Optional<RefreshToken> findByUserId(Long userId) {
-        return repository.findByUserId(userId)
+    public Optional<RefreshToken> findByUserId(final Long userId) {
+        return refreshTokenRepository.findByUserId(userId)
                 .map(this::toDomain);
     }
 
     @Override
-    public RefreshToken save(RefreshToken token) {
-        return toDomain(repository.save(toEntity(token)));
+    public RefreshToken save(final RefreshToken refreshToken) {
+        return toDomain(refreshTokenRepository.save(toEntity(refreshToken)));
     }
 
     @Override
-    public void deleteByUserId(Long userId) {
-        repository.deleteByUserId(userId);
+    public void deleteByUserId(final Long userId) {
+        refreshTokenRepository.deleteByUserId(userId);
     }
 
-    private RefreshToken toDomain(RefreshTokenEntity entity) {
+    private RefreshToken toDomain(final RefreshTokenEntity entity) {
         return RefreshToken.builder()
                 .id(entity.getId())
                 .userId(entity.getUserId())
@@ -48,7 +48,7 @@ public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort, Loa
                 .build();
     }
 
-    private RefreshTokenEntity toEntity(RefreshToken token) {
+    private RefreshTokenEntity toEntity(final RefreshToken token) {
         return RefreshTokenEntity.builder()
                 .id(token.getId())
                 .userId(token.getUserId())

@@ -25,11 +25,11 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
     private final JwtTokenProvider jwtTokenProvider;
 
-    public AuthController(RegisterBuildingUserUseCase registerUserUseCase,
-                          LoginBuildingUserUseCase loginUserUseCase,
-                          RefreshAccessTokenUseCase refreshAccessTokenUseCase,
-                          LogoutUseCase logoutUseCase,
-                          JwtTokenProvider jwtTokenProvider) {
+    public AuthController(final RegisterBuildingUserUseCase registerUserUseCase,
+                          final LoginBuildingUserUseCase loginUserUseCase,
+                          final RefreshAccessTokenUseCase refreshAccessTokenUseCase,
+                          final LogoutUseCase logoutUseCase,
+                          final JwtTokenProvider jwtTokenProvider) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
         this.refreshAccessTokenUseCase = refreshAccessTokenUseCase;
@@ -43,21 +43,21 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody RegisterRequest req) {
-        Long id = registerUserUseCase.register(
-                new RegisterBuildingUserCommand(req.username(),
-                        req.email(),
-                        req.password()));
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody final RegisterRequest request) {
+        final Long id = registerUserUseCase.register(
+                new RegisterBuildingUserCommand(request.username(),
+                        request.email(),
+                        request.password()));
         return ResponseEntity.ok(new RegisterResponse(id));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest req) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody final LoginRequest request) {
 
-        LoginResult result = loginUserUseCase.login(
+        final LoginResult result = loginUserUseCase.login(
                 new LoginBuildingUserCommand(
-                        req.usernameOrEmail(),
-                        req.password()));
+                        request.usernameOrEmail(),
+                        request.password()));
 
         return ResponseEntity.ok(
                 new AuthResponse(
@@ -67,12 +67,12 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public CurrentBuildingUserResponse me(@RequestHeader("Authorization") String authorizationHeader) {
+    public CurrentBuildingUserResponse me(@RequestHeader("Authorization") final String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
         }
 
-        String token = authorizationHeader.substring(7);
+        final String token = authorizationHeader.substring(7);
 
         if (!jwtTokenProvider.isTokenValid(token)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
@@ -86,10 +86,10 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest req) {
+    public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody final RefreshTokenRequest request) {
 
-        LoginResult result = refreshAccessTokenUseCase.refresh(
-                new RefreshAccessTokenCommand(req.refreshToken()));
+        final LoginResult result = refreshAccessTokenUseCase.refresh(
+                new RefreshAccessTokenCommand(request.refreshToken()));
 
         return ResponseEntity.ok(
                 new AuthResponse(
@@ -99,8 +99,8 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(@Valid @RequestBody RefreshTokenRequest req) {
-        logoutUseCase.logout(new LogoutCommand(req.refreshToken()));
+    public ResponseEntity<Void> logout(@Valid @RequestBody final RefreshTokenRequest request) {
+        logoutUseCase.logout(new LogoutCommand(request.refreshToken()));
 
         return ResponseEntity.noContent().build();
     }
