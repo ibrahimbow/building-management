@@ -1,8 +1,12 @@
-name: Docker Build
+name: Docker Build and Push
 
 on:
   push:
     branches: [ "master" ]
+
+permissions:
+  contents: read
+  packages: write
 
 jobs:
   docker:
@@ -22,11 +26,19 @@ jobs:
       - name: Build Maven modules
         run: mvn clean package -DskipTests
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Auth Service Image
-        run: docker build -t bm-auth-service ./bm-auth-service
+      - name: Build and Push Auth Service Image
+        run: |
+          docker build -t ghcr.io/ibrahimbow/bm-auth-service:latest ./bm-auth-service
+          docker push ghcr.io/ibrahimbow/bm-auth-service:latest
 
-      - name: Build Gateway Service Image
-        run: docker build -t bm-gateway-service ./bm-gateway-service
+      - name: Build and Push Gateway Service Image
+        run: |
+          docker build -t ghcr.io/ibrahimbow/bm-gateway-service:latest ./bm-gateway-service
+          docker push ghcr.io/ibrahimbow/bm-gateway-service:latest
