@@ -1,0 +1,22 @@
+name: Docker Build
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Auth Service Image
+        run: docker build -t bm-auth-service ./bm-auth-service
+
+      - name: Build Gateway Service Image
+        run: docker build -t bm-gateway-service ./bm-gateway-service
