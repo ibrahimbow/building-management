@@ -1,40 +1,31 @@
 services:
-  bm-postgres:
+  postgres:
     image: postgres:16
     container_name: bm-postgres
     environment:
-      POSTGRES_DB: building_management_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: building_management
+      POSTGRES_USER: bm_user
+      POSTGRES_PASSWORD: bm_password
     ports:
-      - "5433:5432"
-    volumes:
-      - bm_postgres_data:/var/lib/postgresql/data
-    networks:
-      - bm-network
+      - "5432:5432"
 
   bm-auth-service:
-    build:
-      context: .
-      dockerfile: bm-auth-service/Dockerfile
+    image: ghcr.io/ibrahimbow/bm-auth-service:latest
     container_name: bm-auth-service
-    depends_on:
-      - bm-postgres
-    environment:
-      AUTH_SERVICE_PORT: 8081
-      AUTH_DB_URL: jdbc:postgresql://bm-postgres:5432/building_management_db
-      AUTH_DB_USERNAME: postgres
-      AUTH_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
-      AUTH_JWT_EXPIRATION_MINUTES: 60
     ports:
       - "8081:8081"
-    networks:
-      - bm-network
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/building_management
+      SPRING_DATASOURCE_USERNAME: bm_user
+      SPRING_DATASOURCE_PASSWORD: bm_password
+      JWT_SECRET: your-secret-here
+    depends_on:
+      - postgres
 
-volumes:
-  bm_postgres_data:
-
-networks:
-  bm-network:
-    driver: bridge
+  bm-gateway-service:
+    image: ghcr.io/ibrahimbow/bm-gateway-service:latest
+    container_name: bm-gateway-service
+    ports:
+      - "8080:8080"
+    depends_on:
+      - bm-auth-service
