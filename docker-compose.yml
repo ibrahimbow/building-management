@@ -15,10 +15,10 @@ services:
     ports:
       - "8081:8081"
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/building_management
-      SPRING_DATASOURCE_USERNAME: bm_user
-      SPRING_DATASOURCE_PASSWORD: bm_password
-      JWT_SECRET: your-secret-here
+      AUTH_DB_URL: jdbc:postgresql://postgres:5432/building_management
+      AUTH_DB_USERNAME: bm_user
+      AUTH_DB_PASSWORD: bm_password
+      AUTH_JWT_SECRET: change-this-secret
     depends_on:
       - postgres
 
@@ -27,5 +27,7 @@ services:
     container_name: bm-gateway-service
     ports:
       - "8080:8080"
+    environment:
+      AUTH_SERVICE_URL: http://bm-auth-service:8081
     depends_on:
       - bm-auth-service
