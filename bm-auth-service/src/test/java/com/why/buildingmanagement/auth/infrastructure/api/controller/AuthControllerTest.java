@@ -51,7 +51,8 @@ class AuthControllerTest {
                 {
                   "username": "ibrahim",
                   "email": "ibrahim@test.com",
-                  "password": "12345678"
+                  "password": "12345678",
+                  "nickname": "ibrahimbow"
                 }
                 """;
 
@@ -71,7 +72,8 @@ class AuthControllerTest {
                 {
                   "username": "",
                   "email": "wrong-email",
-                  "password": "123"
+                  "password": "123",
+                  "nickname": ""
                 }
                 """;
 
@@ -88,11 +90,11 @@ class AuthControllerTest {
                 .thenReturn(new LoginResult("JWT_TOKEN", "REFRESH_TOKEN"));
 
         String body = """
-            {
-              "usernameOrEmail": "ibrahim",
-              "password": "12345678"
-            }
-            """;
+                {
+                  "usernameOrEmail": "ibrahim",
+                  "password": "12345678"
+                }
+                """;
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

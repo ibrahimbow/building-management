@@ -27,6 +27,7 @@ class BuildingUserPersistenceAdapterTest {
                 "ibrahim",
                 "ibrahim@test.com",
                 "HASHED_PASSWORD",
+                "ibrahimbow",
                 BuildingUserRole.TENANT,
                 Instant.now(),
                 true
@@ -43,7 +44,7 @@ class BuildingUserPersistenceAdapterTest {
 
     @Test
     void loadById_shouldReturnBuildingUser() {
-        BuildingUser saved = adapter.save(newUser("ibrahim", "ibrahim@test.com"));
+        BuildingUser saved = adapter.save(newUser("ibrahim", "ibrahim@test.com","ibrahimbow"));
 
         BuildingUser found = adapter.loadById(saved.getId())
                 .orElseThrow();
@@ -54,7 +55,7 @@ class BuildingUserPersistenceAdapterTest {
 
     @Test
     void loadByUsernameOrEmail_shouldReturnUser_whenUsernameMatches() {
-        adapter.save(newUser("ibrahim", "ibrahim@test.com"));
+        adapter.save(newUser("ibrahim", "ibrahim@test.com","ibrahimbow"));
 
         BuildingUser found = adapter.loadByUsernameOrEmail("ibrahim")
                 .orElseThrow();
@@ -64,7 +65,7 @@ class BuildingUserPersistenceAdapterTest {
 
     @Test
     void loadByUsernameOrEmail_shouldReturnUser_whenEmailMatches() {
-        adapter.save(newUser("ibrahim", "ibrahim@test.com"));
+        adapter.save(newUser("ibrahim", "ibrahim@test.com","ibrahimbow"));
 
         BuildingUser found = adapter.loadByUsernameOrEmail("ibrahim@test.com")
                 .orElseThrow();
@@ -74,23 +75,24 @@ class BuildingUserPersistenceAdapterTest {
 
     @Test
     void existsByUsername_shouldReturnTrue_whenUsernameExists() {
-        adapter.save(newUser("ibrahim", "ibrahim@test.com"));
+        adapter.save(newUser("ibrahim", "ibrahim@test.com","ibrahimbow"));
 
         assertTrue(adapter.existsByUsername("ibrahim"));
     }
 
     @Test
     void existsByEmail_shouldReturnTrue_whenEmailExists() {
-        adapter.save(newUser("ibrahim", "ibrahim@test.com"));
+        adapter.save(newUser("ibrahim", "ibrahim@test.com","ibrahimbow"));
 
         assertTrue(adapter.existsByEmail("ibrahim@test.com"));
     }
 
-    private BuildingUser newUser(String username, String email) {
+    private BuildingUser newUser(String username, String email,String nickname) {
         return new BuildingUser(
                 null,
                 username,
                 email,
+                "ibrahimbow",
                 "HASHED_PASSWORD",
                 BuildingUserRole.TENANT,
                 Instant.now(),

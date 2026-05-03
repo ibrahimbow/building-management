@@ -47,7 +47,8 @@ public class AuthController {
         final Long id = registerUserUseCase.register(
                 new RegisterBuildingUserCommand(request.username(),
                         request.email(),
-                        request.password()));
+                        request.password(),
+                        request.nickname()));
         return ResponseEntity.ok(new RegisterResponse(id));
     }
 
@@ -82,6 +83,7 @@ public class AuthController {
                 jwtTokenProvider.getUserId(token),
                 jwtTokenProvider.getUsername(token),
                 jwtTokenProvider.getEmail(token),
+                jwtTokenProvider.getNickname(token),
                 jwtTokenProvider.getRole(token));
     }
 

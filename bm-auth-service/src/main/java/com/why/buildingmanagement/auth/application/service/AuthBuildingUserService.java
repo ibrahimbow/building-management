@@ -76,6 +76,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
                 command.username(),
                 command.email(),
                 hash,
+                command.nickname(),
                 BuildingUserRole.TENANT);
 
         final BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);

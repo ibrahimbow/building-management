@@ -179,7 +179,8 @@ class AuthBuildingUserServiceTest {
         return new RegisterBuildingUserCommand(
                 "ibrahim",
                 "ibrahim@test.com",
-                "12345678");
+                "12345678",
+                "ibrahimbow");
     }
 
     private LoginBuildingUserCommand loginCommand() {
@@ -195,6 +196,7 @@ class AuthBuildingUserServiceTest {
                 "ibrahim",
                 "ibrahim@test.com",
                 "HASHED_PASSWORD",
+                "ibrahimbow",
                 BuildingUserRole.TENANT,
                 Instant.now(),
                 true

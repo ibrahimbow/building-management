@@ -45,6 +45,7 @@ class BuildingUserRepositoryTest {
         assertNotNull(saved.getId());
         assertEquals("ibrahim", saved.getUsername());
         assertEquals("ibrahim@test.com", saved.getEmail());
+        assertEquals("ibrahimbow", saved.getNickname());
         assertEquals("HASHED_PASSWORD", saved.getPasswordHash());
         assertEquals(BuildingUserRole.TENANT.name(), saved.getRole());
         assertTrue(saved.isEnabled());
@@ -121,6 +122,7 @@ class BuildingUserRepositoryTest {
         entity.setUsername("ibrahim");
         entity.setEmail("ibrahim@test.com");
         entity.setPasswordHash("HASHED_PASSWORD");
+        entity.setNickname("ibrahimbow");
         entity.setRole(BuildingUserRole.TENANT.name());
         entity.setCreatedAt(Instant.now());
         entity.setEnabled(true);

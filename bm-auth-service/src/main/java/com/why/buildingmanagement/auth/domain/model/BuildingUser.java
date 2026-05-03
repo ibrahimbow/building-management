@@ -13,6 +13,7 @@ public class BuildingUser {
     private String username;
     private String email;
     private String passwordHash;
+    private String nickname;
     private BuildingUserRole role;
     private Instant createdAt;
     private boolean enabled;
@@ -21,6 +22,7 @@ public class BuildingUser {
                         final String username,
                         final String email,
                         final String passwordHash,
+                        final String nickname,
                         final BuildingUserRole role,
                         final Instant createdAt,
                         final boolean enabled) {
@@ -28,6 +30,7 @@ public class BuildingUser {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
+        this.nickname = nickname;
         this.role = role;
         this.createdAt = createdAt;
         this.enabled = enabled;
@@ -36,12 +39,14 @@ public class BuildingUser {
     public static BuildingUser createNew(final String username,
                                          final String email,
                                          final String passwordHash,
+                                         final String nickname,
                                          final BuildingUserRole role) {
         return new BuildingUser(
                 null,
                 username,
                 email,
                 passwordHash,
+                nickname,
                 role,
                 Instant.now(),
                 true);

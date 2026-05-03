@@ -36,6 +36,9 @@ public class BuildingUserEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
+    @Column(nullable = false)
+    private String nickname;
+
     @Column(nullable = false, length = 20)
     private String role;
 
