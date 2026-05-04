@@ -1,0 +1,28 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: bm-building-service
+
+  datasource:
+    url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/building_db}
+    username: ${BUILDING_DB_USERNAME:bm_user}
+    password: ${BUILDING_DB_PASSWORD:bm_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration

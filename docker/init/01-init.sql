@@ -1,0 +1,5 @@
+CREATE DATABASE auth_db;
+CREATE DATABASE building_db;
+
+GRANT ALL PRIVILEGES ON DATABASE auth_db TO bm_user;
+GRANT ALL PRIVILEGES ON DATABASE building_db TO bm_user;

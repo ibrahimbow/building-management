@@ -2,32 +2,53 @@ services:
   postgres:
     image: postgres:16
     container_name: bm-postgres
+    restart: unless-stopped
     environment:
-      POSTGRES_DB: building_management
-      POSTGRES_USER: bm_user
-      POSTGRES_PASSWORD: bm_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - "5432:5432"
+    volumes:
+      - ./docker/init:/docker-entrypoint-initdb.d
 
   bm-auth-service:
-    image: ghcr.io/ibrahimbow/bm-auth-service:latest
+    build: ./bm-auth-service
     container_name: bm-auth-service
+    restart: unless-stopped
     ports:
       - "8081:8081"
     environment:
-      AUTH_DB_URL: jdbc:postgresql://postgres:5432/building_management
-      AUTH_DB_USERNAME: bm_user
-      AUTH_DB_PASSWORD: bm_password
-      AUTH_JWT_SECRET: change-this-secret
+      AUTH_DB_URL: ${AUTH_DB_URL}
+      AUTH_DB_USERNAME: ${AUTH_DB_USERNAME}
+      AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+      AUTH_JWT_EXPIRATION_MINUTES: ${AUTH_JWT_EXPIRATION_MINUTES}
+    depends_on:
+      - postgres
+
+  bm-building-service:
+    build: ./bm-building-service
+    container_name: bm-building-service
+    restart: unless-stopped
+    ports:
+      - "8083:8082"
+    environment:
+      BUILDING_DB_URL: ${BUILDING_DB_URL}
+      BUILDING_DB_USERNAME: ${BUILDING_DB_USERNAME}
+      BUILDING_DB_PASSWORD: ${BUILDING_DB_PASSWORD}
     depends_on:
       - postgres
 
   bm-gateway-service:
-    image: ghcr.io/ibrahimbow/bm-gateway-service:latest
+    build: ./bm-gateway-service
     container_name: bm-gateway-service
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
-      AUTH_SERVICE_URL: http://bm-auth-service:8081
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
     depends_on:
       - bm-auth-service
+      - bm-building-service
