@@ -8,5 +8,6 @@ public record BuildingResponse(
         String managerName,
         String managerEmail,
         int totalApartments,
-        String emergencyPhone
-) {}
+        String emergencyPhone) {
+
+}

@@ -3,7 +3,6 @@ package com.why.buildingmanagement.building.infrastructure.persistence;
 import com.why.buildingmanagement.building.BuildingServiceApplication;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.domain.model.Building;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -17,7 +16,6 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@Disabled("Fails in local Docker environment - to be fixed")
 @SpringBootTest(classes = BuildingServiceApplication.class)
 @Testcontainers
 class BuildingPersistenceAdapterContainerTest {
