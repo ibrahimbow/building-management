@@ -1,0 +1,69 @@
+package com.why.buildingmanagement.gateway.security;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.config.Customizer;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
+import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
+import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import reactor.core.publisher.Mono;
+
+import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
+
+@Configuration
+@EnableConfigurationProperties(JwtProperties.class)
+public class GatewaySecurityConfig {
+
+    private static final String UNAUTHORIZED_BODY = """
+            {
+              "error": "Unauthorized",
+              "message": "Invalid, missing, or expired JWT token"
+            }
+            """;
+
+    @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                .authorizeExchange(exchange -> exchange
+                        .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
+                        .anyExchange().authenticated())
+                .exceptionHandling(ex -> ex.authenticationEntryPoint((exchange, e) -> {
+                    var response = exchange.getResponse();
+                    response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+                    return response.writeWith(Mono.just(
+                            response.bufferFactory().wrap(UNAUTHORIZED_BODY.getBytes(StandardCharsets.UTF_8))
+                    ));
+                }))
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .build();
+    }
+
+    @Bean
+    public ReactiveJwtDecoder jwtDecoder(JwtProperties jwtProperties) {
+        String secret = jwtProperties.secret();
+
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes for HS256");
+        }
+
+        return NimbusReactiveJwtDecoder
+                .withSecretKey(new SecretKeySpec(
+                        secret.getBytes(StandardCharsets.UTF_8),
+                        "HmacSHA256"
+                ))
+                .macAlgorithm(MacAlgorithm.HS256)
+                .build();
+    }
+}

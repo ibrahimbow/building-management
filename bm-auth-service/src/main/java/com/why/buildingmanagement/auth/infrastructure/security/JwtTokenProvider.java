@@ -42,7 +42,7 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .claim("role", buildingUser.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
-                .signWith(secretKey)
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 

@@ -1,26 +1,32 @@
-name: Building Management CI
+server:
+  port: 8082
 
-on:
-  push:
-    branches: [ "master", "main" ]
-  pull_request:
-    branches: [ "master", "main" ]
+spring:
+  application:
+    name: bm-building-service
 
-jobs:
-  build-test:
-    name: Build and Test Maven Project
-    runs-on: ubuntu-latest
+  datasource:
+    url: ${BUILDING_DB_URL:jdbc:postgresql://localhost:5432/building_db}
+    username: ${BUILDING_DB_USERNAME:bm_user}
+    password: ${BUILDING_DB_PASSWORD:bm_password}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
-      - name: Set up Java 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
 
-      - name: Build and test
-        run: mvn clean verify
+security:
+  jwt:
+    secret: ${AUTH_JWT_SECRET}

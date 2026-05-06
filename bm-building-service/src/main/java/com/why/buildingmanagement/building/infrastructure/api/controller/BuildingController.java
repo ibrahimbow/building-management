@@ -6,9 +6,12 @@ import com.why.buildingmanagement.building.infrastructure.api.dto.request.Create
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
+import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -22,15 +25,24 @@ public class BuildingController {
     private final GetBuildingByCodeUseCase getBuildingByCodeUseCase;
     private final JoinBuildingUseCase joinBuildingUseCase;
     private final BuildingApiMapper mapper;
+    private final CurrentUserService currentUserService;
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ResponseEntity<BuildingResponse> createBuilding(@Valid @RequestBody final CreateBuildingRequest request) {
+    public ResponseEntity<BuildingResponse> createBuilding(@RequestBody CreateBuildingRequest request) {
+        final var current = currentUserService.getCurrentUser();
+        final String managerEmail = current.email();
+        final String managerName = current.username();
+
+        if (!current.role().equals("ADMIN") && !current.role().equals("MANAGER")) {
+            throw new AccessDeniedException("Only ADMIN or MANAGER can create buildings");
+        }
 
         final CreateBuildingCommand command = new CreateBuildingCommand(
                 request.buildingName(),
                 request.address(),
-                request.managerName(),
-                request.managerEmail(),
+                managerEmail,
+                managerName,
                 request.totalApartments(),
                 request.emergencyPhone());
 
@@ -41,13 +53,7 @@ public class BuildingController {
                 .body(mapper.toResponse(result));
     }
 
-
-    @GetMapping("/code/{code}")
-    public ResponseEntity<BuildingInfoResult> getBuildingByCode(@PathVariable("code") final String code) {
-        final BuildingInfoResult result = getBuildingByCodeUseCase.getBuildingByCode(code);
-        return ResponseEntity.ok(result);
-    }
-
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TENANT')")
     @PostMapping("/join")
     public ResponseEntity<BuildingInfoResult> joinBuilding(@Valid @RequestBody final JoinBuildingRequest request) {
 
@@ -58,6 +64,13 @@ public class BuildingController {
 
         final BuildingInfoResult result = joinBuildingUseCase.joinBuilding(command);
 
+        return ResponseEntity.ok(result);
+    }
+
+    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TENANT')")
+    @GetMapping("/code/{code}")
+    public ResponseEntity<BuildingInfoResult> getBuildingByCode(@PathVariable("code") final String code) {
+        final BuildingInfoResult result = getBuildingByCodeUseCase.getBuildingByCode(code);
         return ResponseEntity.ok(result);
     }
 }
