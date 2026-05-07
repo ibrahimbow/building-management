@@ -3,6 +3,7 @@ package com.why.buildingmanagement.building.infrastructure.api.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.CreateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.UpdateBuildingRequest;
@@ -148,6 +149,38 @@ class BuildingControllerTest {
                 .andExpect(jsonPath("$.code").value("BM-123456"));
 
         verify(getMyBuildingByIdUseCase).getMyBuildingById(buildingId, 1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void getMyBuildingById_shouldReturn404_whenBuildingNotFound() throws Exception {
+        final UUID buildingId = UUID.randomUUID();
+
+        when(getMyBuildingByIdUseCase.getMyBuildingById(buildingId, 1L))
+                .thenThrow(new BuildingNotFoundException(buildingId));
+
+        mockMvc.perform(get("/api/buildings/{id}", buildingId))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Building not found"))
+                .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void createBuilding_shouldReturn400_whenRequestIsInvalid() throws Exception {
+        final CreateBuildingRequest request = new CreateBuildingRequest(
+                "",
+                "",
+                12,
+                "");
+
+        mockMvc.perform(post("/api/buildings")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Validation failed"))
+                .andExpect(jsonPath("$.status").value(400));
     }
 
     @Test
