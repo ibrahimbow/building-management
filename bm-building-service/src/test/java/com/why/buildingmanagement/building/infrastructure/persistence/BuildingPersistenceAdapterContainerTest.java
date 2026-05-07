@@ -48,24 +48,24 @@ class BuildingPersistenceAdapterContainerTest {
         final Building saved = buildingRepositoryPort.save(building);
 
         assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getManagerId()).isEqualTo(12L);
 
         final Optional<Building> found =
                 buildingRepositoryPort.findByCode("BM-123456");
 
         assertThat(found).isPresent();
         assertThat(found.get().getBuildingName()).isEqualTo("Test Building");
+        assertThat(found.get().getManagerId()).isEqualTo(12L);
     }
 
     private Building createBuilding(final String code) {
-        return Building.builder()
-                .id(null)
-                .buildingName("Test Building")
-                .code(code)
-                .address("Antwerp")
-                .managerName("Ibrahim")
-                .managerEmail("test@test.com")
-                .totalApartments(10)
-                .emergencyPhone("+320000000")
-                .build();
+        return Building.createNew(
+                "Test Building",
+                code,
+                "Antwerp",
+                12L,
+                10,
+                "+320000000"
+        );
     }
 }

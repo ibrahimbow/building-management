@@ -6,7 +6,35 @@ import org.mapstruct.Mapper;
 @Mapper(componentModel = "spring")
 public interface BuildingMapper {
 
-    BuildingEntity toEntity(Building building);
+    default BuildingEntity toEntity(final Building building) {
+        if (building == null) {
+            return null;
+        }
 
-    Building toDomain(BuildingEntity entity);
+        return new BuildingEntity(
+                building.getId(),
+                building.getBuildingName(),
+                building.getCode(),
+                building.getAddress(),
+                building.getManagerId(),
+                building.getTotalApartments(),
+                building.getEmergencyPhone()
+        );
+    }
+
+    default Building toDomain(final BuildingEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return Building.restore(
+                entity.getId(),
+                entity.getBuildingName(),
+                entity.getCode(),
+                entity.getAddress(),
+                entity.getManagerId(),
+                entity.getTotalApartments(),
+                entity.getEmergencyPhone()
+        );
+    }
 }

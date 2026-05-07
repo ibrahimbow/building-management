@@ -5,6 +5,7 @@ import com.why.buildingmanagement.building.domain.model.Building;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -13,7 +14,6 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
 
     private final BuildingRepository buildingRepository;
     private final BuildingMapper buildingMapper;
-
 
     @Override
     public Building save(Building building) {
@@ -31,5 +31,13 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     @Override
     public boolean existsByCode(String code) {
         return buildingRepository.existsByCode(code);
+    }
+
+    @Override
+    public List<Building> findByManagerId(Long managerId) {
+        return buildingRepository.findByManagerId(managerId)
+                .stream()
+                .map(buildingMapper::toDomain)
+                .toList();
     }
 }

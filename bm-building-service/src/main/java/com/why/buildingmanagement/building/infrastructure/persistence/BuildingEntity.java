@@ -33,11 +33,8 @@ public class BuildingEntity {
     @Column(nullable = false)
     private String address;
 
-    @Column(name = "manager_name", nullable = false)
-    private String managerName;
-
-    @Column(name = "manager_email", nullable = false)
-    private String managerEmail;
+    @Column(name = "manager_id", nullable = false)
+    private Long managerId;
 
     @Column(name = "total_apartments", nullable = false)
     private int totalApartments;

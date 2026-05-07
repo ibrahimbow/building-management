@@ -27,12 +27,7 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
         String username = request.getHeader("X-Username");
 
         if (userId != null && email != null && role != null && username != null) {
-            CurrentUserService.CurrentUser currentUser =
-                    new CurrentUserService.CurrentUser(
-                            Long.valueOf(userId),
-                            username,
-                            email,
-                            role);
+            CurrentUser currentUser = new CurrentUser(Long.valueOf(userId), username, email, role);
 
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(

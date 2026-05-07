@@ -29,22 +29,18 @@ public class BuildingController {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ResponseEntity<BuildingResponse> createBuilding(@RequestBody CreateBuildingRequest request) {
+    public ResponseEntity<BuildingResponse> createBuilding(
+            @Valid @RequestBody final CreateBuildingRequest request
+    ) {
         final var current = currentUserService.getCurrentUser();
-        final String managerEmail = current.email();
-        final String managerName = current.username();
-
-        if (!current.role().equals("ADMIN") && !current.role().equals("MANAGER")) {
-            throw new AccessDeniedException("Only ADMIN or MANAGER can create buildings");
-        }
 
         final CreateBuildingCommand command = new CreateBuildingCommand(
                 request.buildingName(),
                 request.address(),
-                managerEmail,
-                managerName,
+                current.userId(),
                 request.totalApartments(),
-                request.emergencyPhone());
+                request.emergencyPhone()
+        );
 
         final BuildingInfoResult result = createBuildingUseCase.createBuilding(command);
 

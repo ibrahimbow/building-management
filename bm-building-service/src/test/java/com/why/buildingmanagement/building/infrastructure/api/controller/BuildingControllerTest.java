@@ -10,6 +10,7 @@ import com.why.buildingmanagement.building.infrastructure.api.dto.request.Create
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
+import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,18 +59,37 @@ class BuildingControllerTest {
                 "Antwerp Residence",
                 "Berchem, Antwerp",
                 12,
-                "+32000000000");
+                "+32000000000"
+        );
 
-        final BuildingInfoResult result = createBuildingInfoResult();
-        final BuildingResponse response = createBuildingResponse();
+        final BuildingInfoResult result = new BuildingInfoResult(
+                "building-id-1",
+                "Antwerp Residence",
+                "BM-123456",
+                "Berchem, Antwerp",
+                1L,
+                12,
+                "+32000000000"
+        );
+
+        final BuildingResponse response = new BuildingResponse(
+                "building-id-1",
+                "Antwerp Residence",
+                "BM-123456",
+                "Berchem, Antwerp",
+                1L,
+                12,
+                "+32000000000"
+        );
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(new CurrentUserService.CurrentUser(
+                .thenReturn(new CurrentUser(
                         1L,
                         "Ibrahim",
                         "ibrahim@example.com",
                         "ADMIN"
                 ));
+
         when(createBuildingUseCase.createBuilding(any(CreateBuildingCommand.class)))
                 .thenReturn(result);
 
@@ -84,7 +104,7 @@ class BuildingControllerTest {
                 .andExpect(jsonPath("$.id").value("building-id-1"))
                 .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"))
                 .andExpect(jsonPath("$.code").value("BM-123456"))
-                .andExpect(jsonPath("$.managerEmail").value("ibrahim@example.com"))
+                .andExpect(jsonPath("$.managerId").value(1L))
                 .andExpect(jsonPath("$.totalApartments").value(12));
     }
 
@@ -140,8 +160,7 @@ class BuildingControllerTest {
                 "Antwerp Residence",
                 "BM-123456",
                 "Berchem, Antwerp",
-                "Ibrahim",
-                "ibrahim@example.com",
+                12L,
                 12,
                 "+32000000000");
     }
@@ -152,8 +171,7 @@ class BuildingControllerTest {
                 "Antwerp Residence",
                 "BM-123456",
                 "Berchem, Antwerp",
-                "Ibrahim",
-                "ibrahim@example.com",
+                12L,
                 12,
                 "+32000000000");
     }

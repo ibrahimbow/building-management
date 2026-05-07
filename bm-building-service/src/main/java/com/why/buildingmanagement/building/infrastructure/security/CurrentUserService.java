@@ -29,12 +29,4 @@ public class CurrentUserService {
                 role
         );
     }
-
-    public record CurrentUser(
-            Long userId,
-            String username,
-            String email,
-            String role
-    ) {
-    }
 }
