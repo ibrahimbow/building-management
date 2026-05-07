@@ -5,9 +5,9 @@ import com.why.buildingmanagement.building.application.port.in.CreateBuildingUse
 import com.why.buildingmanagement.building.application.port.in.GetBuildingByCodeUseCase;
 import com.why.buildingmanagement.building.application.port.in.JoinBuildingCommand;
 import com.why.buildingmanagement.building.application.port.in.JoinBuildingUseCase;
-import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyJoinedBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
@@ -16,11 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-
 @Service
-@Transactional
 @RequiredArgsConstructor
+@Transactional
 public class BuildingApplicationService implements
         CreateBuildingUseCase,
         GetBuildingByCodeUseCase,
@@ -39,20 +37,11 @@ public class BuildingApplicationService implements
                 command.address(),
                 command.managerId(),
                 command.totalApartments(),
-                command.emergencyPhone()
-        );
+                command.emergencyPhone());
 
         final Building savedBuilding = buildingRepositoryPort.save(building);
 
         return toBuildingInfoResult(savedBuilding);
-    }
-
-    @Transactional(readOnly = true)
-    public List<BuildingInfoResult> findByManagerId(final Long managerId) {
-        return buildingRepositoryPort.findByManagerId(managerId)
-                .stream()
-                .map(this::toBuildingInfoResult)
-                .toList();
     }
 
     @Override
@@ -72,21 +61,18 @@ public class BuildingApplicationService implements
         final boolean alreadyJoined = buildingMembershipRepositoryPort
                 .existsByBuildingIdAndTenantUserId(
                         building.getId(),
-                        command.tenantUserId()
-                );
+                        command.tenantUserId());
 
         if (alreadyJoined) {
             throw new TenantAlreadyJoinedBuildingException(
                     building.getId(),
-                    command.tenantUserId()
-            );
+                    command.tenantUserId());
         }
 
         final BuildingMembership buildingMembership = BuildingMembership.createNew(
                 building.getId(),
                 command.tenantUserId(),
-                command.tenantEmail()
-        );
+                command.tenantEmail());
 
         buildingMembershipRepositoryPort.save(buildingMembership);
 
@@ -111,7 +97,6 @@ public class BuildingApplicationService implements
                 building.getAddress(),
                 building.getManagerId(),
                 building.getTotalApartments(),
-                building.getEmergencyPhone()
-        );
+                building.getEmergencyPhone());
     }
 }

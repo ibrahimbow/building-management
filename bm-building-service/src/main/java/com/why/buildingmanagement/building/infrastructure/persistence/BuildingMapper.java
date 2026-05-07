@@ -1,5 +1,6 @@
 package com.why.buildingmanagement.building.infrastructure.persistence;
 
+import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.model.Building;
 import org.mapstruct.Mapper;
 
@@ -29,6 +30,22 @@ public interface BuildingMapper {
 
         return Building.restore(
                 entity.getId(),
+                entity.getBuildingName(),
+                entity.getCode(),
+                entity.getAddress(),
+                entity.getManagerId(),
+                entity.getTotalApartments(),
+                entity.getEmergencyPhone()
+        );
+    }
+
+    default BuildingInfoResult toResult(final BuildingEntity entity) {
+        if (entity == null) {
+            return null;
+        }
+
+        return new BuildingInfoResult(
+                entity.getId().toString(),
                 entity.getBuildingName(),
                 entity.getCode(),
                 entity.getAddress(),

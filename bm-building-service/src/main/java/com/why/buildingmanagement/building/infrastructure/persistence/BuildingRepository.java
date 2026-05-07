@@ -13,4 +13,8 @@ public interface BuildingRepository extends JpaRepository<BuildingEntity, UUID> 
     boolean existsByCode(String code);
 
     List<BuildingEntity> findByManagerId(Long managerId);
+
+    Optional<BuildingEntity> findByIdAndManagerId(UUID id, Long managerId);
+
+    boolean existsByIdAndManagerId(UUID id, Long managerId);
 }

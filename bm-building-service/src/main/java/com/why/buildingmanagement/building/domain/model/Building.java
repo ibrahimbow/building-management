@@ -9,18 +9,15 @@ import java.util.UUID;
 public class Building {
 
     private static final SecureRandom RANDOM = new SecureRandom();
+    private static final int MIN_TOTAL_APARTMENTS = 4;
 
-    private UUID id;
-    private String buildingName;
-    private String code;
-    private String address;
-    private Long managerId;
-    private int totalApartments;
-    private String emergencyPhone;
-
-    protected Building() {
-        // For frameworks only
-    }
+    private final UUID id;
+    private final String buildingName;
+    private final String code;
+    private final String address;
+    private final Long managerId;
+    private final int totalApartments;
+    private final String emergencyPhone;
 
     private Building(
             final UUID id,
@@ -31,13 +28,15 @@ public class Building {
             final int totalApartments,
             final String emergencyPhone
     ) {
+        validate(buildingName, code, address, managerId, totalApartments, emergencyPhone);
+
         this.id = id;
-        this.buildingName = buildingName;
-        this.code = code;
-        this.address = address;
+        this.buildingName = buildingName.trim();
+        this.code = code.trim();
+        this.address = address.trim();
         this.managerId = managerId;
         this.totalApartments = totalApartments;
-        this.emergencyPhone = emergencyPhone;
+        this.emergencyPhone = emergencyPhone.trim();
     }
 
     public static Building createNew(
@@ -48,16 +47,6 @@ public class Building {
             final int totalApartments,
             final String emergencyPhone
     ) {
-
-        validate(
-                buildingName,
-                code,
-                address,
-                managerId,
-                totalApartments,
-                emergencyPhone
-        );
-
         return new Building(
                 null,
                 buildingName,
@@ -78,6 +67,9 @@ public class Building {
             final int totalApartments,
             final String emergencyPhone
     ) {
+        if (id == null) {
+            throw new IllegalArgumentException("Building id is required when restoring building");
+        }
 
         return new Building(
                 id,
@@ -90,37 +82,49 @@ public class Building {
         );
     }
 
-    public void changeEmergencyPhone(final String phone) {
-
-        if (phone == null || phone.isBlank()) {
-            throw new IllegalArgumentException("Invalid emergency phone");
-        }
-
-        this.emergencyPhone = phone;
+    public Building updateDetails(
+            final String buildingName,
+            final String address,
+            final int totalApartments,
+            final String emergencyPhone
+    ) {
+        return new Building(
+                this.id,
+                buildingName,
+                this.code,
+                address,
+                this.managerId,
+                totalApartments,
+                emergencyPhone
+        );
     }
 
-    public void assignManager(final Long managerId) {
-
-        if (managerId == null) {
-            throw new IllegalArgumentException("Manager id required");
-        }
-
-        this.managerId = managerId;
+    public Building changeEmergencyPhone(final String emergencyPhone) {
+        return new Building(
+                this.id,
+                this.buildingName,
+                this.code,
+                this.address,
+                this.managerId,
+                this.totalApartments,
+                emergencyPhone
+        );
     }
 
-    public void rename(final String newName) {
-
-        if (newName == null || newName.isBlank()) {
-            throw new IllegalArgumentException("Invalid building name");
-        }
-
-        this.buildingName = newName;
+    public Building rename(final String buildingName) {
+        return new Building(
+                this.id,
+                buildingName,
+                this.code,
+                this.address,
+                this.managerId,
+                this.totalApartments,
+                this.emergencyPhone
+        );
     }
 
     public static String generateCode() {
-
         final int number = RANDOM.nextInt(900000) + 100000;
-
         return "BM-" + number;
     }
 
@@ -130,30 +134,27 @@ public class Building {
             final String address,
             final Long managerId,
             final int totalApartments,
-            final String emergencyPhone) {
-
-        if (buildingName == null || buildingName.isBlank()) {
-            throw new IllegalArgumentException("Building name required");
-        }
-
-        if (code == null || code.isBlank()) {
-            throw new IllegalArgumentException("Building code required");
-        }
-
-        if (address == null || address.isBlank()) {
-            throw new IllegalArgumentException("Address required");
-        }
+            final String emergencyPhone
+    ) {
+        requireText(buildingName, "Building name is required");
+        requireText(code, "Building code is required");
+        requireText(address, "Address is required");
+        requireText(emergencyPhone, "Emergency phone is required");
 
         if (managerId == null) {
-            throw new IllegalArgumentException("Manager id required");
+            throw new IllegalArgumentException("Manager id is required");
         }
 
-        if (totalApartments < 4) {
-            throw new IllegalArgumentException("Total apartments must be at least 4");
+        if (totalApartments < MIN_TOTAL_APARTMENTS) {
+            throw new IllegalArgumentException(
+                    "Total apartments must be at least " + MIN_TOTAL_APARTMENTS
+            );
         }
+    }
 
-        if (emergencyPhone == null || emergencyPhone.isBlank()) {
-            throw new IllegalArgumentException("Emergency phone required");
+    private static void requireText(final String value, final String message) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(message);
         }
     }
 }
