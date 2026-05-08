@@ -1,19 +1,8 @@
-package com.why.buildingmanagement.building.infrastructure.api.controller;
+package com.why.buildingmanagement.building.infrastructure.api.controller.manager;
 
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.DeleteMyBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.DeleteMyBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetBuildingByCodeUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetMyBuildingByIdUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetMyBuildingsUseCase;
-import com.why.buildingmanagement.building.application.port.in.JoinBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.JoinBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.UpdateMyBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.UpdateMyBuildingUseCase;
+import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.CreateBuildingRequest;
-import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.UpdateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
@@ -29,13 +18,12 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/buildings")
+@RequestMapping("/api/manager/buildings")
 @RequiredArgsConstructor
-public class BuildingController {
+@PreAuthorize("hasRole('MANAGER')")
+public class ManagerBuildingController {
 
     private final CreateBuildingUseCase createBuildingUseCase;
-    private final GetBuildingByCodeUseCase getBuildingByCodeUseCase;
-    private final JoinBuildingUseCase joinBuildingUseCase;
     private final GetMyBuildingsUseCase getMyBuildingsUseCase;
     private final GetMyBuildingByIdUseCase getMyBuildingByIdUseCase;
     private final UpdateMyBuildingUseCase updateMyBuildingUseCase;
@@ -44,10 +32,9 @@ public class BuildingController {
     private final BuildingApiMapper mapper;
     private final CurrentUserService currentUserService;
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
     @PostMapping
-    public ResponseEntity<BuildingResponse> createBuilding(
-            @Valid @RequestBody final CreateBuildingRequest request) {
+    public ResponseEntity<BuildingResponse> createBuilding(@Valid @RequestBody final CreateBuildingRequest request) {
+
         final var current = currentUserService.getCurrentUser();
 
         final CreateBuildingCommand command = new CreateBuildingCommand(
@@ -57,87 +44,65 @@ public class BuildingController {
                 request.totalApartments(),
                 request.emergencyPhone());
 
-        final BuildingInfoResult result = createBuildingUseCase.createBuilding(command);
+        final BuildingInfoResult result =
+                createBuildingUseCase.createBuilding(command);
 
         return ResponseEntity
-                .created(URI.create("/api/buildings/" + result.id()))
+                .created(URI.create("/api/manager/buildings/" + result.id()))
                 .body(mapper.toResponse(result));
     }
 
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TENANT')")
-    @PostMapping("/join")
-    public ResponseEntity<BuildingResponse> joinBuilding(
-            @Valid @RequestBody final JoinBuildingRequest request) {
-        final var current = currentUserService.getCurrentUser();
-
-        final JoinBuildingCommand command = new JoinBuildingCommand(
-                request.code(),
-                current.userId(),
-                current.email());
-
-        final BuildingInfoResult result = joinBuildingUseCase.joinBuilding(command);
-
-        return ResponseEntity.ok(mapper.toResponse(result));
-    }
-
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'TENANT')")
-    @GetMapping("/code/{code}")
-    public ResponseEntity<BuildingResponse> getBuildingByCode(
-            @PathVariable("code") final String code) {
-        final BuildingInfoResult result = getBuildingByCodeUseCase.getBuildingByCode(code);
-        return ResponseEntity.ok(mapper.toResponse(result));
-    }
-
-    @PreAuthorize("hasRole('MANAGER')")
-    @GetMapping("/managed")
+    @GetMapping
     public ResponseEntity<List<BuildingResponse>> getMyBuildings() {
+
         final var current = currentUserService.getCurrentUser();
 
-        final List<BuildingResponse> response = getMyBuildingsUseCase
-                .getMyBuildings(current.userId())
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        final List<BuildingResponse> response =
+                getMyBuildingsUseCase
+                        .getMyBuildings(current.userId())
+                        .stream()
+                        .map(mapper::toResponse)
+                        .toList();
 
         return ResponseEntity.ok(response);
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
     @GetMapping("/{id}")
-    public ResponseEntity<BuildingResponse> getMyBuildingById(
-            @PathVariable("id") final UUID id) {
+    public ResponseEntity<BuildingResponse> getMyBuildingById(@PathVariable("id") final UUID id) {
+
         final var current = currentUserService.getCurrentUser();
 
         final BuildingInfoResult result =
-                getMyBuildingByIdUseCase.getMyBuildingById(id, current.userId());
+                getMyBuildingByIdUseCase
+                        .getMyBuildingById(id, current.userId());
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
     @PutMapping("/{id}")
-    public ResponseEntity<BuildingResponse> updateMyBuilding(
-            @PathVariable("id") final UUID id,
-            @Valid @RequestBody final UpdateBuildingRequest request) {
+    public ResponseEntity<BuildingResponse> updateMyBuilding(@PathVariable("id") final UUID id,
+                                                             @Valid @RequestBody final UpdateBuildingRequest request) {
+
         final var current = currentUserService.getCurrentUser();
 
-        final UpdateMyBuildingCommand command = new UpdateMyBuildingCommand(
-                id,
-                current.userId(),
-                request.buildingName(),
-                request.address(),
-                request.totalApartments(),
-                request.emergencyPhone());
+        final UpdateMyBuildingCommand command =
+                new UpdateMyBuildingCommand(
+                        id,
+                        current.userId(),
+                        request.buildingName(),
+                        request.address(),
+                        request.totalApartments(),
+                        request.emergencyPhone());
 
-        final BuildingInfoResult result = updateMyBuildingUseCase.updateMyBuilding(command);
+        final BuildingInfoResult result =
+                updateMyBuildingUseCase.updateMyBuilding(command);
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
 
-    @PreAuthorize("hasRole('MANAGER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteMyBuilding(
-            @PathVariable("id") final UUID id) {
+    public ResponseEntity<Void> deleteMyBuilding(@PathVariable("id") final UUID id) {
+
         final var current = currentUserService.getCurrentUser();
 
         final DeleteMyBuildingCommand command =

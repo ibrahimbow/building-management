@@ -6,7 +6,7 @@ import com.why.buildingmanagement.building.application.port.out.BuildingMembersh
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
-import com.why.buildingmanagement.building.domain.exception.TenantAlreadyJoinedBuildingException;
+import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,8 +33,7 @@ class BuildingApplicationServiceTest {
 
         buildingApplicationService = new BuildingApplicationService(
                 buildingRepositoryPort,
-                membershipRepositoryPort
-        );
+                membershipRepositoryPort);
     }
 
     @Test
@@ -44,8 +43,7 @@ class BuildingApplicationServiceTest {
                 "Berchem, Antwerp",
                 12L,
                 8,
-                "+32000000000"
-        );
+                "+32000000000");
 
         when(buildingRepositoryPort.existsByCode(anyString()))
                 .thenReturn(false);
@@ -61,8 +59,7 @@ class BuildingApplicationServiceTest {
                             building.getAddress(),
                             building.getManagerId(),
                             building.getTotalApartments(),
-                            building.getEmergencyPhone()
-                    );
+                            building.getEmergencyPhone());
                 });
 
         final BuildingInfoResult result =
@@ -88,8 +85,7 @@ class BuildingApplicationServiceTest {
                 "Berchem, Antwerp",
                 19L,
                 12,
-                "+32470000000"
-        );
+                "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
                 .thenReturn(Optional.of(building));
@@ -123,14 +119,12 @@ class BuildingApplicationServiceTest {
                 "Berchem, Antwerp",
                 19L,
                 12,
-                "+32470000000"
-        );
+                "+32470000000");
 
         final JoinBuildingCommand command = new JoinBuildingCommand(
                 "BM-123456",
                 10L,
-                "tenant@example.com"
-        );
+                "tenant@example.com");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
                 .thenReturn(Optional.of(building));
@@ -157,7 +151,7 @@ class BuildingApplicationServiceTest {
     }
 
     @Test
-    void joinBuilding_shouldThrowException_whenTenantAlreadyJoined() {
+    void joinBuilding_shouldThrowException_whenTenantAlreadyAssignedToBuilding() {
         final UUID buildingId = UUID.randomUUID();
 
         final Building building = Building.restore(
@@ -167,23 +161,27 @@ class BuildingApplicationServiceTest {
                 "Berchem, Antwerp",
                 19L,
                 12,
-                "+32470000000"
-        );
+                "+32470000000");
 
         final JoinBuildingCommand command = new JoinBuildingCommand(
                 "BM-123456",
                 10L,
-                "tenant@example.com"
-        );
+                "tenant@example.com");
+
+        final BuildingMembership existingMembership =
+                BuildingMembership.createNew(
+                        buildingId,
+                        10L,
+                        "tenant@example.com");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
                 .thenReturn(Optional.of(building));
 
-        when(membershipRepositoryPort.existsByBuildingIdAndTenantUserId(buildingId, 10L))
-                .thenReturn(true);
+        when(membershipRepositoryPort.findByTenantUserId(10L))
+                .thenReturn(Optional.of(existingMembership));
 
         assertThatThrownBy(() -> buildingApplicationService.joinBuilding(command))
-                .isInstanceOf(TenantAlreadyJoinedBuildingException.class);
+                .isInstanceOf(TenantAlreadyAssignedToBuildingException.class);
 
         verify(membershipRepositoryPort, never()).save(any());
     }

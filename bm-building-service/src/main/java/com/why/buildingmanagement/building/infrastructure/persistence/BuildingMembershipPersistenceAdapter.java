@@ -5,6 +5,7 @@ import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.UUID;
 
 @Component
@@ -25,5 +26,16 @@ public class BuildingMembershipPersistenceAdapter implements BuildingMembershipR
     @Override
     public boolean existsByBuildingIdAndTenantUserId(final UUID buildingId, final Long tenantUserId) {
         return buildingMembershipRepository.existsByBuildingIdAndTenantUserId(buildingId, tenantUserId);
+    }
+
+    @Override
+    public Optional<BuildingMembership> findByTenantUserId(final Long tenantUserId) {
+        return buildingMembershipRepository.findByTenantUserId(tenantUserId)
+                .map(mapper::toDomain);
+    }
+
+    @Override
+    public void delete(final BuildingMembership membership) {
+        buildingMembershipRepository.deleteById(membership.getId());
     }
 }

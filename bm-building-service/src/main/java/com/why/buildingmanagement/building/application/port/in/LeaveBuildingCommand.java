@@ -1,4 +1,8 @@
 package com.why.buildingmanagement.building.application.port.in;
 
-public record LeaveBuildingCommand() {
+import jakarta.validation.constraints.NotNull;
+
+public record LeaveBuildingCommand(
+        @NotNull(message = "tenant user id required")
+        Long tenantUserId) {
 }

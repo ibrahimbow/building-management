@@ -30,6 +30,12 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     }
 
     @Override
+    public Optional<Building> findById(UUID id) {
+        return buildingRepository.findById(id)
+                .map(buildingMapper::toDomain);
+    }
+
+    @Override
     public boolean existsByCode(final String code) {
         return buildingRepository.existsByCode(code);
     }
@@ -44,10 +50,7 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     }
 
     @Override
-    public Optional<Building> findByIdAndManagerId(
-            final UUID id,
-            final Long managerId
-    ) {
+    public Optional<Building> findByIdAndManagerId(final UUID id, final Long managerId) {
 
         return buildingRepository.findByIdAndManagerId(id, managerId)
                 .map(buildingMapper::toDomain);

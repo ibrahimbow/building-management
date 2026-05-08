@@ -1,4 +1,63 @@
 package com.why.buildingmanagement.building.application.service;
 
-public class TenantBuildingService {
+import com.why.buildingmanagement.building.application.port.in.GetMyBuildingUseCase;
+import com.why.buildingmanagement.building.application.port.in.LeaveBuildingCommand;
+import com.why.buildingmanagement.building.application.port.in.LeaveBuildingUseCase;
+import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
+import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
+import com.why.buildingmanagement.building.domain.model.Building;
+import com.why.buildingmanagement.building.domain.model.BuildingMembership;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+@Transactional(readOnly = true)
+public class TenantBuildingService implements
+        GetMyBuildingUseCase,
+        LeaveBuildingUseCase {
+
+    private final BuildingRepositoryPort buildingRepositoryPort;
+    private final BuildingMembershipRepositoryPort membershipRepositoryPort;
+
+    @Override
+    public BuildingInfoResult getMyBuilding(final Long tenantUserId) {
+        final BuildingMembership membership = findMembershipOrThrow(tenantUserId);
+
+        final Building building = buildingRepositoryPort
+                .findById(membership.getBuildingId())
+                .orElseThrow(() -> new BuildingNotFoundException(membership.getBuildingId()));
+
+        return toResult(building);
+    }
+
+    @Override
+    @Transactional
+    public void leaveBuilding(final LeaveBuildingCommand command) {
+        final BuildingMembership membership = membershipRepositoryPort
+                .findByTenantUserId(command.tenantUserId())
+                .orElseThrow(() -> new BuildingNotFoundException("Tenant has no building"));
+
+        membershipRepositoryPort.delete(membership);
+    }
+
+    private BuildingMembership findMembershipOrThrow(final Long tenantUserId) {
+        return membershipRepositoryPort
+                .findByTenantUserId(tenantUserId)
+                .orElseThrow(() -> new BuildingNotFoundException("Tenant has no building"));
+    }
+
+    private BuildingInfoResult toResult(final Building building) {
+        return new BuildingInfoResult(
+                building.getId() == null ? null : building.getId().toString(),
+                building.getBuildingName(),
+                building.getCode(),
+                building.getAddress(),
+                building.getManagerId(),
+                building.getTotalApartments(),
+                building.getEmergencyPhone());
+    }
 }

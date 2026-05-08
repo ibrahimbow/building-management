@@ -8,15 +8,16 @@ public class CurrentUserService {
 
     private final HttpServletRequest request;
 
-    public CurrentUserService(HttpServletRequest request) {
+    public CurrentUserService(final HttpServletRequest request) {
         this.request = request;
     }
 
     public CurrentUser getCurrentUser() {
-        String userId = request.getHeader("X-User-Id");
-        String email = request.getHeader("X-User-Email");
-        String role = request.getHeader("X-User-Role");
-        String username = request.getHeader("X-Username");
+
+        final String userId = request.getHeader("X-User-Id");
+        final String email = request.getHeader("X-User-Email");
+        final String role = request.getHeader("X-User-Role");
+        final String username = request.getHeader("X-Username");
 
         if (userId == null || email == null || role == null || username == null) {
             throw new IllegalStateException("No authenticated user found");

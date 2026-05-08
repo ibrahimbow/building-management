@@ -16,7 +16,7 @@ spring:
         - id: bm-building-service
           uri: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
           predicates:
-            - Path=/api/buildings/**
+            - Path=/api/**
 
 security:
   jwt:

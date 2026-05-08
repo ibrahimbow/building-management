@@ -12,6 +12,8 @@ public interface BuildingRepositoryPort {
 
     Optional<Building> findByCode(String code);
 
+    Optional<Building> findById(UUID id);
+
     boolean existsByCode(String code);
 
     List<Building> findByManagerId(Long managerId);

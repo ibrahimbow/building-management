@@ -19,8 +19,7 @@ public interface BuildingMapper {
                 building.getAddress(),
                 building.getManagerId(),
                 building.getTotalApartments(),
-                building.getEmergencyPhone()
-        );
+                building.getEmergencyPhone());
     }
 
     default Building toDomain(final BuildingEntity entity) {
@@ -35,8 +34,7 @@ public interface BuildingMapper {
                 entity.getAddress(),
                 entity.getManagerId(),
                 entity.getTotalApartments(),
-                entity.getEmergencyPhone()
-        );
+                entity.getEmergencyPhone());
     }
 
     default BuildingInfoResult toResult(final BuildingEntity entity) {
@@ -51,7 +49,6 @@ public interface BuildingMapper {
                 entity.getAddress(),
                 entity.getManagerId(),
                 entity.getTotalApartments(),
-                entity.getEmergencyPhone()
-        );
+                entity.getEmergencyPhone());
     }
 }

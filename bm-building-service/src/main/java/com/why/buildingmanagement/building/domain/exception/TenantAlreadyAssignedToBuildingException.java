@@ -1,7 +1,8 @@
 package com.why.buildingmanagement.building.domain.exception;
 
 public class TenantAlreadyAssignedToBuildingException extends RuntimeException {
-  public TenantAlreadyAssignedToBuildingException(String message) {
-    super(message);
-  }
+
+    public TenantAlreadyAssignedToBuildingException(final Long tenantUserId) {
+        super("Tenant already assigned to another building: " + tenantUserId);
+    }
 }

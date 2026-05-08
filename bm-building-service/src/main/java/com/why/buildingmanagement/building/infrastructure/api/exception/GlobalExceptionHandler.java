@@ -1,7 +1,7 @@
 package com.why.buildingmanagement.building.infrastructure.api.exception;
 
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
-import com.why.buildingmanagement.building.domain.exception.TenantAlreadyJoinedBuildingException;
+import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,40 +19,32 @@ import java.time.Instant;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BuildingNotFoundException.class)
-    public ProblemDetail handleBuildingNotFound(
-            final BuildingNotFoundException exception,
-            final HttpServletRequest request
-    ) {
+    public ProblemDetail handleBuildingNotFound(final BuildingNotFoundException exception,
+                                                final HttpServletRequest request) {
         final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND,
-                exception.getMessage()
-        );
+                exception.getMessage());
 
         enrich(problem, request, "Building not found");
 
         return problem;
     }
 
-    @ExceptionHandler(TenantAlreadyJoinedBuildingException.class)
-    public ProblemDetail handleTenantAlreadyJoined(
-            final TenantAlreadyJoinedBuildingException exception,
-            final HttpServletRequest request
-    ) {
+    @ExceptionHandler(TenantAlreadyAssignedToBuildingException.class)
+    public ProblemDetail handleTenantAlreadyAssigned(final TenantAlreadyAssignedToBuildingException exception,
+                                                     final HttpServletRequest request) {
         final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.CONFLICT,
-                exception.getMessage()
-        );
+                exception.getMessage());
 
-        enrich(problem, request, "Tenant already joined building");
+        enrich(problem, request, "Tenant already assigned");
 
         return problem;
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(
-            final MethodArgumentNotValidException exception,
-            final HttpServletRequest request
-    ) {
+    public ProblemDetail handleValidationException(final MethodArgumentNotValidException exception,
+                                                   final HttpServletRequest request) {
         final String message = exception.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -60,10 +52,7 @@ public class GlobalExceptionHandler {
                 .map(error -> error.getField() + ": " + error.getDefaultMessage())
                 .orElse("Validation failed");
 
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST,
-                message
-        );
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
 
         enrich(problem, request, "Validation failed");
 
@@ -71,14 +60,9 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ProblemDetail handleIllegalArgument(
-            final IllegalArgumentException exception,
-            final HttpServletRequest request
-    ) {
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST,
-                exception.getMessage()
-        );
+    public ProblemDetail handleIllegalArgument(final IllegalArgumentException exception,
+                                               final HttpServletRequest request) {
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
 
         enrich(problem, request, "Bad request");
 
@@ -86,14 +70,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(AccessDeniedException.class)
-    public ProblemDetail handleAccessDenied(
-            final AccessDeniedException exception,
-            final HttpServletRequest request
-    ) {
+    public ProblemDetail handleAccessDenied(final AccessDeniedException exception, final HttpServletRequest request) {
         final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.FORBIDDEN,
-                "You do not have permission to access this resource"
-        );
+                "You do not have permission to access this resource");
 
         enrich(problem, request, "Access denied");
 
@@ -101,27 +81,21 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGenericException(
-            final Exception exception,
-            final HttpServletRequest request
-    ) {
+    public ProblemDetail handleGenericException(final Exception exception, final HttpServletRequest request) {
         log.error("Unexpected error occurred", exception);
 
         final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred"
-        );
+                "An unexpected error occurred");
 
         enrich(problem, request, "Internal server error");
 
         return problem;
     }
 
-    private void enrich(
-            final ProblemDetail problem,
-            final HttpServletRequest request,
-            final String title
-    ) {
+    private void enrich(final ProblemDetail problem,
+                        final HttpServletRequest request,
+                        final String title) {
         problem.setTitle(title);
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("timestamp", Instant.now());

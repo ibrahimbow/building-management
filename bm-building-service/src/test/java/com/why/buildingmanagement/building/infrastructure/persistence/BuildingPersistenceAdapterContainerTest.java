@@ -65,7 +65,6 @@ class BuildingPersistenceAdapterContainerTest {
                 "Antwerp",
                 12L,
                 10,
-                "+320000000"
-        );
+                "+320000000");
     }
 }

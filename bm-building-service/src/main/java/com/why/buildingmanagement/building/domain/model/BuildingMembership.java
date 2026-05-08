@@ -16,12 +16,11 @@ public class BuildingMembership {
     private String tenantEmail;
     private Instant joinedAt;
 
-    public BuildingMembership(
-            final UUID id,
-            final UUID buildingId,
-            final Long tenantUserId,
-            final String tenantEmail,
-            final Instant joinedAt) {
+    public BuildingMembership(final UUID id,
+                              final UUID buildingId,
+                              final Long tenantUserId,
+                              final String tenantEmail,
+                              final Instant joinedAt) {
         this.id = id;
         this.buildingId = buildingId;
         this.tenantUserId = tenantUserId;
@@ -29,15 +28,28 @@ public class BuildingMembership {
         this.joinedAt = joinedAt;
     }
 
-    public static BuildingMembership createNew(
-            final UUID buildingId,
-            final Long tenantUserId,
-            final String tenantEmail) {
+    public static BuildingMembership createNew(final UUID buildingId,
+                                               final Long tenantUserId,
+                                               final String tenantEmail) {
         return new BuildingMembership(
                 null,
                 buildingId,
                 tenantUserId,
                 tenantEmail,
                 Instant.now());
+    }
+
+    public static BuildingMembership restore(final UUID id,
+                                             final UUID buildingId,
+                                             final Long tenantUserId,
+                                             final String tenantEmail,
+                                             final Instant joinedAt) {
+
+        return new BuildingMembership(
+                id,
+                buildingId,
+                tenantUserId,
+                tenantEmail,
+                joinedAt);
     }
 }

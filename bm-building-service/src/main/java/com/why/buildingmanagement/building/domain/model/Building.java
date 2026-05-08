@@ -19,15 +19,13 @@ public class Building {
     private final int totalApartments;
     private final String emergencyPhone;
 
-    private Building(
-            final UUID id,
-            final String buildingName,
-            final String code,
-            final String address,
-            final Long managerId,
-            final int totalApartments,
-            final String emergencyPhone
-    ) {
+    private Building(final UUID id,
+                     final String buildingName,
+                     final String code,
+                     final String address,
+                     final Long managerId,
+                     final int totalApartments,
+                     final String emergencyPhone) {
         validate(buildingName, code, address, managerId, totalApartments, emergencyPhone);
 
         this.id = id;
@@ -39,14 +37,12 @@ public class Building {
         this.emergencyPhone = emergencyPhone.trim();
     }
 
-    public static Building createNew(
-            final String buildingName,
-            final String code,
-            final String address,
-            final Long managerId,
-            final int totalApartments,
-            final String emergencyPhone
-    ) {
+    public static Building createNew(final String buildingName,
+                                     final String code,
+                                     final String address,
+                                     final Long managerId,
+                                     final int totalApartments,
+                                     final String emergencyPhone) {
         return new Building(
                 null,
                 buildingName,
@@ -54,19 +50,16 @@ public class Building {
                 address,
                 managerId,
                 totalApartments,
-                emergencyPhone
-        );
+                emergencyPhone);
     }
 
-    public static Building restore(
-            final UUID id,
-            final String buildingName,
-            final String code,
-            final String address,
-            final Long managerId,
-            final int totalApartments,
-            final String emergencyPhone
-    ) {
+    public static Building restore(final UUID id,
+                                   final String buildingName,
+                                   final String code,
+                                   final String address,
+                                   final Long managerId,
+                                   final int totalApartments,
+                                   final String emergencyPhone) {
         if (id == null) {
             throw new IllegalArgumentException("Building id is required when restoring building");
         }
@@ -82,12 +75,10 @@ public class Building {
         );
     }
 
-    public Building updateDetails(
-            final String buildingName,
-            final String address,
-            final int totalApartments,
-            final String emergencyPhone
-    ) {
+    public Building updateDetails(final String buildingName,
+                                  final String address,
+                                  final int totalApartments,
+                                  final String emergencyPhone) {
         return new Building(
                 this.id,
                 buildingName,
@@ -128,14 +119,12 @@ public class Building {
         return "BM-" + number;
     }
 
-    private static void validate(
-            final String buildingName,
-            final String code,
-            final String address,
-            final Long managerId,
-            final int totalApartments,
-            final String emergencyPhone
-    ) {
+    private static void validate(final String buildingName,
+                                 final String code,
+                                 final String address,
+                                 final Long managerId,
+                                 final int totalApartments,
+                                 final String emergencyPhone) {
         requireText(buildingName, "Building name is required");
         requireText(code, "Building code is required");
         requireText(address, "Address is required");

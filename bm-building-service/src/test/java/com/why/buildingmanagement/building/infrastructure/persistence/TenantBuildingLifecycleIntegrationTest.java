@@ -1,11 +1,9 @@
-package com.why.buildingmanagement.building.integration;
+package com.why.buildingmanagement.building.infrastructure.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.building.BuildingServiceApplication;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
-import com.why.buildingmanagement.building.infrastructure.persistence.BuildingMapper;
-import com.why.buildingmanagement.building.infrastructure.persistence.BuildingRepository;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,20 +13,45 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = BuildingServiceApplication.class)
 @AutoConfigureMockMvc
+@Testcontainers
 @Transactional
 class TenantBuildingLifecycleIntegrationTest {
+
+    @Container
+    static final PostgreSQLContainer<?> postgres =
+            new PostgreSQLContainer<>("postgres:16")
+                    .withDatabaseName("building_test_db")
+                    .withUsername("test")
+                    .withPassword("test");
+
+    @DynamicPropertySource
+    static void configure(final DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
+
+        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
+        registry.add("spring.flyway.enabled", () -> "true");
+    }
 
     @Autowired
     private MockMvc mockMvc;

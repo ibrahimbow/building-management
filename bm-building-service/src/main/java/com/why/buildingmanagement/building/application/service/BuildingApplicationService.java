@@ -1,15 +1,11 @@
 package com.why.buildingmanagement.building.application.service;
 
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetBuildingByCodeUseCase;
-import com.why.buildingmanagement.building.application.port.in.JoinBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.JoinBuildingUseCase;
+import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
-import com.why.buildingmanagement.building.domain.exception.TenantAlreadyJoinedBuildingException;
+import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import lombok.RequiredArgsConstructor;
@@ -55,19 +51,14 @@ public class BuildingApplicationService implements
 
     @Override
     public BuildingInfoResult joinBuilding(final JoinBuildingCommand command) {
+
         final Building building = buildingRepositoryPort.findByCode(command.code())
                 .orElseThrow(() -> new BuildingNotFoundException(command.code()));
 
-        final boolean alreadyJoined = buildingMembershipRepositoryPort
-                .existsByBuildingIdAndTenantUserId(
-                        building.getId(),
-                        command.tenantUserId());
-
-        if (alreadyJoined) {
-            throw new TenantAlreadyJoinedBuildingException(
-                    building.getId(),
-                    command.tenantUserId());
-        }
+        buildingMembershipRepositoryPort.findByTenantUserId(command.tenantUserId())
+                .ifPresent(membership -> {
+                    throw new TenantAlreadyAssignedToBuildingException(command.tenantUserId());
+                });
 
         final BuildingMembership buildingMembership = BuildingMembership.createNew(
                 building.getId(),

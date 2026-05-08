@@ -5,7 +5,22 @@ import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")
 public interface BuildingMembershipMapper {
-    BuildingMembershipEntity toEntity(BuildingMembership membership);
 
-    BuildingMembership toDomain(BuildingMembershipEntity entity);
+    default BuildingMembershipEntity toEntity(final BuildingMembership membership) {
+        return new BuildingMembershipEntity(
+                membership.getId(),
+                membership.getBuildingId(),
+                membership.getTenantUserId(),
+                membership.getTenantEmail(),
+                membership.getJoinedAt());
+    }
+
+    default BuildingMembership toDomain(final BuildingMembershipEntity entity) {
+        return BuildingMembership.restore(
+                entity.getId(),
+                entity.getBuildingId(),
+                entity.getTenantUserId(),
+                entity.getTenantEmail(),
+                entity.getJoinedAt());
+    }
 }
