@@ -52,8 +52,7 @@ public class BuildingMembership {
                 tenantEmail,
                 tenantPhoneNumber,
                 Instant.now(),
-                null
-        );
+                null);
     }
 
     public static BuildingMembership restore(final UUID id,

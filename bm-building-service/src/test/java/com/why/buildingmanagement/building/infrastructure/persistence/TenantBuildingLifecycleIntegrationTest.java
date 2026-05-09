@@ -22,11 +22,13 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import java.util.UUID;
+
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -83,8 +85,7 @@ class TenantBuildingLifecycleIntegrationTest {
                         "tenant",
                         "tenant@example.com",
                         "+32000000000",
-                        "TENANT"
-                ));
+                        "TENANT"));
 
         final Building building = Building.createNew(
                 "Antwerp Residence",
@@ -92,8 +93,7 @@ class TenantBuildingLifecycleIntegrationTest {
                 "Berchem, Antwerp",
                 1L,
                 12,
-                "+32000000000"
-        );
+                "+32000000000");
 
         final Building secondBuilding = Building.createNew(
                 "Brussels Residence",
@@ -101,8 +101,7 @@ class TenantBuildingLifecycleIntegrationTest {
                 "Brussels",
                 1L,
                 20,
-                "+32111111111"
-        );
+                "+32111111111");
 
         buildingRepository.save(buildingMapper.toEntity(building));
         buildingRepository.save(buildingMapper.toEntity(secondBuilding));
@@ -193,5 +192,55 @@ class TenantBuildingLifecycleIntegrationTest {
                         .content(objectMapper.writeValueAsString(secondJoinRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void managerRemovesTenant_shouldPreventTenantFromAccessingBuilding() throws Exception {
+        final JoinBuildingRequest joinRequest =
+                new JoinBuildingRequest(BUILDING_CODE);
+
+        when(currentUserService.getCurrentUser())
+                .thenReturn(new CurrentUser(
+                        TENANT_ID,
+                        "tenant",
+                        "tenant@example.com",
+                        "+32000000000",
+                        "TENANT"));
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(joinRequest)))
+                .andExpect(status().isCreated());
+
+        when(currentUserService.getCurrentUser())
+                .thenReturn(new CurrentUser(
+                        1L,
+                        "manager",
+                        "manager@example.com",
+                        "+32000000000",
+                        "MANAGER"));
+
+        final UUID buildingId = buildingRepository.findByCode(BUILDING_CODE).orElseThrow().getId();
+
+        mockMvc.perform(delete("/api/manager/buildings/{id}/tenants/{tenantUserId}", buildingId, TENANT_ID)
+                        .with(user("manager").roles("MANAGER"))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        when(currentUserService.getCurrentUser())
+                .thenReturn(new CurrentUser(
+                        TENANT_ID,
+                        "tenant",
+                        "tenant@example.com",
+                        "+32000000000",
+                        "TENANT"));
+
+        mockMvc.perform(get("/api/tenant/buildings/my-building")
+                        .with(user("tenant").roles("TENANT")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 }

@@ -107,8 +107,7 @@ public class Building {
                 this.address,
                 this.managerId,
                 this.totalApartments,
-                this.emergencyPhone
-        );
+                this.emergencyPhone);
     }
 
     public static String generateCode() {

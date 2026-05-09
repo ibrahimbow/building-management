@@ -6,7 +6,6 @@ import com.why.buildingmanagement.building.application.port.out.BuildingReposito
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
-import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import lombok.RequiredArgsConstructor;
