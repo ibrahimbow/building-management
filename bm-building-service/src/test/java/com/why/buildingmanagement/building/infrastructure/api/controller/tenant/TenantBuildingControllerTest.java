@@ -61,6 +61,7 @@ class TenantBuildingControllerTest {
                         10L,
                         "Tenant",
                         "tenant@example.com",
+                        "+32000000000",
                         "TENANT"));
     }
 

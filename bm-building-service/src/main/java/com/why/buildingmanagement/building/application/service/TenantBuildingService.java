@@ -7,6 +7,7 @@ import com.why.buildingmanagement.building.application.port.out.BuildingMembersh
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
+import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class TenantBuildingService implements
 
     @Override
     public BuildingInfoResult getMyBuilding(final Long tenantUserId) {
-        final BuildingMembership membership = findMembershipOrThrow(tenantUserId);
+        final BuildingMembership membership = findActiveMembershipOrThrow(tenantUserId);
 
         final Building building = buildingRepositoryPort
                 .findById(membership.getBuildingId())
@@ -37,17 +38,18 @@ public class TenantBuildingService implements
     @Override
     @Transactional
     public void leaveBuilding(final LeaveBuildingCommand command) {
-        final BuildingMembership membership = membershipRepositoryPort
-                .findByTenantUserId(command.tenantUserId())
-                .orElseThrow(() -> new BuildingNotFoundException("Tenant has no building"));
+        final BuildingMembership membership =
+                findActiveMembershipOrThrow(command.tenantUserId());
 
-        membershipRepositoryPort.delete(membership);
+        membership.leave();
+
+        membershipRepositoryPort.save(membership);
     }
 
-    private BuildingMembership findMembershipOrThrow(final Long tenantUserId) {
+    private BuildingMembership findActiveMembershipOrThrow(final Long tenantUserId) {
         return membershipRepositoryPort
-                .findByTenantUserId(tenantUserId)
-                .orElseThrow(() -> new BuildingNotFoundException("Tenant has no building"));
+                .findActiveByTenantUserId(tenantUserId)
+                .orElseThrow(() -> new TenantNotAssignedToBuildingException(tenantUserId));
     }
 
     private BuildingInfoResult toResult(final Building building) {

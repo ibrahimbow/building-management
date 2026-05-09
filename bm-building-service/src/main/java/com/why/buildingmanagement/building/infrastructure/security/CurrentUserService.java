@@ -13,21 +13,21 @@ public class CurrentUserService {
     }
 
     public CurrentUser getCurrentUser() {
-
         final String userId = request.getHeader("X-User-Id");
         final String email = request.getHeader("X-User-Email");
         final String role = request.getHeader("X-User-Role");
         final String username = request.getHeader("X-Username");
+        final String phoneNumber = request.getHeader("X-User-Phone");
 
         if (userId == null || email == null || role == null || username == null) {
-            throw new IllegalStateException("No authenticated user found");
+            throw new IllegalStateException("Missing authenticated user headers");
         }
 
         return new CurrentUser(
                 Long.valueOf(userId),
                 username,
                 email,
-                role
-        );
+                phoneNumber,
+                role);
     }
 }

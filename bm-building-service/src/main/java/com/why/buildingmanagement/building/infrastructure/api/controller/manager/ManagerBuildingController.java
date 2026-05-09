@@ -5,7 +5,9 @@ import com.why.buildingmanagement.building.application.result.BuildingInfoResult
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.CreateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.UpdateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
+import com.why.buildingmanagement.building.infrastructure.api.dto.response.TenantInfoResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
+import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,8 @@ public class ManagerBuildingController {
     private final GetMyBuildingByIdUseCase getMyBuildingByIdUseCase;
     private final UpdateMyBuildingUseCase updateMyBuildingUseCase;
     private final DeleteMyBuildingUseCase deleteMyBuildingUseCase;
+    private final GetBuildingTenantsUseCase getBuildingTenantsUseCase;
+    private final RemoveTenantFromBuildingUseCase removeTenantFromBuildingUseCase;
 
     private final BuildingApiMapper mapper;
     private final CurrentUserService currentUserService;
@@ -112,4 +116,34 @@ public class ManagerBuildingController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/{id}/tenants")
+    public ResponseEntity<List<TenantInfoResponse>> getBuildingTenants(@PathVariable("id") final UUID buildingId) {
+
+        final CurrentUser currentUser = currentUserService.getCurrentUser();
+
+        final List<TenantInfoResponse> tenants = getBuildingTenantsUseCase
+                .getBuildingTenants(buildingId, currentUser.userId())
+                .stream()
+                .map(mapper::toResponse)
+                .toList();
+
+        return ResponseEntity.ok(tenants);
+    }
+
+    @DeleteMapping("/{id}/tenants/{tenantUserId}")
+    public ResponseEntity<Void> removeTenantFromBuilding(@PathVariable("id") final UUID buildingId,
+                                                         @PathVariable("tenantUserId") final Long tenantUserId) {
+
+        final CurrentUser currentUser = currentUserService.getCurrentUser();
+
+        removeTenantFromBuildingUseCase.removeTenantFromBuilding(
+                new RemoveTenantFromBuildingCommand(
+                        buildingId,
+                        tenantUserId,
+                        currentUser.userId()));
+
+        return ResponseEntity.noContent().build();
+    }
+
 }

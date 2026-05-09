@@ -2,6 +2,7 @@ package com.why.buildingmanagement.building.application.port.out;
 
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -9,9 +10,9 @@ public interface BuildingMembershipRepositoryPort {
 
     BuildingMembership save(BuildingMembership membership);
 
-    boolean existsByBuildingIdAndTenantUserId(UUID buildingId, Long tenantUserId);
+    Optional<BuildingMembership> findActiveByTenantUserId(Long tenantUserId);
 
-    Optional<BuildingMembership> findByTenantUserId(Long tenantUserId);
+    List<BuildingMembership> findActiveByBuildingId(UUID buildingId);
 
-    void delete(BuildingMembership membership);
+    Optional<BuildingMembership> findActiveByBuildingIdAndTenantUserId(UUID buildingId, Long tenantUserId);
 }

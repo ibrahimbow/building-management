@@ -6,6 +6,7 @@ import com.why.buildingmanagement.building.application.port.out.BuildingReposito
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
+import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import lombok.RequiredArgsConstructor;
@@ -55,7 +56,7 @@ public class BuildingApplicationService implements
         final Building building = buildingRepositoryPort.findByCode(command.code())
                 .orElseThrow(() -> new BuildingNotFoundException(command.code()));
 
-        buildingMembershipRepositoryPort.findByTenantUserId(command.tenantUserId())
+        buildingMembershipRepositoryPort.findActiveByTenantUserId(command.tenantUserId())
                 .ifPresent(membership -> {
                     throw new TenantAlreadyAssignedToBuildingException(command.tenantUserId());
                 });
@@ -63,7 +64,9 @@ public class BuildingApplicationService implements
         final BuildingMembership buildingMembership = BuildingMembership.createNew(
                 building.getId(),
                 command.tenantUserId(),
-                command.tenantEmail());
+                command.tenantUsername(),
+                command.tenantEmail(),
+                command.tenantPhoneNumber());
 
         buildingMembershipRepositoryPort.save(buildingMembership);
 

@@ -1,18 +1,13 @@
 package com.why.buildingmanagement.building.infrastructure.api.controller.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.CreateBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.DeleteMyBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.DeleteMyBuildingUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetMyBuildingByIdUseCase;
-import com.why.buildingmanagement.building.application.port.in.GetMyBuildingsUseCase;
-import com.why.buildingmanagement.building.application.port.in.UpdateMyBuildingCommand;
-import com.why.buildingmanagement.building.application.port.in.UpdateMyBuildingUseCase;
+import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.application.result.TenantInfoResult;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.CreateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.UpdateBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
+import com.why.buildingmanagement.building.infrastructure.api.dto.response.TenantInfoResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
@@ -34,10 +29,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(ManagerBuildingController.class)
@@ -65,10 +57,16 @@ class ManagerBuildingControllerTest {
     private DeleteMyBuildingUseCase deleteMyBuildingUseCase;
 
     @MockitoBean
+    private GetBuildingTenantsUseCase getBuildingTenantsUseCase;
+
+    @MockitoBean
     private BuildingApiMapper mapper;
 
     @MockitoBean
     private CurrentUserService currentUserService;
+
+    @MockitoBean
+    private RemoveTenantFromBuildingUseCase removeTenantFromBuildingUseCase;
 
     @BeforeEach
     void setUp() {
@@ -159,6 +157,30 @@ class ManagerBuildingControllerTest {
 
     @Test
     @WithMockUser(roles = "MANAGER")
+    void getBuildingTenants_shouldReturnActiveTenantsForManagersBuilding() throws Exception {
+        final UUID buildingId = UUID.randomUUID();
+
+        final TenantInfoResult result = createTenantInfoResult();
+        final TenantInfoResponse response = createTenantInfoResponse();
+
+        when(getBuildingTenantsUseCase.getBuildingTenants(buildingId, 1L))
+                .thenReturn(List.of(result));
+
+        when(mapper.toResponse(result))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/manager/buildings/{id}/tenants", buildingId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].tenantUserId").value(2L))
+                .andExpect(jsonPath("$[0].username").value("tenant"))
+                .andExpect(jsonPath("$[0].email").value("tenant@example.com"))
+                .andExpect(jsonPath("$[0].phoneNumber").value("+32470000000"));
+
+        verify(getBuildingTenantsUseCase).getBuildingTenants(buildingId, 1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
     void updateMyBuilding_shouldUpdateBuildingOwnedByCurrentManager() throws Exception {
         final UUID buildingId = UUID.randomUUID();
 
@@ -231,11 +253,31 @@ class ManagerBuildingControllerTest {
         assertThat(captor.getValue().managerId()).isEqualTo(1L);
     }
 
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void removeTenantFromBuilding_shouldRemoveTenantFromManagersBuilding() throws Exception {
+        final UUID buildingId = UUID.randomUUID();
+
+        mockMvc.perform(delete("/api/manager/buildings/{buildingId}/tenants/{tenantUserId}", buildingId, 2L)
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        final ArgumentCaptor<RemoveTenantFromBuildingCommand> captor =
+                ArgumentCaptor.forClass(RemoveTenantFromBuildingCommand.class);
+
+        verify(removeTenantFromBuildingUseCase).removeTenantFromBuilding(captor.capture());
+
+        assertThat(captor.getValue().buildingId()).isEqualTo(buildingId);
+        assertThat(captor.getValue().tenantUserId()).isEqualTo(2L);
+        assertThat(captor.getValue().managerId()).isEqualTo(1L);
+    }
+
     private CurrentUser currentManager() {
         return new CurrentUser(
                 1L,
                 "Ibrahim",
                 "ibrahim@example.com",
+                "+32000000000",
                 "MANAGER");
     }
 
@@ -259,5 +301,21 @@ class ManagerBuildingControllerTest {
                 1L,
                 12,
                 "+32000000000");
+    }
+
+    private TenantInfoResult createTenantInfoResult() {
+        return new TenantInfoResult(
+                2L,
+                "tenant",
+                "tenant@example.com",
+                "+32470000000");
+    }
+
+    private TenantInfoResponse createTenantInfoResponse() {
+        return new TenantInfoResponse(
+                2L,
+                "tenant",
+                "tenant@example.com",
+                "+32470000000");
     }
 }

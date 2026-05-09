@@ -8,9 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.Optional;
 
@@ -21,8 +21,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 class BuildingPersistenceAdapterContainerTest {
 
     @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16")
+    static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
+            new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")
                     .withPassword("test");

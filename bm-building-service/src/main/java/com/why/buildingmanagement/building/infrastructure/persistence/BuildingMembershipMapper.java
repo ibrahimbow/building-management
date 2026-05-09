@@ -7,20 +7,30 @@ import org.mapstruct.Mapper;
 public interface BuildingMembershipMapper {
 
     default BuildingMembershipEntity toEntity(final BuildingMembership membership) {
+
         return new BuildingMembershipEntity(
                 membership.getId(),
                 membership.getBuildingId(),
                 membership.getTenantUserId(),
+                membership.getTenantUsername(),
                 membership.getTenantEmail(),
-                membership.getJoinedAt());
+                membership.getTenantPhoneNumber(),
+                membership.getJoinedAt(),
+                membership.getLeftAt()
+        );
     }
 
     default BuildingMembership toDomain(final BuildingMembershipEntity entity) {
+
         return BuildingMembership.restore(
                 entity.getId(),
                 entity.getBuildingId(),
                 entity.getTenantUserId(),
+                entity.getTenantUsername(),
                 entity.getTenantEmail(),
-                entity.getJoinedAt());
+                entity.getTenantPhoneNumber(),
+                entity.getJoinedAt(),
+                entity.getLeftAt()
+        );
     }
 }

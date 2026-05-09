@@ -2,11 +2,14 @@ package com.why.buildingmanagement.building.infrastructure.api.exception;
 
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
+import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -91,6 +94,20 @@ public class GlobalExceptionHandler {
         enrich(problem, request, "Internal server error");
 
         return problem;
+    }
+
+    @ExceptionHandler(TenantNotAssignedToBuildingException.class)
+    public ResponseEntity<ProblemDetail> handleTenantNotAssignedToBuilding(
+            final TenantNotAssignedToBuildingException exception) {
+
+        final ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+
+        problem.setTitle("NOT_FOUND");
+        problem.setDetail(exception.getMessage());
+        problem.setProperty("status", 404);
+        problem.setProperty("timestamp", Instant.now());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
     }
 
     private void enrich(final ProblemDetail problem,

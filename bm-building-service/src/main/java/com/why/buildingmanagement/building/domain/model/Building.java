@@ -71,8 +71,7 @@ public class Building {
                 address,
                 managerId,
                 totalApartments,
-                emergencyPhone
-        );
+                emergencyPhone);
     }
 
     public Building updateDetails(final String buildingName,
@@ -86,8 +85,7 @@ public class Building {
                 address,
                 this.managerId,
                 totalApartments,
-                emergencyPhone
-        );
+                emergencyPhone);
     }
 
     public Building changeEmergencyPhone(final String emergencyPhone) {
@@ -98,8 +96,7 @@ public class Building {
                 this.address,
                 this.managerId,
                 this.totalApartments,
-                emergencyPhone
-        );
+                emergencyPhone);
     }
 
     public Building rename(final String buildingName) {
@@ -117,6 +114,10 @@ public class Building {
     public static String generateCode() {
         final int number = RANDOM.nextInt(900000) + 100000;
         return "BM-" + number;
+    }
+
+    public boolean isManagedBy(final Long managerId) {
+        return this.managerId != null && this.managerId.equals(managerId);
     }
 
     private static void validate(final String buildingName,

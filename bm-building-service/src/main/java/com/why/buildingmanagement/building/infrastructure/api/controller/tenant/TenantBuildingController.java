@@ -5,6 +5,7 @@ import com.why.buildingmanagement.building.application.result.BuildingInfoResult
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.api.dto.response.BuildingResponse;
 import com.why.buildingmanagement.building.infrastructure.api.mapper.BuildingApiMapper;
+import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,9 @@ public class TenantBuildingController {
                 new JoinBuildingCommand(
                         request.code(),
                         current.userId(),
-                        current.email()));
+                        current.username(),
+                        current.email(),
+                        current.phoneNumber()));
 
         return ResponseEntity
                 .created(URI.create("/api/tenant/buildings/my-building"))
@@ -60,8 +63,10 @@ public class TenantBuildingController {
 
     @PostMapping("/my-building/leave")
     public ResponseEntity<Void> leaveBuilding() {
-        final var current = currentUserService.getCurrentUser();
-        leaveBuildingUseCase.leaveBuilding(new LeaveBuildingCommand(current.userId()));
+
+        final CurrentUser currentUser = currentUserService.getCurrentUser();
+
+        leaveBuildingUseCase.leaveBuilding(new LeaveBuildingCommand(currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }

@@ -18,10 +18,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,8 +37,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class TenantBuildingLifecycleIntegrationTest {
 
     @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16")
+    static final PostgreSQLContainer postgres =
+            new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")
                     .withPassword("test");
@@ -70,15 +71,20 @@ class TenantBuildingLifecycleIntegrationTest {
 
     private static final Long TENANT_ID = 2L;
     private static final String BUILDING_CODE = "BM-751788";
+    private static final String SECOND_BUILDING_CODE = "BM-999111";
 
     @BeforeEach
     void setUp() {
+        reset(currentUserService);
+
         when(currentUserService.getCurrentUser())
                 .thenReturn(new CurrentUser(
                         TENANT_ID,
                         "tenant",
                         "tenant@example.com",
-                        "TENANT"));
+                        "+32000000000",
+                        "TENANT"
+                ));
 
         final Building building = Building.createNew(
                 "Antwerp Residence",
@@ -86,16 +92,26 @@ class TenantBuildingLifecycleIntegrationTest {
                 "Berchem, Antwerp",
                 1L,
                 12,
-                "+32000000000");
+                "+32000000000"
+        );
+
+        final Building secondBuilding = Building.createNew(
+                "Brussels Residence",
+                SECOND_BUILDING_CODE,
+                "Brussels",
+                1L,
+                20,
+                "+32111111111"
+        );
 
         buildingRepository.save(buildingMapper.toEntity(building));
+        buildingRepository.save(buildingMapper.toEntity(secondBuilding));
     }
 
     @Test
     @WithMockUser(roles = "TENANT")
     void tenantLifecycle_shouldJoinViewLeaveAndThenReturn404() throws Exception {
-        final JoinBuildingRequest joinRequest =
-                new JoinBuildingRequest(BUILDING_CODE);
+        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                         .with(csrf())
@@ -116,5 +132,66 @@ class TenantBuildingLifecycleIntegrationTest {
         mockMvc.perform(get("/api/tenant/buildings/my-building"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
+    }
+
+    @Test
+    @WithMockUser(roles = "TENANT")
+    void tenantCannotJoinTwice_shouldReturnConflict() throws Exception {
+        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(joinRequest)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(joinRequest)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(roles = "TENANT")
+    void tenantCannotJoinAnotherBuildingWhileActive_shouldReturnConflict() throws Exception {
+        final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
+        final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(firstJoinRequest)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondJoinRequest)))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    @WithMockUser(roles = "TENANT")
+    void tenantCanJoinAgainAfterLeaving_shouldReturnCreated() throws Exception {
+        final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
+        final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(firstJoinRequest)))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
+
+        mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(secondJoinRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
     }
 }

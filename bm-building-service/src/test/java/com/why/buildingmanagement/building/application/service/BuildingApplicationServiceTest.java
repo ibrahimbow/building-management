@@ -109,7 +109,7 @@ class BuildingApplicationServiceTest {
     }
 
     @Test
-    void joinBuilding_shouldCreateMembership_whenTenantHasNotJoinedBefore() {
+    void joinBuilding_shouldCreateMembership_whenTenantHasNoActiveMembership() {
         final UUID buildingId = UUID.randomUUID();
 
         final Building building = Building.restore(
@@ -124,13 +124,15 @@ class BuildingApplicationServiceTest {
         final JoinBuildingCommand command = new JoinBuildingCommand(
                 "BM-123456",
                 10L,
-                "tenant@example.com");
+                "tenantUser",
+                "tenant@example.com",
+                "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
                 .thenReturn(Optional.of(building));
 
-        when(membershipRepositoryPort.existsByBuildingIdAndTenantUserId(buildingId, 10L))
-                .thenReturn(false);
+        when(membershipRepositoryPort.findActiveByTenantUserId(10L))
+                .thenReturn(Optional.empty());
 
         when(membershipRepositoryPort.save(any(BuildingMembership.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -145,13 +147,19 @@ class BuildingApplicationServiceTest {
 
         verify(membershipRepositoryPort).save(captor.capture());
 
-        assertThat(captor.getValue().getBuildingId()).isEqualTo(buildingId);
-        assertThat(captor.getValue().getTenantUserId()).isEqualTo(10L);
-        assertThat(captor.getValue().getTenantEmail()).isEqualTo("tenant@example.com");
+        final BuildingMembership savedMembership = captor.getValue();
+
+        assertThat(savedMembership.getBuildingId()).isEqualTo(buildingId);
+        assertThat(savedMembership.getTenantUserId()).isEqualTo(10L);
+        assertThat(savedMembership.getTenantUsername()).isEqualTo("tenantUser");
+        assertThat(savedMembership.getTenantEmail()).isEqualTo("tenant@example.com");
+        assertThat(savedMembership.getTenantPhoneNumber()).isEqualTo("+32470000000");
+        assertThat(savedMembership.getJoinedAt()).isNotNull();
+        assertThat(savedMembership.getLeftAt()).isNull();
     }
 
     @Test
-    void joinBuilding_shouldThrowException_whenTenantAlreadyAssignedToBuilding() {
+    void joinBuilding_shouldThrowException_whenTenantAlreadyHasActiveMembership() {
         final UUID buildingId = UUID.randomUUID();
 
         final Building building = Building.restore(
@@ -166,18 +174,22 @@ class BuildingApplicationServiceTest {
         final JoinBuildingCommand command = new JoinBuildingCommand(
                 "BM-123456",
                 10L,
-                "tenant@example.com");
+                "ibrahim",
+                "tenant@example.com",
+                "+32470000000");
 
         final BuildingMembership existingMembership =
                 BuildingMembership.createNew(
                         buildingId,
                         10L,
-                        "tenant@example.com");
+                        "ibrahim",
+                        "tenant@example.com",
+                        "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
                 .thenReturn(Optional.of(building));
 
-        when(membershipRepositoryPort.findByTenantUserId(10L))
+        when(membershipRepositoryPort.findActiveByTenantUserId(10L))
                 .thenReturn(Optional.of(existingMembership));
 
         assertThatThrownBy(() -> buildingApplicationService.joinBuilding(command))
