@@ -14,7 +14,7 @@ public interface BuildingUserMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .passwordHash(user.getPasswordHash())
-                .nickname(user.getNickname())
+                .displayName(user.getDisplayName())
                 .phoneNumber(user.getPhoneNumber())
                 .role(user.getRole().name())
                 .enabled(user.isEnabled())
@@ -29,7 +29,7 @@ public interface BuildingUserMapper {
                 entity.getUsername(),
                 entity.getEmail(),
                 entity.getPasswordHash(),
-                entity.getNickname(),
+                entity.getDisplayName(),
                 entity.getPhoneNumber(),
                 BuildingUserRole.valueOf(entity.getRole()),
                 entity.getCreatedAt(),

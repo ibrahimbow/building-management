@@ -18,18 +18,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(
-                        new HeaderAuthenticationFilter(),
-                        UsernamePasswordAuthenticationFilter.class
-                )
+                .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/manager/announcements").hasRole(MANAGER)
                         .requestMatchers(HttpMethod.GET, "/api/manager/announcements").hasRole(MANAGER)
                         .requestMatchers(HttpMethod.PUT, "/api/manager/announcements/**").hasRole(MANAGER)
                         .requestMatchers(HttpMethod.DELETE, "/api/manager/announcements/**").hasRole(MANAGER)
                         .requestMatchers(HttpMethod.GET, "/api/tenant/announcements").hasRole(TENANT)
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .build();
     }
 }

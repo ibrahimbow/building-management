@@ -76,7 +76,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
                 command.username(),
                 command.email(),
                 hash,
-                command.nickname(),
+                command.displayName(),
                 command.phoneNumber(),
                 BuildingUserRole.MANAGER);
 

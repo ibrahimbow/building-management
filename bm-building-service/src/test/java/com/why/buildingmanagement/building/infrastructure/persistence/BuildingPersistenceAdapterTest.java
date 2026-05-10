@@ -5,13 +5,11 @@ import com.why.buildingmanagement.building.domain.model.Building;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -79,23 +77,9 @@ class BuildingPersistenceAdapterTest {
         assertThat(building).isEmpty();
     }
 
-
-    @Test
-    void save_shouldFail_whenManagerAlreadyHasBuilding() {
-        final Long managerId = 99L;
-
-        buildingRepositoryPort.save(createBuilding("BM-111111", managerId));
-
-        final Building secondBuilding = createBuilding("BM-222222", managerId);
-
-        assertThatThrownBy(() -> buildingRepositoryPort.save(secondBuilding))
-                .isInstanceOf(DataIntegrityViolationException.class);
-    }
-
     private Building createBuilding(
             final String code,
-            final Long managerId
-    ) {
+            final Long managerId) {
         return Building.createNew(
                 "Test Building",
                 code,

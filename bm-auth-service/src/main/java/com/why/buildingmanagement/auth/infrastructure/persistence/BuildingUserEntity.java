@@ -30,7 +30,6 @@ import java.time.Instant;
         }
 )
 @Getter
-@Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
@@ -50,7 +49,7 @@ public class BuildingUserEntity {
     private String passwordHash;
 
     @Column(nullable = false)
-    private String nickname;
+    private String displayName;
 
     @Column(name = "phone_number", nullable = false, length = 30)
     private String phoneNumber;

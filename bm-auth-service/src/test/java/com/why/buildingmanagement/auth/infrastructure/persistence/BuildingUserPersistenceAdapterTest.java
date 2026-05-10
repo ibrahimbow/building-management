@@ -89,7 +89,7 @@ class BuildingUserPersistenceAdapterTest {
         assertTrue(adapter.existsByEmail("ibrahim@test.com"));
     }
 
-    private BuildingUser newUser(String username, String email,String nickname) {
+    private BuildingUser newUser(String username, String email,String displayName) {
         return new BuildingUser(
                 null,
                 username,

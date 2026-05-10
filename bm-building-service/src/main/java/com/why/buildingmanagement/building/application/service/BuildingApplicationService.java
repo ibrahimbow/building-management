@@ -28,7 +28,7 @@ public class BuildingApplicationService implements
     public BuildingInfoResult createBuilding(final CreateBuildingCommand command) {
         buildingRepositoryPort.findByManagerId(command.managerId())
                 .ifPresent(building -> {
-                    throw new ManagerAlreadyHasBuildingException(command.buildingName());
+                    throw new ManagerAlreadyHasBuildingException(building.getBuildingName());
                 });
 
         final String buildingCode = generateUniqueCode();

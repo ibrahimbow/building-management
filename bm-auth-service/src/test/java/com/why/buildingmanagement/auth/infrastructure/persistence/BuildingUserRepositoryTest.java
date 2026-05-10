@@ -47,7 +47,7 @@ class BuildingUserRepositoryTest {
         assertNotNull(saved.getId());
         assertEquals("ibrahim", saved.getUsername());
         assertEquals("ibrahim@test.com", saved.getEmail());
-        assertEquals("ibrahimbow", saved.getNickname());
+        assertEquals("ibrahimbow", saved.getDisplayName());
         assertEquals("+3200000000", saved.getPhoneNumber());
         assertEquals("HASHED_PASSWORD", saved.getPasswordHash());
         assertEquals(BuildingUserRole.TENANT.name(), saved.getRole());
@@ -121,17 +121,15 @@ class BuildingUserRepositoryTest {
     }
 
     private BuildingUserEntity userEntity() {
-        final BuildingUserEntity entity = new BuildingUserEntity();
-
-        entity.setUsername("ibrahim");
-        entity.setEmail("ibrahim@test.com");
-        entity.setPasswordHash("HASHED_PASSWORD");
-        entity.setNickname("ibrahimbow");
-        entity.setPhoneNumber("+3200000000");
-        entity.setRole(BuildingUserRole.TENANT.name());
-        entity.setCreatedAt(Instant.now());
-        entity.setEnabled(true);
-
-        return entity;
+        return BuildingUserEntity.builder()
+                .username("ibrahim")
+                .email("ibrahim@test.com")
+                .passwordHash("HASHED_PASSWORD")
+                .displayName("ibrahimbow")
+                .phoneNumber("+3200000000")
+                .role(BuildingUserRole.TENANT.name())
+                .createdAt(Instant.now())
+                .enabled(true)
+                .build();
     }
 }

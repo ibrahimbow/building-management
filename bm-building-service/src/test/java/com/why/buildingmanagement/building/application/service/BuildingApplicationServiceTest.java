@@ -6,6 +6,7 @@ import com.why.buildingmanagement.building.application.port.out.BuildingMembersh
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
+import com.why.buildingmanagement.building.domain.exception.ManagerAlreadyHasBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
@@ -35,6 +36,26 @@ class BuildingApplicationServiceTest {
                 buildingRepositoryPort,
                 membershipRepositoryPort);
     }
+
+    @Test
+    void createBuilding_shouldThrowException_whenManagerAlreadyHasBuilding() {
+        final CreateBuildingCommand command = new CreateBuildingCommand(
+                "Sky Tower",
+                "Antwerp Belgium",
+                1L,
+                20,
+                "+32470000000");
+
+        when(buildingRepositoryPort.findByManagerId(1L))
+                .thenReturn(Optional.of(existingBuilding()));
+
+        assertThatThrownBy(() -> buildingApplicationService.createBuilding(command))
+                .isInstanceOf(ManagerAlreadyHasBuildingException.class)
+                .hasMessage("Manager already managed another building: " + existingBuilding().getBuildingName());
+
+        verify(buildingRepositoryPort, never()).save(any(Building.class));
+    }
+
 
     @Test
     void createBuilding_shouldGenerateUniqueCodeAndSaveBuilding() {
@@ -196,5 +217,15 @@ class BuildingApplicationServiceTest {
                 .isInstanceOf(TenantAlreadyAssignedToBuildingException.class);
 
         verify(membershipRepositoryPort, never()).save(any());
+    }
+
+    private Building existingBuilding() {
+        return Building.createNew(
+                "Existing Building",
+                "BM-111111",
+                "Antwerp",
+                1L,
+                10,
+                "+320000000");
     }
 }

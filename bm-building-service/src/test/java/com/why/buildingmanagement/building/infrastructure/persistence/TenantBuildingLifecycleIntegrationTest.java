@@ -12,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -28,7 +27,9 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -51,7 +52,6 @@ class TenantBuildingLifecycleIntegrationTest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", postgres::getDriverClassName);
-
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.flyway.enabled", () -> "true");
     }
@@ -71,27 +71,25 @@ class TenantBuildingLifecycleIntegrationTest {
     @MockitoBean
     private CurrentUserService currentUserService;
 
+    private static final Long MANAGER_ID = 1L;
     private static final Long TENANT_ID = 2L;
     private static final String BUILDING_CODE = "BM-751788";
     private static final String SECOND_BUILDING_CODE = "BM-999111";
+    private static final Long SECOND_MANAGER_ID = 3L;
+
 
     @BeforeEach
     void setUp() {
         reset(currentUserService);
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(new CurrentUser(
-                        TENANT_ID,
-                        "tenant",
-                        "tenant@example.com",
-                        "+32000000000",
-                        "TENANT"));
+                .thenReturn(currentTenant());
 
         final Building building = Building.createNew(
                 "Antwerp Residence",
                 BUILDING_CODE,
                 "Berchem, Antwerp",
-                1L,
+                MANAGER_ID,
                 12,
                 "+32000000000");
 
@@ -99,7 +97,7 @@ class TenantBuildingLifecycleIntegrationTest {
                 "Brussels Residence",
                 SECOND_BUILDING_CODE,
                 "Brussels",
-                1L,
+                SECOND_MANAGER_ID,
                 20,
                 "+32111111111");
 
@@ -108,43 +106,47 @@ class TenantBuildingLifecycleIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TENANT")
     void tenantLifecycle_shouldJoinViewLeaveAndThenReturn404() throws Exception {
         final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value(BUILDING_CODE));
 
-        mockMvc.perform(get("/api/tenant/buildings/my-building"))
+        mockMvc.perform(get("/api/tenant/buildings/my-building")
+                        .with(user("tenant").roles("TENANT")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(BUILDING_CODE))
                 .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"));
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
-        mockMvc.perform(get("/api/tenant/buildings/my-building"))
+        mockMvc.perform(get("/api/tenant/buildings/my-building")
+                        .with(user("tenant").roles("TENANT")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
-    @WithMockUser(roles = "TENANT")
     void tenantCannotJoinTwice_shouldReturnConflict() throws Exception {
         final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinRequest)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinRequest)))
@@ -152,18 +154,19 @@ class TenantBuildingLifecycleIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TENANT")
     void tenantCannotJoinAnotherBuildingWhileActive_shouldReturnConflict() throws Exception {
         final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
         final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(firstJoinRequest)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(secondJoinRequest)))
@@ -171,22 +174,24 @@ class TenantBuildingLifecycleIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "TENANT")
     void tenantCanJoinAgainAfterLeaving_shouldReturnCreated() throws Exception {
         final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
         final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(firstJoinRequest)))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf()))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
+                        .with(user("tenant").roles("TENANT"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(secondJoinRequest)))
@@ -195,18 +200,11 @@ class TenantBuildingLifecycleIntegrationTest {
     }
 
     @Test
-    @WithMockUser(roles = "MANAGER")
     void managerRemovesTenant_shouldPreventTenantFromAccessingBuilding() throws Exception {
-        final JoinBuildingRequest joinRequest =
-                new JoinBuildingRequest(BUILDING_CODE);
+        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(new CurrentUser(
-                        TENANT_ID,
-                        "tenant",
-                        "tenant@example.com",
-                        "+32000000000",
-                        "TENANT"));
+                .thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                         .with(user("tenant").roles("TENANT"))
@@ -216,14 +214,11 @@ class TenantBuildingLifecycleIntegrationTest {
                 .andExpect(status().isCreated());
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(new CurrentUser(
-                        1L,
-                        "manager",
-                        "manager@example.com",
-                        "+32000000000",
-                        "MANAGER"));
+                .thenReturn(currentManager());
 
-        final UUID buildingId = buildingRepository.findByCode(BUILDING_CODE).orElseThrow().getId();
+        final UUID buildingId = buildingRepository.findByCode(BUILDING_CODE)
+                .orElseThrow()
+                .getId();
 
         mockMvc.perform(delete("/api/manager/buildings/{id}/tenants/{tenantUserId}", buildingId, TENANT_ID)
                         .with(user("manager").roles("MANAGER"))
@@ -231,16 +226,29 @@ class TenantBuildingLifecycleIntegrationTest {
                 .andExpect(status().isNoContent());
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(new CurrentUser(
-                        TENANT_ID,
-                        "tenant",
-                        "tenant@example.com",
-                        "+32000000000",
-                        "TENANT"));
+                .thenReturn(currentTenant());
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
                         .with(user("tenant").roles("TENANT")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404));
+    }
+
+    private CurrentUser currentTenant() {
+        return new CurrentUser(
+                TENANT_ID,
+                "tenant",
+                "tenant@example.com",
+                "+32000000000",
+                "TENANT");
+    }
+
+    private CurrentUser currentManager() {
+        return new CurrentUser(
+                MANAGER_ID,
+                "manager",
+                "manager@example.com",
+                "+32000000000",
+                "MANAGER");
     }
 }

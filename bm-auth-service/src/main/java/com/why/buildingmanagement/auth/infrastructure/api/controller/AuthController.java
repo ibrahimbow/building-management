@@ -51,7 +51,7 @@ public class AuthController {
                         request.username(),
                         request.email(),
                         request.password(),
-                        request.nickname(),
+                        request.displayName(),
                         request.phoneNumber(),
                         request.role().toUpperCase()));
 
@@ -90,7 +90,7 @@ public class AuthController {
                 jwtTokenProvider.getUserId(token),
                 jwtTokenProvider.getUsername(token),
                 jwtTokenProvider.getEmail(token),
-                jwtTokenProvider.getNickname(token),
+                jwtTokenProvider.getDisplayName(token),
                 jwtTokenProvider.getRole(token));
     }
 

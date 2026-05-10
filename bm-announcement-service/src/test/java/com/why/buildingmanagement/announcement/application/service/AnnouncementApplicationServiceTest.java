@@ -1,10 +1,6 @@
 package com.why.buildingmanagement.announcement.application.service;
 
-import com.why.buildingmanagement.announcement.application.port.in.CreateAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.DeleteAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.GetManagerAnnouncementsQuery;
-import com.why.buildingmanagement.announcement.application.port.in.GetTenantAnnouncementsQuery;
-import com.why.buildingmanagement.announcement.application.port.in.UpdateAnnouncementCommand;
+import com.why.buildingmanagement.announcement.application.port.in.*;
 import com.why.buildingmanagement.announcement.application.port.out.AnnouncementRepositoryPort;
 import com.why.buildingmanagement.announcement.application.port.out.BuildingAccessPort;
 import com.why.buildingmanagement.announcement.application.result.AnnouncementResult;
@@ -20,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static com.why.buildingmanagement.announcement.domain.model.AnnouncementCategory.EMERGENCY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
@@ -73,7 +70,7 @@ class AnnouncementApplicationServiceTest {
         assertThat(result.createdBy()).isEqualTo("Ibrahim");
         assertThat(result.title()).isEqualTo("Water maintenance");
         assertThat(result.message()).isEqualTo("Water will be off tomorrow");
-        assertThat(result.category()).isEqualTo("Maintenance");
+        assertThat(result.category()).isEqualTo(AnnouncementCategory.MAINTENANCE);
         assertThat(result.icon()).isEqualTo("build");
         assertThat(result.imageUrl()).isEqualTo("https://example.com/image.jpg");
 
@@ -98,7 +95,7 @@ class AnnouncementApplicationServiceTest {
                 MANAGER_ID,
                 "Updated title",
                 "Updated message",
-                AnnouncementCategory.EMERGENCY,
+                EMERGENCY,
                 null);
 
         when(announcementRepositoryPort.findById(announcementId))
@@ -115,8 +112,8 @@ class AnnouncementApplicationServiceTest {
 
         assertThat(result.title()).isEqualTo("Updated title");
         assertThat(result.message()).isEqualTo("Updated message");
-        assertThat(result.category()).isEqualTo("Safety");
-        assertThat(result.icon()).isEqualTo("shield");
+        assertThat(result.category()).isEqualTo(EMERGENCY);
+        assertThat(result.icon()).isEqualTo("warning");
         assertThat(result.updatedAt()).isNotNull();
 
         verify(announcementRepositoryPort).save(existingAnnouncement);

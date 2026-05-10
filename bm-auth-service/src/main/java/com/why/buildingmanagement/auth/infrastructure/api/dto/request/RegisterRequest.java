@@ -16,8 +16,8 @@ public record RegisterRequest(
         @NotBlank(message = "password required")
         String password,
 
-        @NotBlank(message = "nickname required")
-        String nickname,
+        @NotBlank(message = "displayName required")
+        String displayName,
 
         @NotBlank(message = "phone number required")
         @Pattern(regexp = "^\\+?[0-9]{8,15}$",

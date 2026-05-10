@@ -13,7 +13,7 @@ public class BuildingUser {
     private String username;
     private String email;
     private String passwordHash;
-    private String nickname;
+    private String displayName;
     private String phoneNumber;
     private BuildingUserRole role;
     private Instant createdAt;
@@ -23,7 +23,7 @@ public class BuildingUser {
                         final String username,
                         final String email,
                         final String passwordHash,
-                        final String nickname,
+                        final String displayName,
                         final String phoneNumber,
                         final BuildingUserRole role,
                         final Instant createdAt,
@@ -32,7 +32,7 @@ public class BuildingUser {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.nickname = nickname;
+        this.displayName = displayName;
         this.phoneNumber = phoneNumber;
         this.role = role;
         this.createdAt = createdAt;
@@ -42,7 +42,7 @@ public class BuildingUser {
     public static BuildingUser createNew(final String username,
                                          final String email,
                                          final String passwordHash,
-                                         final String nickname,
+                                         final String displayName,
                                          final String phoneNumber,
                                          final BuildingUserRole role) {
 
@@ -51,7 +51,7 @@ public class BuildingUser {
                 username,
                 email,
                 passwordHash,
-                nickname,
+                displayName,
                 phoneNumber,
                 role,
                 Instant.now(),

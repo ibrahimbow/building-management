@@ -57,7 +57,7 @@ class AuthControllerTest {
                   "username": "ibrahim",
                   "email": "ibrahim@test.com",
                   "password": "12345678",
-                  "nickname": "ibrahimbow",
+                  "displayName": "ibrahimbow",
                   "phoneNumber": "+3200000000",
                   "role": "MANAGER"
                 }
@@ -80,7 +80,7 @@ class AuthControllerTest {
                   "username": "",
                   "email": "wrong-email",
                   "password": "123",
-                  "nickname": "",
+                  "displayName": "",
                   "phoneNumber": "wrong-phone",
                   "role": ""
                 }

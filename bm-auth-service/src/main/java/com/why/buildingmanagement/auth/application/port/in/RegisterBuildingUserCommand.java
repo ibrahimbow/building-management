@@ -3,7 +3,6 @@ package com.why.buildingmanagement.auth.application.port.in;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
 
 public record RegisterBuildingUserCommand(
         @NotBlank(message = "username required")
@@ -16,8 +15,8 @@ public record RegisterBuildingUserCommand(
         @NotBlank(message = "password required")
         String password,
 
-        @NotBlank(message = "nickname required")
-        String nickname,
+        @NotBlank(message = "displayName required")
+        String displayName,
 
         @NotBlank(message = "phone number required")
         @Pattern(regexp = "^\\+?[0-9]{8,15}$", message = "invalid phone number format")
