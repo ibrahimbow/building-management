@@ -39,6 +39,7 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .claim("userId", buildingUser.getId())
                 .claim("email", buildingUser.getEmail())
                 .claim("nickname", buildingUser.getNickname())
+                .claim("phoneNumber", buildingUser.getPhoneNumber())
                 .claim("role", buildingUser.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))

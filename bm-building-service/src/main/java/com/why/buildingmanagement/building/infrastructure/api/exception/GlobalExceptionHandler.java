@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.building.infrastructure.api.exception;
 
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
+import com.why.buildingmanagement.building.domain.exception.ManagerAlreadyHasBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -107,6 +108,17 @@ public class GlobalExceptionHandler {
         problem.setProperty("timestamp", Instant.now());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+
+    @ExceptionHandler(ManagerAlreadyHasBuildingException.class)
+    public ResponseEntity<ProblemDetail> handleManagerAlreadyHasBuilding(
+            final ManagerAlreadyHasBuildingException ex) {
+
+        final ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problemDetail.setTitle("Manager already has a building");
+        problemDetail.setDetail(ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
     }
 
     private void enrich(final ProblemDetail problem,

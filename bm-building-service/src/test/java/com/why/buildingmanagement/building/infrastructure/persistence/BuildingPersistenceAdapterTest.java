@@ -5,11 +5,13 @@ import com.why.buildingmanagement.building.domain.model.Building;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -54,23 +56,40 @@ class BuildingPersistenceAdapterTest {
     }
 
     @Test
-    void findByManagerId_shouldReturnBuildingsForManager() {
+    void findByManagerId_shouldReturnBuildingForManager() {
         final Long managerId = 99L;
 
         buildingRepositoryPort.save(createBuilding("BM-777777", managerId));
-        buildingRepositoryPort.save(createBuilding("BM-666666", managerId));
         buildingRepositoryPort.save(createBuilding("BM-555555", 100L));
 
-        final var buildings = buildingRepositoryPort.findByManagerId(managerId);
+        final Optional<Building> building =
+                buildingRepositoryPort.findByManagerId(managerId);
 
-        assertThat(buildings).hasSize(2);
-        assertThat(buildings)
-                .extracting(Building::getManagerId)
-                .containsOnly(managerId);
+        assertThat(building).isPresent();
+        assertThat(building.get().getManagerId()).isEqualTo(managerId);
+        assertThat(building.get().getCode()).isEqualTo("BM-777777");
+    }
 
-        assertThat(buildings)
-                .extracting(Building::getCode)
-                .containsExactlyInAnyOrder("BM-777777", "BM-666666");
+
+    @Test
+    void findByManagerId_shouldReturnEmpty_whenManagerHasNoBuilding() {
+        final Optional<Building> building =
+                buildingRepositoryPort.findByManagerId(404L);
+
+        assertThat(building).isEmpty();
+    }
+
+
+    @Test
+    void save_shouldFail_whenManagerAlreadyHasBuilding() {
+        final Long managerId = 99L;
+
+        buildingRepositoryPort.save(createBuilding("BM-111111", managerId));
+
+        final Building secondBuilding = createBuilding("BM-222222", managerId);
+
+        assertThatThrownBy(() -> buildingRepositoryPort.save(secondBuilding))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 
     private Building createBuilding(

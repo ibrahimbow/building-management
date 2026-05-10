@@ -1,6 +1,11 @@
 package com.why.buildingmanagement.auth.infrastructure.api.controller;
 
-import com.why.buildingmanagement.auth.application.port.in.*;
+import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
+import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
+import com.why.buildingmanagement.auth.application.port.in.LogoutUseCase;
+import com.why.buildingmanagement.auth.application.port.in.RefreshAccessTokenUseCase;
+import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
+import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
@@ -47,19 +52,21 @@ class AuthControllerTest {
         when(registerBuildingUserUseCase.register(ArgumentMatchers.any(RegisterBuildingUserCommand.class)))
                 .thenReturn(1L);
 
-        String body = """
+        final String body = """
                 {
                   "username": "ibrahim",
                   "email": "ibrahim@test.com",
                   "password": "12345678",
-                  "nickname": "ibrahimbow"
+                  "nickname": "ibrahimbow",
+                  "phoneNumber": "+3200000000",
+                  "role": "MANAGER"
                 }
                 """;
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1));
 
         verify(registerBuildingUserUseCase)
@@ -68,12 +75,14 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
-        String body = """
+        final String body = """
                 {
                   "username": "",
                   "email": "wrong-email",
                   "password": "123",
-                  "nickname": ""
+                  "nickname": "",
+                  "phoneNumber": "wrong-phone",
+                  "role": ""
                 }
                 """;
 
@@ -89,7 +98,7 @@ class AuthControllerTest {
         when(loginBuildingUserUseCase.login(ArgumentMatchers.any(LoginBuildingUserCommand.class)))
                 .thenReturn(new LoginResult("JWT_TOKEN", "REFRESH_TOKEN"));
 
-        String body = """
+        final String body = """
                 {
                   "usernameOrEmail": "ibrahim",
                   "password": "12345678"
@@ -113,7 +122,7 @@ class AuthControllerTest {
         when(loginBuildingUserUseCase.login(ArgumentMatchers.any(LoginBuildingUserCommand.class)))
                 .thenThrow(new InvalidCredentialsException());
 
-        String body = """
+        final String body = """
                 {
                   "usernameOrEmail": "ibrahim",
                   "password": "wrong-password"
@@ -126,5 +135,4 @@ class AuthControllerTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.error").value("INVALID_CREDENTIALS"));
     }
-
 }

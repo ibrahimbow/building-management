@@ -1,0 +1,46 @@
+server:
+  port: ${ANNOUNCEMENT_SERVICE_PORT:8084}
+
+spring:
+  application:
+    name: bm-announcement-service
+
+  datasource:
+    url: ${ANNOUNCEMENT_DB_URL}
+    username: ${ANNOUNCEMENT_DB_USERNAME}
+    password: ${ANNOUNCEMENT_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+services:
+  building-service:
+    url: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: bm-announcement-service
+    version: 1.0.0
+    description: Announcement service for Building Management
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.why.buildingmanagement: DEBUG
+    org.flywaydb: DEBUG

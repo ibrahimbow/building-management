@@ -5,6 +5,7 @@ import com.why.buildingmanagement.building.application.port.out.BuildingMembersh
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
+import com.why.buildingmanagement.building.domain.exception.ManagerAlreadyHasBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
@@ -25,6 +26,11 @@ public class BuildingApplicationService implements
 
     @Override
     public BuildingInfoResult createBuilding(final CreateBuildingCommand command) {
+        buildingRepositoryPort.findByManagerId(command.managerId())
+                .ifPresent(building -> {
+                    throw new ManagerAlreadyHasBuildingException(command.buildingName());
+                });
+
         final String buildingCode = generateUniqueCode();
 
         final Building building = Building.createNew(

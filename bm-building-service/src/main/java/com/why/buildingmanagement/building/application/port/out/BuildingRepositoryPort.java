@@ -2,7 +2,6 @@ package com.why.buildingmanagement.building.application.port.out;
 
 import com.why.buildingmanagement.building.domain.model.Building;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -16,7 +15,7 @@ public interface BuildingRepositoryPort {
 
     boolean existsByCode(String code);
 
-    List<Building> findByManagerId(Long managerId);
+    Optional<Building> findByManagerId(Long managerId);
 
     Optional<Building> findByIdAndManagerId(UUID id, Long managerId);
 

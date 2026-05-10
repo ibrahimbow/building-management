@@ -145,7 +145,9 @@ class AuthBuildingUserServiceTest {
                 "ibrahim",
                 "ibrahim@test.com",
                 "12345678",
-                "ibrahimbow");
+                "ibrahimbow",
+                "+32000000000",
+                BuildingUserRole.TENANT.name());
     }
 
     private LoginBuildingUserCommand loginCommand() {
@@ -162,6 +164,7 @@ class AuthBuildingUserServiceTest {
                 "ibrahim@test.com",
                 "HASHED_PASSWORD",
                 "ibrahimbow",
+                "+32000000000",
                 BuildingUserRole.TENANT,
                 Instant.now(),
                 true

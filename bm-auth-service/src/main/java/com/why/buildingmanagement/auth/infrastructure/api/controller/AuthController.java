@@ -43,13 +43,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody final RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(
+            @Valid @RequestBody final RegisterRequest request) {
+
         final Long id = registerUserUseCase.register(
-                new RegisterBuildingUserCommand(request.username(),
+                new RegisterBuildingUserCommand(
+                        request.username(),
                         request.email(),
                         request.password(),
-                        request.nickname()));
-        return ResponseEntity.ok(new RegisterResponse(id));
+                        request.nickname(),
+                        request.phoneNumber(),
+                        request.role().toUpperCase()));
+
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new RegisterResponse(id));
     }
 
     @PostMapping("/login")

@@ -6,14 +6,27 @@ import lombok.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "building_users",
+@Table(
+        name = "building_users",
         uniqueConstraints = {
-                @UniqueConstraint(name = "uk_building_users_username", columnNames = "username"),
-                @UniqueConstraint(name = "uk_building_users_email", columnNames = "email")
+                @UniqueConstraint(
+                        name = "uk_building_users_username",
+                        columnNames = "username"
+                ),
+                @UniqueConstraint(
+                        name = "uk_building_users_email",
+                        columnNames = "email"
+                )
         },
         indexes = {
-                @Index(name = "idx_building_users_username", columnList = "username"),
-                @Index(name = "idx_building_users_email", columnList = "email")
+                @Index(
+                        name = "idx_building_users_username",
+                        columnList = "username"
+                ),
+                @Index(
+                        name = "idx_building_users_email",
+                        columnList = "email"
+                )
         }
 )
 @Getter
@@ -27,10 +40,10 @@ public class BuildingUserEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
 
-    @Column(nullable = false, length = 120)
+    @Column(nullable = false, unique = true, length = 120)
     private String email;
 
     @Column(name = "password_hash", nullable = false)
@@ -38,6 +51,9 @@ public class BuildingUserEntity {
 
     @Column(nullable = false)
     private String nickname;
+
+    @Column(name = "phone_number", nullable = false, length = 30)
+    private String phoneNumber;
 
     @Column(nullable = false, length = 20)
     private String role;
@@ -51,6 +67,7 @@ public class BuildingUserEntity {
 
     @PrePersist
     public void prePersist() {
+
         if (createdAt == null) {
             createdAt = Instant.now();
         }

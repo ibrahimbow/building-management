@@ -4,32 +4,25 @@ on:
   push:
     branches:
       - master
+
   pull_request:
     branches:
       - master
 
 jobs:
-  build-services:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+          cache: maven
 
-      - name: Build auth service
-        run: mvn clean package -DskipTests
-        working-directory: bm-auth-service
-
-      - name: Build gateway service
-        run: mvn clean package -DskipTests
-        working-directory: bm-gateway-service
-
-      - name: Build building service
-        run: mvn clean package -DskipTests
-        working-directory: bm-building-service
+      - name: Build parent project
+        run: mvn clean verify

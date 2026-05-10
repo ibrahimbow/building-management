@@ -17,6 +17,7 @@
         <module>bm-auth-service</module>
         <module>bm-gateway-service</module>
         <module>bm-building-service</module>
+        <module>bm-announcement-service</module>
     </modules>
 
     <properties>

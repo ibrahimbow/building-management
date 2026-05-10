@@ -13,10 +13,15 @@ spring:
           predicates:
             - Path=/api/auth/**
 
+        - id: bm-announcement-service
+          uri: ${ANNOUNCEMENT_SERVICE_URL:http://bm-announcement-service:8084}
+          predicates:
+            - Path=/api/manager/announcements/**,/api/tenant/announcements/**
+
         - id: bm-building-service
           uri: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
           predicates:
-            - Path=/api/**
+            - Path=/api/buildings/**,/api/manager/buildings/**,/api/tenant/buildings/**
 
 security:
   jwt:

@@ -1,8 +1,8 @@
 package com.why.buildingmanagement.gateway.security;
 
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -14,27 +14,31 @@ import reactor.core.publisher.Mono;
 public class JwtForwardingFilter implements GlobalFilter, Ordered {
 
     @Override
-    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    public Mono<Void> filter(final ServerWebExchange exchange,
+                             final GatewayFilterChain chain) {
 
         return exchange.getPrincipal()
                 .cast(Authentication.class)
-                .filter(auth -> auth.getPrincipal() instanceof Jwt)
-                .map(auth -> (Jwt) auth.getPrincipal())
+                .filter(authentication -> authentication.getPrincipal() instanceof Jwt)
+                .map(authentication -> (Jwt) authentication.getPrincipal())
                 .flatMap(jwt -> {
-                    Object userId = jwt.getClaim("userId");
+                    final String role = jwt.getClaimAsString("role");
+                    final Object userId = jwt.getClaim("userId");
 
-                    ServerHttpRequest request = exchange.getRequest()
+                    final ServerHttpRequest request = exchange.getRequest()
                             .mutate()
                             .headers(headers -> {
                                 headers.remove("X-User-Id");
                                 headers.remove("X-User-Email");
                                 headers.remove("X-User-Role");
                                 headers.remove("X-Username");
+                                headers.remove("X-User-Phone");
                             })
                             .header("X-User-Id", String.valueOf(userId))
                             .header("X-User-Email", jwt.getClaimAsString("email"))
-                            .header("X-User-Role", jwt.getClaimAsString("role"))
+                            .header("X-User-Role", role == null ? "" : role.toUpperCase())
                             .header("X-Username", jwt.getSubject())
+                            .header("X-User-Phone", jwt.getClaimAsString("phoneNumber"))
                             .build();
 
                     return chain.filter(exchange.mutate().request(request).build());

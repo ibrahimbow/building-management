@@ -2,22 +2,27 @@ package com.why.buildingmanagement.auth.application.port.in;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record RegisterBuildingUserCommand(
-        @NotBlank(message = "Username is required")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+        @NotBlank(message = "username required")
         String username,
 
-        @NotBlank(message = "Email is required")
-        @Email(message = "Email must be valid")
+        @Email(message = "invalid email format")
+        @NotBlank(message = "email required")
         String email,
 
-        @NotBlank(message = "Password is required")
-        @Size(min = 8, max = 100, message = "Password must be at least 8 characters")
+        @NotBlank(message = "password required")
         String password,
 
-        @NotBlank(message = "nickname is required")
-        @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-        String nickname) {
+        @NotBlank(message = "nickname required")
+        String nickname,
+
+        @NotBlank(message = "phone number required")
+        @Pattern(regexp = "^\\+?[0-9]{8,15}$", message = "invalid phone number format")
+        String phoneNumber,
+
+        @NotBlank(message = "role required")
+        String role) {
 }

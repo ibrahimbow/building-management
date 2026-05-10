@@ -41,12 +41,9 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     }
 
     @Override
-    public List<Building> findByManagerId(final Long managerId) {
-
+    public Optional<Building> findByManagerId(final Long managerId) {
         return buildingRepository.findByManagerId(managerId)
-                .stream()
-                .map(buildingMapper::toDomain)
-                .toList();
+                .map(buildingMapper::toDomain);
     }
 
     @Override

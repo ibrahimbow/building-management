@@ -34,7 +34,7 @@ public class BuildingEntity {
     @Column(nullable = false)
     private String address;
 
-    @Column(name = "manager_id", nullable = false)
+    @Column(name = "manager_id", nullable = false, unique = true)
     private Long managerId;
 
     @Column(name = "total_apartments", nullable = false)
