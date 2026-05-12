@@ -54,10 +54,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         final RefreshToken refreshToken =
                 refreshTokenService.createForUser(buildingUser.getId());
 
-        return new LoginResult(
-                accessToken,
-                refreshToken.getToken()
-        );
+        return new LoginResult(accessToken, refreshToken.getToken());
     }
 
     @Override
@@ -72,13 +69,15 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         final String hash = passwordEncoder.encode(command.password());
 
+        final BuildingUserRole role = BuildingUserRole.valueOf(command.role().toUpperCase());
+
         final BuildingUser newBuildingUser = BuildingUser.createNew(
                 command.username(),
                 command.email(),
                 hash,
                 command.displayName(),
                 command.phoneNumber(),
-                BuildingUserRole.MANAGER);
+                role);
 
         final BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
         return saved.getId();
@@ -95,8 +94,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     @Override
     public LoginResult refresh(final RefreshAccessTokenCommand command) {
 
-        final RefreshToken refreshToken =
-                refreshTokenService.validate(command.refreshToken());
+        final RefreshToken refreshToken = refreshTokenService.validate(command.refreshToken());
 
         final BuildingUser buildingUser = loadBuildingUserPort
                 .loadById(refreshToken.getUserId())
@@ -105,9 +103,6 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         final String accessToken =
                 tokenProviderPort.generateToken(buildingUser);
 
-        return new LoginResult(
-                accessToken,
-                refreshToken.getToken()
-        );
+        return new LoginResult(accessToken, refreshToken.getToken());
     }
 }

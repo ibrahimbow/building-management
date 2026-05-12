@@ -22,7 +22,8 @@ public class AnnouncementApplicationService implements
         UpdateAnnouncementUseCase,
         DeleteAnnouncementUseCase,
         GetManagerAnnouncementsUseCase,
-        GetTenantAnnouncementsUseCase {
+        GetTenantAnnouncementsUseCase,
+        GetManagerAnnouncementByIdUseCase{
 
     private final AnnouncementRepositoryPort announcementRepositoryPort;
     private final BuildingAccessPort buildingAccessPort;
@@ -126,5 +127,19 @@ public class AnnouncementApplicationService implements
                 announcement.getImageUrl(),
                 announcement.getCreatedAt(),
                 announcement.getUpdatedAt());
+    }
+
+    @Override
+    public AnnouncementResult getManagerAnnouncementById(
+            final GetManagerAnnouncementByIdQuery query) {
+
+        final Announcement announcement = announcementRepositoryPort
+                .findByIdAndManagerId(
+                        query.announcementId(),
+                        query.managerId())
+                .orElseThrow(() -> new AnnouncementNotFoundException(
+                        query.announcementId()));
+
+        return toResult(announcement);
     }
 }

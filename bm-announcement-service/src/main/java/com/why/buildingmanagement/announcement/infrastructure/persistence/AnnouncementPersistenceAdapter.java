@@ -43,4 +43,10 @@ public class AnnouncementPersistenceAdapter implements AnnouncementRepositoryPor
     public void delete(final Announcement announcement) {
         repository.delete(mapper.toEntity(announcement));
     }
+
+    @Override
+    public Optional<Announcement> findByIdAndManagerId(final UUID announcementId, final Long managerId) {
+        return repository.findByIdAndCreatedByManagerId(announcementId, managerId)
+                .map(mapper::toDomain);
+    }
 }

@@ -1,13 +1,6 @@
 package com.why.buildingmanagement.announcement.infrastructure.api.controller.manager;
 
-import com.why.buildingmanagement.announcement.application.port.in.CreateAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.CreateAnnouncementUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.DeleteAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.DeleteAnnouncementUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.GetManagerAnnouncementsQuery;
-import com.why.buildingmanagement.announcement.application.port.in.GetManagerAnnouncementsUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.UpdateAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.UpdateAnnouncementUseCase;
+import com.why.buildingmanagement.announcement.application.port.in.*;
 import com.why.buildingmanagement.announcement.application.result.AnnouncementResult;
 import com.why.buildingmanagement.announcement.infrastructure.api.dto.request.CreateAnnouncementRequest;
 import com.why.buildingmanagement.announcement.infrastructure.api.dto.request.UpdateAnnouncementRequest;
@@ -35,39 +28,27 @@ public class ManagerAnnouncementController {
     private final GetManagerAnnouncementsUseCase getManagerAnnouncementsUseCase;
     private final AnnouncementApiMapper mapper;
     private final CurrentUserService currentUserService;
+    private final GetManagerAnnouncementByIdUseCase getManagerAnnouncementByIdUseCase;
+
 
     @PostMapping
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
             @Valid @RequestBody final CreateAnnouncementRequest request) {
 
-        System.out.println("🔥 CREATE ANNOUNCEMENT HIT");
-
-
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
+        final AnnouncementResult result = createAnnouncementUseCase.createAnnouncement(
+                new CreateAnnouncementCommand(
+                        currentUser.userId(),
+                        currentUser.username(),
+                        request.title(),
+                        request.message(),
+                        request.category(),
+                        request.imageUrl()));
 
-        System.out.println("🔥 USER = " + currentUser);
-
-        try {
-            final AnnouncementResult result = createAnnouncementUseCase.createAnnouncement(
-                    new CreateAnnouncementCommand(
-                            currentUser.userId(),
-                            currentUser.username(),
-                            request.title(),
-                            request.message(),
-                            request.category(),
-                            request.imageUrl()));
-
-            System.out.println("🔥 RESULT = " + result);
-
-            return ResponseEntity
-                    .created(URI.create("/api/manager/announcements/" + result.id()))
-                    .body(mapper.toResponse(result));
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+        return ResponseEntity
+                .created(URI.create("/api/manager/announcements/" + result.id()))
+                .body(mapper.toResponse(result));
     }
 
     @GetMapping
@@ -102,6 +83,21 @@ public class ManagerAnnouncementController {
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<AnnouncementResponse> getAnnouncementById(
+            @PathVariable("id") final UUID announcementId) {
+
+        final CurrentUser currentUser = currentUserService.getCurrentUser();
+
+        final AnnouncementResult result = getManagerAnnouncementByIdUseCase.getManagerAnnouncementById(
+                new GetManagerAnnouncementByIdQuery(
+                        announcementId,
+                        currentUser.userId()));
+
+        return ResponseEntity.ok(mapper.toResponse(result));
+    }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAnnouncement(@PathVariable("id") final UUID announcementId) {

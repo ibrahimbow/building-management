@@ -15,4 +15,6 @@ public interface AnnouncementRepositoryPort {
     List<Announcement> findByBuildingId(UUID buildingId);
 
     void delete(Announcement announcement);
+
+    Optional<Announcement> findByIdAndManagerId(UUID announcementId, Long managerId);
 }
