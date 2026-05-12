@@ -1,14 +1,7 @@
 package com.why.buildingmanagement.announcement.infrastructure.api.controller.manager;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.why.buildingmanagement.announcement.application.port.in.CreateAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.CreateAnnouncementUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.DeleteAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.DeleteAnnouncementUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.GetManagerAnnouncementsQuery;
-import com.why.buildingmanagement.announcement.application.port.in.GetManagerAnnouncementsUseCase;
-import com.why.buildingmanagement.announcement.application.port.in.UpdateAnnouncementCommand;
-import com.why.buildingmanagement.announcement.application.port.in.UpdateAnnouncementUseCase;
+import com.why.buildingmanagement.announcement.application.port.in.*;
 import com.why.buildingmanagement.announcement.application.result.AnnouncementResult;
 import com.why.buildingmanagement.announcement.domain.model.AnnouncementCategory;
 import com.why.buildingmanagement.announcement.infrastructure.api.dto.request.CreateAnnouncementRequest;
@@ -59,6 +52,9 @@ class ManagerAnnouncementControllerTest {
 
     @MockitoBean
     private GetManagerAnnouncementsUseCase getManagerAnnouncementsUseCase;
+
+    @MockitoBean
+    private GetManagerAnnouncementByIdUseCase getManagerAnnouncementByIdUseCase;
 
     @MockitoBean
     private AnnouncementApiMapper mapper;
@@ -230,6 +226,37 @@ class ManagerAnnouncementControllerTest {
                 ArgumentCaptor.forClass(DeleteAnnouncementCommand.class);
 
         verify(deleteAnnouncementUseCase).deleteAnnouncement(captor.capture());
+
+        assertThat(captor.getValue().announcementId()).isEqualTo(announcementId);
+        assertThat(captor.getValue().managerId()).isEqualTo(1L);
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void getManagerAnnouncementById_shouldReturnAnnouncementForCurrentManager() throws Exception {
+        final AnnouncementResult result = announcementResult();
+        final AnnouncementResponse response = announcementResponse();
+
+        when(getManagerAnnouncementByIdUseCase.getManagerAnnouncementById(any(GetManagerAnnouncementByIdQuery.class)))
+                .thenReturn(result);
+
+        when(mapper.toResponse(result))
+                .thenReturn(response);
+
+        mockMvc.perform(get("/api/manager/announcements/{id}", announcementId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(announcementId.toString()))
+                .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
+                .andExpect(jsonPath("$.title").value("Water maintenance"))
+                .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
+                .andExpect(jsonPath("$.category").value("MAINTENANCE"))
+                .andExpect(jsonPath("$.createdBy").value("Ibrahim"));
+
+        final ArgumentCaptor<GetManagerAnnouncementByIdQuery> captor =
+                ArgumentCaptor.forClass(GetManagerAnnouncementByIdQuery.class);
+
+        verify(getManagerAnnouncementByIdUseCase)
+                .getManagerAnnouncementById(captor.capture());
 
         assertThat(captor.getValue().announcementId()).isEqualTo(announcementId);
         assertThat(captor.getValue().managerId()).isEqualTo(1L);
