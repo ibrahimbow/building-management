@@ -2,6 +2,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.shareandhelp.application.port.in.*;
+import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.CreateShareAndHelpPostRequest;
@@ -64,6 +65,9 @@ class ShareAndHelpControllerTest {
     @MockitoBean
     private ShareAndHelpApiMapper shareAndHelpApiMapper;
 
+    @MockitoBean
+    private LoadTenantBuildingPort loadTenantBuildingPort;
+
     @Test
     @WithMockUser(roles = "TENANT")
     void shouldCreateShareAndHelpPost() throws Exception {
@@ -108,9 +112,15 @@ class ShareAndHelpControllerTest {
                 List.of());
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+
+        when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(1001L))
+                .thenReturn(buildingId);
+
         when(createShareAndHelpPostUseCase.create(any(CreateShareAndHelpPostCommand.class)))
                 .thenReturn(result);
         when(shareAndHelpApiMapper.toResponse(result)).thenReturn(response);
+
+
 
         mockMvc.perform(post("/api/tenant/share-and-help/posts")
                         .with(csrf())
