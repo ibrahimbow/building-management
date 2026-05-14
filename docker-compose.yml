@@ -55,6 +55,21 @@ services:
       - postgres
       - bm-building-service
 
+  bm-share-and-help-service:
+    build: ./bm-share-and-help-service
+    container_name: bm-share-and-help-service
+    restart: unless-stopped
+    ports:
+      - "8085"
+    environment:
+      SHARE_AND_HELP_DB_URL: ${SHARE_AND_HELP_DB_URL}
+      SHARE_AND_HELP_DB_USERNAME: ${SHARE_AND_HELP_DB_USERNAME}
+      SHARE_AND_HELP_DB_PASSWORD: ${SHARE_AND_HELP_DB_PASSWORD}
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+    depends_on:
+      - postgres
+      - bm-building-service
+
   bm-gateway-service:
     build: ./bm-gateway-service
     container_name: bm-gateway-service
@@ -65,8 +80,10 @@ services:
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
+      SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
     depends_on:
       - bm-auth-service
       - bm-building-service
       - bm-announcement-service
+      - bm-share-and-help-service

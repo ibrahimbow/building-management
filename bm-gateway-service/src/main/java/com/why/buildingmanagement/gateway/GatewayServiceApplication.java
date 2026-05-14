@@ -1,4 +1,4 @@
-package com.why.buildingmanagement;
+package com.why.buildingmanagement.gateway;
 
 
 import org.springframework.boot.SpringApplication;

@@ -1,0 +1,40 @@
+server:
+  port: ${SHARE_AND_HELP_SERVICE_PORT:8085}
+
+spring:
+  application:
+    name: bm-share-and-help-service
+
+  datasource:
+    url: ${SHARE_AND_HELP_DB_URL}
+    username: ${SHARE_AND_HELP_DB_USERNAME}
+    password: ${SHARE_AND_HELP_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+services:
+  building-service:
+    url: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: bm-share-and-help-service
+    version: 1.0.0
+    description: Share and Help service for tenant posts, comments, and building community communication

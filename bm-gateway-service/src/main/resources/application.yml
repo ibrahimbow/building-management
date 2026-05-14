@@ -23,6 +23,11 @@ spring:
           predicates:
             - Path=/api/buildings/**,/api/manager/buildings/**,/api/tenant/buildings/**
 
+        - id: bm-share-and-help-service
+          uri: ${SHARE_AND_HELP_SERVICE_URL:http://bm-share-and-help-service:8085}
+          predicates:
+            - Path=/api/manager/share-and-help/**,/api/tenant/share-and-help/**
+
 security:
   jwt:
     secret: ${AUTH_JWT_SECRET}

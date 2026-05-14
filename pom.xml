@@ -18,6 +18,7 @@
         <module>bm-gateway-service</module>
         <module>bm-building-service</module>
         <module>bm-announcement-service</module>
+        <module>bm-share-and-help-service</module>
     </modules>
 
     <properties>
