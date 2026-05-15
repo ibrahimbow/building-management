@@ -60,6 +60,7 @@ public class GatewaySecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint((exchange, e) -> {

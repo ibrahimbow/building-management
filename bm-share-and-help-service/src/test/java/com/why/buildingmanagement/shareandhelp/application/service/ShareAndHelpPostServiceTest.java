@@ -57,7 +57,7 @@ class ShareAndHelpPostServiceTest {
 
         final ShareAndHelpPost savedPost = createPost(buildingId);
 
-        final ShareAndHelpPostResult result = createResult(savedPost.getId());
+        final ShareAndHelpPostResult result = createResult(savedPost.getId(),savedPost.getBuildingId());
 
         when(saveShareAndHelpPostPort.save(org.mockito.ArgumentMatchers.any(ShareAndHelpPost.class)))
                 .thenReturn(savedPost);
@@ -82,7 +82,7 @@ class ShareAndHelpPostServiceTest {
 
         final ShareAndHelpPost post = createPost(buildingId);
 
-        final ShareAndHelpPostResult result = createResult(post.getId());
+        final ShareAndHelpPostResult result = createResult(post.getId(),post.getBuildingId());
 
         when(loadShareAndHelpPostPort.loadByBuildingId(buildingId))
                 .thenReturn(List.of(post));
@@ -116,7 +116,7 @@ class ShareAndHelpPostServiceTest {
                         "Updated description",
                         null);
 
-        final ShareAndHelpPostResult result = createResult(post.getId());
+        final ShareAndHelpPostResult result = createResult(post.getId(),post.getBuildingId());
 
         when(loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(postId, 1001L))
                 .thenReturn(Optional.of(post));
@@ -230,17 +230,20 @@ class ShareAndHelpPostServiceTest {
                 List.of());
     }
 
-    private static ShareAndHelpPostResult createResult(final UUID postId) {
+    private static ShareAndHelpPostResult createResult(final UUID postId,
+                                                       final UUID buildingId) {
 
         return new ShareAndHelpPostResult(
                 postId,
+                buildingId,
                 "Need a ladder",
                 "Does anyone have a ladder I can borrow this weekend?",
-                Instant.parse("2026-05-14T10:00:00Z"),
                 1001L,
                 "Tenant One",
                 null,
-                List.of(),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                null,
                 List.of());
     }
 }

@@ -28,6 +28,11 @@ spring:
           predicates:
             - Path=/api/manager/share-and-help/**,/api/tenant/share-and-help/**
 
+        - id: bm-file-service
+          uri: ${FILE_SERVICE_URL:http://bm-file-service:8086}
+          predicates:
+            - Path=/api/files/**
+
 security:
   jwt:
     secret: ${AUTH_JWT_SECRET}

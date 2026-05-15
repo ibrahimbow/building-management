@@ -19,6 +19,7 @@
         <module>bm-building-service</module>
         <module>bm-announcement-service</module>
         <module>bm-share-and-help-service</module>
+        <module>bm-file-service</module>
     </modules>
 
     <properties>

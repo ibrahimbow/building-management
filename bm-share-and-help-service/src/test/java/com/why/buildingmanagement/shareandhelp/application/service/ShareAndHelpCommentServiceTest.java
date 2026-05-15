@@ -8,6 +8,7 @@ import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPo
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpResultMapper;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,9 +45,11 @@ class ShareAndHelpCommentServiceTest {
     void shouldAddCommentToPost() {
 
         final UUID postId = UUID.randomUUID();
+
         final ShareAndHelpPost post = createPost(postId);
-        final ShareAndHelpPost savedPost = post;
-        final ShareAndHelpPostResult result = createResult(postId);
+
+        final ShareAndHelpPostResult result =
+                createResult(postId, post.getBuildingId());
 
         final AddCommentCommand command = new AddCommentCommand(
                 postId,
@@ -57,21 +60,26 @@ class ShareAndHelpCommentServiceTest {
 
         when(loadShareAndHelpPostPort.loadById(postId))
                 .thenReturn(Optional.of(post));
+
         when(saveShareAndHelpPostPort.save(post))
-                .thenReturn(savedPost);
-        when(shareAndHelpResultMapper.toResult(savedPost))
+                .thenReturn(post);
+
+        when(shareAndHelpResultMapper.toResult(post))
                 .thenReturn(result);
 
-        final ShareAndHelpPostResult actual = shareAndHelpCommentService.addComment(command);
+        final ShareAndHelpPostResult actual =
+                shareAndHelpCommentService.addComment(command);
 
         assertThat(actual).isEqualTo(result);
         assertThat(post.getComments()).hasSize(1);
-        assertThat(post.getComments().getFirst().getComment()).isEqualTo("I can help you with that.");
-        assertThat(post.getComments().getFirst().getCreatedByUserId()).isEqualTo(1001L);
+        assertThat(post.getComments().getFirst().getComment())
+                .isEqualTo("I can help you with that.");
+        assertThat(post.getComments().getFirst().getCreatedByUserId())
+                .isEqualTo(1001L);
 
         verify(loadShareAndHelpPostPort).loadById(postId);
         verify(saveShareAndHelpPostPort).save(post);
-        verify(shareAndHelpResultMapper).toResult(savedPost);
+        verify(shareAndHelpResultMapper).toResult(post);
     }
 
     @Test
@@ -99,9 +107,10 @@ class ShareAndHelpCommentServiceTest {
     void shouldDeleteOwnComment() {
 
         final UUID postId = UUID.randomUUID();
+
         final ShareAndHelpPost post = createPost(postId);
 
-        post.addComment(com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment.createNew(
+        post.addComment(ShareAndHelpComment.createNew(
                 postId,
                 1001L,
                 "Tenant One",
@@ -117,6 +126,7 @@ class ShareAndHelpCommentServiceTest {
 
         when(loadShareAndHelpPostPort.loadById(postId))
                 .thenReturn(Optional.of(post));
+
         when(saveShareAndHelpPostPort.save(post))
                 .thenReturn(post);
 
@@ -185,17 +195,20 @@ class ShareAndHelpCommentServiceTest {
                 List.of());
     }
 
-    private static ShareAndHelpPostResult createResult(final UUID postId) {
+    private static ShareAndHelpPostResult createResult(final UUID postId,
+                                                       final UUID buildingId) {
 
         return new ShareAndHelpPostResult(
                 postId,
+                buildingId,
                 "Need a ladder",
                 "Does anyone have a ladder I can borrow this weekend?",
-                Instant.parse("2026-05-14T10:00:00Z"),
                 1001L,
                 "Tenant One",
                 null,
-                List.of(),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                null,
                 List.of());
     }
 }

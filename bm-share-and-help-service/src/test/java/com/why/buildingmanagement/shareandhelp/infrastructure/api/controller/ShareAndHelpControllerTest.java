@@ -89,18 +89,19 @@ class ShareAndHelpControllerTest {
 
         final ShareAndHelpPostResult result = new ShareAndHelpPostResult(
                 postId,
+                buildingId,
                 "Need a ladder",
                 "Does anyone have a ladder I can borrow this weekend?",
-                Instant.parse("2026-05-14T10:00:00Z"),
                 1001L,
                 "Tenant One",
                 null,
-                List.of(),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                null,
                 List.of());
 
         final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
                 postId,
-                buildingId,
                 1001L,
                 "Tenant One",
                 null,
@@ -164,18 +165,19 @@ class ShareAndHelpControllerTest {
 
         final ShareAndHelpPostResult result = new ShareAndHelpPostResult(
                 postId,
+                buildingId,
                 "Need a ladder",
-                "Does anyone have a ladder?",
-                Instant.now(),
+                "Does anyone have a ladder I can borrow this weekend?",
                 1001L,
                 "Tenant One",
                 null,
-                List.of(),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                Instant.parse("2026-05-14T10:00:00Z"),
+                null,
                 List.of());
 
         final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
                 postId,
-                buildingId,
                 1001L,
                 "Tenant One",
                 null,

@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Locale;
 import java.util.UUID;
 
 @Component
@@ -24,7 +25,7 @@ public class LocalFileStorageAdapter implements StoreFilePort {
     @Override
     public UploadedFileResult store(final MultipartFile file, final FileType type) {
         try {
-            final Path targetDirectory = uploadRoot.resolve(type.name().toLowerCase());
+            final Path targetDirectory = uploadRoot.resolve(toStorageFolder(type));
             Files.createDirectories(targetDirectory);
 
             final String originalFileName = file.getOriginalFilename();
@@ -35,7 +36,7 @@ public class LocalFileStorageAdapter implements StoreFilePort {
 
             file.transferTo(targetFile);
 
-            final String url = "/api/files/" + type.name().toLowerCase() + "/" + storedFileName;
+            final String url = "/api/files/" + type.name() + "/" + storedFileName;
 
             return new UploadedFileResult(
                     storedFileName,
@@ -49,9 +50,13 @@ public class LocalFileStorageAdapter implements StoreFilePort {
 
     public Path load(final FileType type, final String fileName) {
         return uploadRoot
-                .resolve(type.name().toLowerCase())
+                .resolve(toStorageFolder(type))
                 .resolve(fileName)
                 .normalize();
+    }
+
+    private String toStorageFolder(final FileType type) {
+        return type.name().toLowerCase(Locale.ROOT);
     }
 
     private String extractExtension(final String fileName) {
@@ -61,5 +66,4 @@ public class LocalFileStorageAdapter implements StoreFilePort {
 
         return fileName.substring(fileName.lastIndexOf("."));
     }
-
 }

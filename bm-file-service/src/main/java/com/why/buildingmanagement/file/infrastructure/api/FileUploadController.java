@@ -47,7 +47,21 @@ public class FileUploadController {
         }
 
         return ResponseEntity.ok()
-                .contentType(MediaType.IMAGE_JPEG)
+                .contentType(resolveMediaType(fileName))
                 .body(resource);
+    }
+
+    private MediaType resolveMediaType(final String fileName) {
+        final String lowerCaseFileName = fileName.toLowerCase();
+
+        if (lowerCaseFileName.endsWith(".png")) {
+            return MediaType.IMAGE_PNG;
+        }
+
+        if (lowerCaseFileName.endsWith(".webp")) {
+            return MediaType.parseMediaType("image/webp");
+        }
+
+        return MediaType.IMAGE_JPEG;
     }
 }

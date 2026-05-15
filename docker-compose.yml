@@ -1,14 +1,18 @@
 services:
+
   postgres:
     image: postgres:16
     container_name: bm-postgres
     restart: unless-stopped
+
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
     ports:
       - "5432:5432"
+
     volumes:
       - ./docker/init:/docker-entrypoint-initdb.d
 
@@ -16,14 +20,17 @@ services:
     build: ./bm-auth-service
     container_name: bm-auth-service
     restart: unless-stopped
+
     ports:
-      - "8081:8081"
+      - "8081"
+
     environment:
       AUTH_DB_URL: ${AUTH_DB_URL}
       AUTH_DB_USERNAME: ${AUTH_DB_USERNAME}
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
       AUTH_JWT_EXPIRATION_MINUTES: ${AUTH_JWT_EXPIRATION_MINUTES}
+
     depends_on:
       - postgres
 
@@ -31,12 +38,15 @@ services:
     build: ./bm-building-service
     container_name: bm-building-service
     restart: unless-stopped
+
     ports:
       - "8083"
+
     environment:
       BUILDING_DB_URL: ${BUILDING_DB_URL}
       BUILDING_DB_USERNAME: ${BUILDING_DB_USERNAME}
       BUILDING_DB_PASSWORD: ${BUILDING_DB_PASSWORD}
+
     depends_on:
       - postgres
 
@@ -44,13 +54,16 @@ services:
     build: ./bm-announcement-service
     container_name: bm-announcement-service
     restart: unless-stopped
+
     ports:
       - "8084"
+
     environment:
       ANNOUNCEMENT_DB_URL: ${ANNOUNCEMENT_DB_URL}
       ANNOUNCEMENT_DB_USERNAME: ${ANNOUNCEMENT_DB_USERNAME}
       ANNOUNCEMENT_DB_PASSWORD: ${ANNOUNCEMENT_DB_PASSWORD}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+
     depends_on:
       - postgres
       - bm-building-service
@@ -59,31 +72,57 @@ services:
     build: ./bm-share-and-help-service
     container_name: bm-share-and-help-service
     restart: unless-stopped
+
     ports:
       - "8085"
+
     environment:
       SHARE_AND_HELP_DB_URL: ${SHARE_AND_HELP_DB_URL}
       SHARE_AND_HELP_DB_USERNAME: ${SHARE_AND_HELP_DB_USERNAME}
       SHARE_AND_HELP_DB_PASSWORD: ${SHARE_AND_HELP_DB_PASSWORD}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+
     depends_on:
       - postgres
       - bm-building-service
+
+  bm-file-service:
+    build: ./bm-file-service
+    container_name: bm-file-service
+    restart: unless-stopped
+
+    ports:
+      - "8086"
+
+    environment:
+      FILE_SERVICE_PORT: ${FILE_SERVICE_PORT}
+      FILE_STORAGE_UPLOAD_DIR: ${FILE_STORAGE_UPLOAD_DIR}
+
+    volumes:
+      - file_uploads:/app/uploads
 
   bm-gateway-service:
     build: ./bm-gateway-service
     container_name: bm-gateway-service
     restart: unless-stopped
+
     ports:
       - "8080:8080"
+
     environment:
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
       SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
+      FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+
     depends_on:
       - bm-auth-service
       - bm-building-service
       - bm-announcement-service
       - bm-share-and-help-service
+      - bm-file-service
+
+volumes:
+  file_uploads:

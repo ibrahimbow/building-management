@@ -5,9 +5,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record ShareAndHelpPostResponse(
-
         UUID id,
-        UUID buildingId,
         Long createdByUserId,
         String createdByDisplayName,
         String createdByAvatarUrl,

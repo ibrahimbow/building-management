@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.UUID;
 
 public record ShareAndHelpPostResult(UUID id,
+                                     UUID buildingId,
                                      String title,
                                      String description,
-                                     Instant createdAt,
                                      Long createdByUserId,
                                      String createdByDisplayName,
                                      String createdByAvatarUrl,
-                                     List<String> images,
+                                     Instant createdAt,
+                                     Instant updatedAt,
+                                     String imageUrl,
                                      List<ShareAndHelpCommentResult> comments) {
 }
