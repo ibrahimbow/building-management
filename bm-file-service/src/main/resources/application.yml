@@ -1,0 +1,31 @@
+server:
+  port: ${FILE_SERVICE_PORT:8086}
+
+spring:
+  application:
+    name: bm-file-service
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never
+
+file:
+  storage:
+    upload-dir: ${FILE_STORAGE_UPLOAD_DIR:uploads}
+
+info:
+  app:
+    name: bm-file-service
+    version: 1.0.0
+    description: File upload service for Building Management
