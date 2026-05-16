@@ -20,7 +20,7 @@ The system is designed using a modern microservices architecture to demonstrate 
 * bm-auth-service – Authentication & authorization
 * bm-building-service – Buildings & buildingUser membership
 * bm-announcement-service – Official building announcements
-* bm-community-service – Community “Share & Help” posts
+* bm-share-and-help-service – Community “Share & Help” posts
 * bm-notification-service – Kafka-based notifications
 * bm-file-service – File & image uploads
 * bm-frontend-angular – Angular frontend
