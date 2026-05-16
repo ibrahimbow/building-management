@@ -33,6 +33,11 @@ spring:
           predicates:
             - Path=/api/files/**
 
+        - id: bm-chat-service
+          uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
+          predicates:
+            - Path=/api/tenant/chat/**
+
 security:
   jwt:
     secret: ${AUTH_JWT_SECRET}

@@ -1,0 +1,15 @@
+package com.why.buildingmanagement.chat.infrastructure.config;
+
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.client.RestClient;
+
+@Configuration
+public class ChatClientConfiguration {
+
+    @Bean
+    public RestClient.Builder restClientBuilder() {
+
+        return RestClient.builder();
+    }
+}

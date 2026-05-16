@@ -20,6 +20,7 @@
         <module>bm-announcement-service</module>
         <module>bm-share-and-help-service</module>
         <module>bm-file-service</module>
+        <module>bm-chat-service</module>
     </modules>
 
     <properties>

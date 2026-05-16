@@ -3,8 +3,6 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.security;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
-import java.util.UUID;
-
 @Service
 @RequestScope
 public class CurrentUserService {
@@ -12,21 +10,23 @@ public class CurrentUserService {
     private static final String USER_ID_HEADER = "X-User-Id";
     private static final String USER_EMAIL_HEADER = "X-User-Email";
     private static final String USER_ROLE_HEADER = "X-User-Role";
-    private static final String USERNAME_HEADER = "X-Username";
+    private static final String USER_DISPLAY_NAME_HEADER = "X-User-Display-Name";
     private static final String USER_AVATAR_URL_HEADER = "X-User-Avatar-Url";
 
     private final jakarta.servlet.http.HttpServletRequest request;
 
     public CurrentUserService(final jakarta.servlet.http.HttpServletRequest request) {
+
         this.request = request;
     }
 
     public CurrentUser getCurrentUser() {
+
         return new CurrentUser(
                 Long.valueOf(requiredHeader(USER_ID_HEADER)),
                 requiredHeader(USER_EMAIL_HEADER),
                 requiredHeader(USER_ROLE_HEADER),
-                requiredHeader(USERNAME_HEADER),
+                requiredHeader(USER_DISPLAY_NAME_HEADER),
                 optionalHeader(USER_AVATAR_URL_HEADER));
     }
 
@@ -42,6 +42,7 @@ public class CurrentUserService {
     }
 
     private String optionalHeader(final String name) {
+
         return request.getHeader(name);
     }
 }

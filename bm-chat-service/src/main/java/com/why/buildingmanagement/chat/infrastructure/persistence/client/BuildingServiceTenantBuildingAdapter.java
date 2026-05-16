@@ -1,7 +1,6 @@
-package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
+package com.why.buildingmanagement.chat.infrastructure.persistence.client;
 
-import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
-import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.response.TenantBuildingResponse;
+import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,13 +22,12 @@ public class BuildingServiceTenantBuildingAdapter implements LoadTenantBuildingP
 
         final TenantBuildingResponse response = restClientBuilder.build()
                 .get()
-                .uri(buildingServiceUrl + "/internal/tenants/{tenantUserId}/building", tenantUserId)
+                .uri(buildingServiceUrl
+                        + "/internal/tenants/"
+                        + tenantUserId
+                        + "/building")
                 .retrieve()
                 .body(TenantBuildingResponse.class);
-
-        if (response == null || response.buildingId() == null) {
-            throw new IllegalStateException("Tenant has no active building.");
-        }
 
         return response.buildingId();
     }

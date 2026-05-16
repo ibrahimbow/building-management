@@ -2,6 +2,8 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
 
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity.ShareAndHelpCommentEntity;
+import com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity.ShareAndHelpPostEntity;
 import org.mapstruct.Mapper;
 
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
 
+import com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity.ShareAndHelpPostEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

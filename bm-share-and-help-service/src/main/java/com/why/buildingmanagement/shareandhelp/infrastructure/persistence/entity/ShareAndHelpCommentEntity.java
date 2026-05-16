@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
+package com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;

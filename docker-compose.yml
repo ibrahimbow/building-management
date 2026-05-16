@@ -15,13 +15,14 @@ services:
 
     volumes:
       - ./docker/init:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
 
   bm-auth-service:
     build: ./bm-auth-service
     container_name: bm-auth-service
     restart: unless-stopped
 
-    ports:
+    expose:
       - "8081"
 
     environment:
@@ -39,7 +40,7 @@ services:
     container_name: bm-building-service
     restart: unless-stopped
 
-    ports:
+    expose:
       - "8083"
 
     environment:
@@ -55,7 +56,7 @@ services:
     container_name: bm-announcement-service
     restart: unless-stopped
 
-    ports:
+    expose:
       - "8084"
 
     environment:
@@ -73,7 +74,7 @@ services:
     container_name: bm-share-and-help-service
     restart: unless-stopped
 
-    ports:
+    expose:
       - "8085"
 
     environment:
@@ -91,7 +92,7 @@ services:
     container_name: bm-file-service
     restart: unless-stopped
 
-    ports:
+    expose:
       - "8086"
 
     environment:
@@ -100,6 +101,26 @@ services:
 
     volumes:
       - file_uploads:/app/uploads
+
+
+  bm-chat-service:
+    build: ./bm-chat-service
+    container_name: bm-chat-service
+    restart: unless-stopped
+
+    expose:
+      - "8087"
+
+    environment:
+      CHAT_DB_URL: ${CHAT_DB_URL}
+      CHAT_DB_USERNAME: ${CHAT_DB_USERNAME}
+      CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD}
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+
+    depends_on:
+      - postgres
+      - bm-building-service
+
 
   bm-gateway-service:
     build: ./bm-gateway-service
@@ -115,6 +136,7 @@ services:
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
       SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
       FILE_SERVICE_URL: ${FILE_SERVICE_URL}
+      CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     depends_on:
@@ -123,6 +145,8 @@ services:
       - bm-announcement-service
       - bm-share-and-help-service
       - bm-file-service
+      - bm-chat-service
 
 volumes:
+  postgres_data:
   file_uploads:

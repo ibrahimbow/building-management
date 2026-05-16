@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.response;
+package com.why.buildingmanagement.shareandhelp.infrastructure.client;
 
 import java.util.UUID;
 

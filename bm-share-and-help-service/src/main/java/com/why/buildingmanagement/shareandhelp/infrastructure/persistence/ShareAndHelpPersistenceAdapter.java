@@ -3,6 +3,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity.ShareAndHelpPostEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

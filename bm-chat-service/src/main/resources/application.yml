@@ -1,0 +1,41 @@
+server:
+  port: ${CHAT_SERVICE_PORT:8087}
+
+spring:
+  application:
+    name: bm-chat-service
+
+  datasource:
+    url: ${CHAT_DB_URL}
+    username: ${CHAT_DB_USERNAME}
+    password: ${CHAT_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+services:
+  building-service:
+    url: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+  endpoint:
+    health:
+      show-details: never
+
+info:
+  app:
+    name: bm-chat-service
+    version: 1.0.0
+    description: Public building chat service for tenant communication and reactions
