@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.auth.infrastructure.api.error;
+package com.why.buildingmanagement.auth.infrastructure.api.exception;
 
 import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;

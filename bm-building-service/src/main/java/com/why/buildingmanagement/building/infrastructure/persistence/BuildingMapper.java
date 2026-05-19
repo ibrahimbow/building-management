@@ -48,6 +48,7 @@ public interface BuildingMapper {
                 entity.getCode(),
                 entity.getAddress(),
                 entity.getManagerId(),
+                null,
                 entity.getTotalApartments(),
                 entity.getEmergencyPhone());
     }

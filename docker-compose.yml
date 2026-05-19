@@ -47,9 +47,11 @@ services:
       BUILDING_DB_URL: ${BUILDING_DB_URL}
       BUILDING_DB_USERNAME: ${BUILDING_DB_USERNAME}
       BUILDING_DB_PASSWORD: ${BUILDING_DB_PASSWORD}
+      AUTH_SERVICE_URL: http://bm-auth-service:8081
 
     depends_on:
       - postgres
+      - bm-auth-service
 
   bm-announcement-service:
     build: ./bm-announcement-service
@@ -112,6 +114,7 @@ services:
       - "8087"
 
     environment:
+      CHAT_SERVICE_PORT: 8087
       CHAT_DB_URL: ${CHAT_DB_URL}
       CHAT_DB_USERNAME: ${CHAT_DB_USERNAME}
       CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD}

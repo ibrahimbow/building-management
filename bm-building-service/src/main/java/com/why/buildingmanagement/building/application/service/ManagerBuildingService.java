@@ -3,7 +3,9 @@ package com.why.buildingmanagement.building.application.service;
 import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
 import com.why.buildingmanagement.building.application.result.TenantInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
@@ -29,6 +31,7 @@ public class ManagerBuildingService implements
 
     private final BuildingRepositoryPort buildingRepositoryPort;
     private final BuildingMembershipRepositoryPort membershipRepositoryPort;
+    private final LoadManagerInfoPort loadManagerInfoPort;
 
     @Override
     public List<BuildingInfoResult> getMyBuildings(final Long managerId) {
@@ -75,12 +78,18 @@ public class ManagerBuildingService implements
     }
 
     private BuildingInfoResult toResult(final Building building) {
+
+        final ManagerInfoResult managerInfo =
+                loadManagerInfoPort.loadManagerInfoById(
+                        building.getManagerId());
+
         return new BuildingInfoResult(
                 building.getId() == null ? null : building.getId().toString(),
                 building.getBuildingName(),
                 building.getCode(),
                 building.getAddress(),
                 building.getManagerId(),
+                managerInfo.displayName(),
                 building.getTotalApartments(),
                 building.getEmergencyPhone());
     }

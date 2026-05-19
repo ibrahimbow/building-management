@@ -161,6 +161,7 @@ class TenantBuildingControllerTest {
                 "BM-123456",
                 "Antwerp",
                 12L,
+                "ibrahim Aref",
                 10,
                 "+320000000");
     }
@@ -172,6 +173,8 @@ class TenantBuildingControllerTest {
                 "BM-123456",
                 "Antwerp",
                 12L,
+                "Ibrahim Aref",
+
                 10,
                 "+320000000");
     }

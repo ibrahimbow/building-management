@@ -35,3 +35,7 @@ info:
     name: bm-Building-service
     version: 1.0.0
     description: Building service for Building Management
+
+services:
+  auth-service:
+    url: ${AUTH_SERVICE_URL:http://bm-auth-service:8081}

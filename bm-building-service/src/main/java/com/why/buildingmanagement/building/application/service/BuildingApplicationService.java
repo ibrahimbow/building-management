@@ -3,7 +3,9 @@ package com.why.buildingmanagement.building.application.service;
 import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.ManagerAlreadyHasBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
@@ -23,6 +25,8 @@ public class BuildingApplicationService implements
 
     private final BuildingRepositoryPort buildingRepositoryPort;
     private final BuildingMembershipRepositoryPort buildingMembershipRepositoryPort;
+    private final LoadManagerInfoPort loadManagerInfoPort;
+
 
     @Override
     public BuildingInfoResult createBuilding(final CreateBuildingCommand command) {
@@ -88,14 +92,21 @@ public class BuildingApplicationService implements
         return code;
     }
 
+
     private BuildingInfoResult toBuildingInfoResult(final Building building) {
+
+        final ManagerInfoResult managerInfo = loadManagerInfoPort.loadManagerInfoById(
+                building.getManagerId());
+
         return new BuildingInfoResult(
                 building.getId() == null ? null : building.getId().toString(),
                 building.getBuildingName(),
                 building.getCode(),
                 building.getAddress(),
                 building.getManagerId(),
+                managerInfo.displayName(),
                 building.getTotalApartments(),
                 building.getEmergencyPhone());
     }
+
 }

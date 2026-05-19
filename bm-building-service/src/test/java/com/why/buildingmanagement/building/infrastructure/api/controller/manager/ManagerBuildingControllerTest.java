@@ -196,6 +196,7 @@ class ManagerBuildingControllerTest {
                 "BM-123456",
                 "Updated Address",
                 1L,
+                "Ibrahim Aref",
                 20,
                 "+32111111111");
 
@@ -205,6 +206,7 @@ class ManagerBuildingControllerTest {
                 "BM-123456",
                 "Updated Address",
                 1L,
+                "Ibrahim Aref",
                 20,
                 "+32111111111");
 
@@ -288,6 +290,7 @@ class ManagerBuildingControllerTest {
                 "BM-123456",
                 "Berchem, Antwerp",
                 1L,
+                "Ibrahim Aref",
                 12,
                 "+32000000000");
     }
@@ -299,6 +302,7 @@ class ManagerBuildingControllerTest {
                 "BM-123456",
                 "Berchem, Antwerp",
                 1L,
+                "Ibrahim Aref",
                 12,
                 "+32000000000");
     }

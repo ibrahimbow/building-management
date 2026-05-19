@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.auth.infrastructure.api.error;
+package com.why.buildingmanagement.auth.infrastructure.api.exception;
 
 import java.time.Instant;
 import java.util.Map;

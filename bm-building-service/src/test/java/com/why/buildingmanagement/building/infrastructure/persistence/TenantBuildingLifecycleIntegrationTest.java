@@ -2,6 +2,8 @@ package com.why.buildingmanagement.building.infrastructure.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.building.BuildingServiceApplication;
+import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
+import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
 import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.infrastructure.api.dto.request.JoinBuildingRequest;
 import com.why.buildingmanagement.building.infrastructure.security.CurrentUser;
@@ -23,6 +25,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -71,6 +74,9 @@ class TenantBuildingLifecycleIntegrationTest {
     @MockitoBean
     private CurrentUserService currentUserService;
 
+    @MockitoBean
+    private LoadManagerInfoPort loadManagerInfoPort;
+
     private static final Long MANAGER_ID = 1L;
     private static final Long TENANT_ID = 2L;
     private static final String BUILDING_CODE = "BM-751788";
@@ -100,6 +106,19 @@ class TenantBuildingLifecycleIntegrationTest {
                 SECOND_MANAGER_ID,
                 20,
                 "+32111111111");
+
+        reset(loadManagerInfoPort);
+
+        when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
+                .thenAnswer(invocation -> {
+                    final Long managerId = invocation.getArgument(0);
+
+                    return new ManagerInfoResult(
+                            managerId,
+                            "Ibrahim Aref",
+                            "manager@example.com",
+                            null);
+                });
 
         buildingRepository.save(buildingMapper.toEntity(building));
         buildingRepository.save(buildingMapper.toEntity(secondBuilding));

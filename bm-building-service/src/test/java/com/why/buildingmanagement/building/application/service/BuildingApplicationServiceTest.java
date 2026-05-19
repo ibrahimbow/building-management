@@ -4,7 +4,9 @@ import com.why.buildingmanagement.building.application.port.in.CreateBuildingCom
 import com.why.buildingmanagement.building.application.port.in.JoinBuildingCommand;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
+import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.ManagerAlreadyHasBuildingException;
 import com.why.buildingmanagement.building.domain.exception.TenantAlreadyAssignedToBuildingException;
@@ -27,14 +29,29 @@ class BuildingApplicationServiceTest {
     private BuildingMembershipRepositoryPort membershipRepositoryPort;
     private BuildingApplicationService buildingApplicationService;
 
+    private LoadManagerInfoPort loadManagerInfoPort;
+
     @BeforeEach
     void setUp() {
         buildingRepositoryPort = mock(BuildingRepositoryPort.class);
         membershipRepositoryPort = mock(BuildingMembershipRepositoryPort.class);
+        loadManagerInfoPort = mock(LoadManagerInfoPort.class);
+
+        when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
+                .thenAnswer(invocation -> {
+                    final Long managerId = invocation.getArgument(0);
+
+                    return new ManagerInfoResult(
+                            managerId,
+                            "Ibrahim Aref",
+                            "manager@example.com",
+                            null);
+                });
 
         buildingApplicationService = new BuildingApplicationService(
                 buildingRepositoryPort,
-                membershipRepositoryPort);
+                membershipRepositoryPort,
+                loadManagerInfoPort);
     }
 
     @Test

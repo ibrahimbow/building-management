@@ -6,6 +6,7 @@ public record BuildingInfoResult(
         String code,
         String address,
         Long managerId,
+        String managerName,
         int totalApartments,
         String emergencyPhone) {
 }

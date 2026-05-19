@@ -33,6 +33,7 @@ public class ChatMessageService implements SendChatMessageUseCase,
     private final SaveChatReactionPort saveChatReactionPort;
     private final LoadChatReactionPort loadChatReactionPort;
     private final DeleteChatReactionPort deleteChatReactionPort;
+    private final LoadManagerBuildingPort loadManagerBuildingPort;
     private final ChatWebSocketPublisher chatWebSocketPublisher;
 
     @Override
@@ -40,6 +41,32 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
         final UUID buildingId = loadTenantBuildingPort
                 .loadActiveBuildingIdByTenantUserId(command.senderUserId());
+
+        final ChatMessage message = ChatMessage.createNew(
+                buildingId,
+                command.senderUserId(),
+                command.senderDisplayName(),
+                command.senderAvatarUrl(),
+                command.content(),
+                command.imageUrl());
+
+        final ChatMessage savedMessage = saveChatMessagePort.save(message);
+
+        final ChatMessageResult result = toMessageResult(
+                savedMessage,
+                command.senderUserId());
+
+        chatWebSocketPublisher.publishMessageCreated(result);
+
+        return result;
+    }
+
+    @Override
+    public ChatMessageResult sendFromCurrentManagerBuilding(
+            final SendChatMessageCommand command) {
+
+        final UUID buildingId = loadManagerBuildingPort
+                .loadBuildingIdByManagerUserId(command.senderUserId());
 
         final ChatMessage message = ChatMessage.createNew(
                 buildingId,
@@ -81,6 +108,31 @@ public class ChatMessageService implements SendChatMessageUseCase,
                         message,
                         reactions,
                         tenantUserId))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatMessageResult> getMessagesForCurrentManagerBuilding(
+            final Long managerUserId) {
+
+        final UUID buildingId = loadManagerBuildingPort
+                .loadBuildingIdByManagerUserId(managerUserId);
+
+        final List<ChatMessage> messages = loadChatMessagePort
+                .findByBuildingIdOrderByCreatedAtAsc(buildingId);
+
+        final List<UUID> messageIds = messages.stream()
+                .map(ChatMessage::getId)
+                .toList();
+
+        final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(messageIds);
+
+        return messages.stream()
+                .map(message -> toMessageResult(
+                        message,
+                        reactions,
+                        managerUserId))
                 .toList();
     }
 

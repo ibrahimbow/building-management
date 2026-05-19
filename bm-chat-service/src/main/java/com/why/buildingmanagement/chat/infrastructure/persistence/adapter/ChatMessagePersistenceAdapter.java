@@ -18,7 +18,7 @@ import java.util.UUID;
 public class ChatMessagePersistenceAdapter implements SaveChatMessagePort,
         LoadChatMessagePort {
 
-    private final ChatMessageRepository chatMessageJpaRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final ChatPersistenceMapper chatPersistenceMapper;
 
     @Override
@@ -26,7 +26,7 @@ public class ChatMessagePersistenceAdapter implements SaveChatMessagePort,
 
         final ChatMessageEntity entity = chatPersistenceMapper.toEntity(message);
 
-        final ChatMessageEntity savedEntity = chatMessageJpaRepository.save(entity);
+        final ChatMessageEntity savedEntity = chatMessageRepository.save(entity);
 
         return chatPersistenceMapper.toDomain(savedEntity);
     }
@@ -34,14 +34,14 @@ public class ChatMessagePersistenceAdapter implements SaveChatMessagePort,
     @Override
     public Optional<ChatMessage> findById(final UUID messageId) {
 
-        return chatMessageJpaRepository.findById(messageId)
+        return chatMessageRepository.findById(messageId)
                 .map(chatPersistenceMapper::toDomain);
     }
 
     @Override
     public List<ChatMessage> findByBuildingIdOrderByCreatedAtAsc(final UUID buildingId) {
 
-        return chatMessageJpaRepository.findByBuildingIdOrderByCreatedAtAsc(buildingId)
+        return chatMessageRepository.findByBuildingIdOrderByCreatedAtAsc(buildingId)
                 .stream()
                 .map(chatPersistenceMapper::toDomain)
                 .toList();

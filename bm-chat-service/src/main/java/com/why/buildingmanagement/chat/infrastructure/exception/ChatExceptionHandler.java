@@ -1,9 +1,6 @@
 package com.why.buildingmanagement.chat.infrastructure.exception;
 
-import com.why.buildingmanagement.chat.domain.exception.ChatMessageAccessDeniedException;
-import com.why.buildingmanagement.chat.domain.exception.ChatMessageNotFoundException;
-import com.why.buildingmanagement.chat.domain.exception.ChatMessageImageLimitExceededException;
-import com.why.buildingmanagement.chat.domain.exception.EmptyChatMessageException;
+import com.why.buildingmanagement.chat.domain.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -102,6 +99,20 @@ public class ChatExceptionHandler {
                         exception.getMessage());
 
         problemDetail.setTitle("Constraint violation");
+
+        return problemDetail;
+    }
+
+    @ExceptionHandler(ManagerBuildingNotFoundException.class)
+    public ProblemDetail handleManagerBuildingNotFoundException(
+            final ManagerBuildingNotFoundException exception) {
+
+        final ProblemDetail problemDetail = ProblemDetail
+                .forStatusAndDetail(
+                        HttpStatus.NOT_FOUND,
+                        exception.getMessage());
+
+        problemDetail.setTitle("Manager building not found");
 
         return problemDetail;
     }
