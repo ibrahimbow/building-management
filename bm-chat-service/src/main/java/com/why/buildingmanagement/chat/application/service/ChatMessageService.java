@@ -1,17 +1,7 @@
 package com.why.buildingmanagement.chat.application.service;
 
-import com.why.buildingmanagement.chat.application.port.in.DeleteChatMessageUseCase;
-import com.why.buildingmanagement.chat.application.port.in.GetBuildingChatUseCase;
-import com.why.buildingmanagement.chat.application.port.in.ReactToChatMessageCommand;
-import com.why.buildingmanagement.chat.application.port.in.ReactToChatMessageUseCase;
-import com.why.buildingmanagement.chat.application.port.in.SendChatMessageCommand;
-import com.why.buildingmanagement.chat.application.port.in.SendChatMessageUseCase;
-import com.why.buildingmanagement.chat.application.port.out.DeleteChatReactionPort;
-import com.why.buildingmanagement.chat.application.port.out.LoadChatMessagePort;
-import com.why.buildingmanagement.chat.application.port.out.LoadChatReactionPort;
-import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
-import com.why.buildingmanagement.chat.application.port.out.SaveChatMessagePort;
-import com.why.buildingmanagement.chat.application.port.out.SaveChatReactionPort;
+import com.why.buildingmanagement.chat.application.port.in.*;
+import com.why.buildingmanagement.chat.application.port.out.*;
 import com.why.buildingmanagement.chat.application.result.ChatMessageResult;
 import com.why.buildingmanagement.chat.application.result.ChatReactionResult;
 import com.why.buildingmanagement.chat.application.result.ChatReactionSummaryResult;
@@ -19,6 +9,7 @@ import com.why.buildingmanagement.chat.domain.exception.ChatMessageAccessDeniedE
 import com.why.buildingmanagement.chat.domain.exception.ChatMessageNotFoundException;
 import com.why.buildingmanagement.chat.domain.model.ChatMessage;
 import com.why.buildingmanagement.chat.domain.model.ChatReaction;
+import com.why.buildingmanagement.chat.infrastructure.websocket.ChatWebSocketPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +33,7 @@ public class ChatMessageService implements SendChatMessageUseCase,
     private final SaveChatReactionPort saveChatReactionPort;
     private final LoadChatReactionPort loadChatReactionPort;
     private final DeleteChatReactionPort deleteChatReactionPort;
+    private final ChatWebSocketPublisher chatWebSocketPublisher;
 
     @Override
     public ChatMessageResult send(final SendChatMessageCommand command) {
@@ -59,9 +51,13 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
         final ChatMessage savedMessage = saveChatMessagePort.save(message);
 
-        return toMessageResult(
+        final ChatMessageResult result = toMessageResult(
                 savedMessage,
                 command.senderUserId());
+
+        chatWebSocketPublisher.publishMessageCreated(result);
+
+        return result;
     }
 
     @Override
@@ -101,7 +97,12 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
         message.delete();
 
-        saveChatMessagePort.save(message);
+        final ChatMessage savedMessage = saveChatMessagePort.save(message);
+        final ChatMessageResult result = toMessageResult(
+                savedMessage,
+                currentUserId);
+
+        chatWebSocketPublisher.publishMessageDeleted(result);
     }
 
     @Override
@@ -136,6 +137,8 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
         final ChatReaction savedReaction = saveChatReactionPort.save(reaction);
 
+        publishReactionUpdated(message, command.userId());
+
         return toReactionResult(savedReaction);
     }
 
@@ -146,6 +149,11 @@ public class ChatMessageService implements SendChatMessageUseCase,
                 command.messageId(),
                 command.userId(),
                 command.emoji());
+
+        final ChatMessage message = loadChatMessagePort.findById(command.messageId())
+                .orElseThrow(() -> new ChatMessageNotFoundException(command.messageId()));
+
+        publishReactionUpdated(message, command.userId());
     }
 
     private ChatMessageResult toMessageResult(final ChatMessage message,
@@ -206,5 +214,18 @@ public class ChatMessageService implements SendChatMessageUseCase,
                 reaction.getUserId(),
                 reaction.getEmoji(),
                 reaction.getCreatedAt());
+    }
+
+    private void publishReactionUpdated(final ChatMessage message, final Long currentUserId) {
+
+        final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(
+                List.of(message.getId()));
+
+        final ChatMessageResult result = toMessageResult(
+                message,
+                reactions,
+                currentUserId);
+
+        chatWebSocketPublisher.publishReactionUpdated(result);
     }
 }

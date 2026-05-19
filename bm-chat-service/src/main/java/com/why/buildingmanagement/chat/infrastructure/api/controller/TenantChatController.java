@@ -72,7 +72,7 @@ public class TenantChatController {
     }
 
     @DeleteMapping("/messages/{messageId}")
-    public ResponseEntity<Void> deleteMessage(@PathVariable final UUID messageId) {
+    public ResponseEntity<Void> deleteMessage(@PathVariable("messageId") final UUID messageId) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
@@ -86,7 +86,7 @@ public class TenantChatController {
 
     @PostMapping("/messages/{messageId}/reactions")
     public ResponseEntity<ChatReactionResponse> reactToMessage(
-            @PathVariable final UUID messageId,
+            @PathVariable("messageId") final UUID messageId,
             @Valid @RequestBody final ReactToChatMessageRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
@@ -106,10 +106,10 @@ public class TenantChatController {
         return ResponseEntity.ok(chatApiMapper.toResponse(result));
     }
 
-    @DeleteMapping("/messages/{messageId}/reactions/{emoji}")
+    @DeleteMapping("/messages/{messageId}/reactions")
     public ResponseEntity<Void> removeReaction(
-            @PathVariable final UUID messageId,
-            @PathVariable final String emoji) {
+            @PathVariable("messageId") final UUID messageId,
+            @Valid @RequestBody final ReactToChatMessageRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
@@ -117,7 +117,7 @@ public class TenantChatController {
                 new ReactToChatMessageCommand(
                         messageId,
                         currentUser.userId(),
-                        emoji));
+                        request.emoji()));
 
         return ResponseEntity.noContent()
                 .build();

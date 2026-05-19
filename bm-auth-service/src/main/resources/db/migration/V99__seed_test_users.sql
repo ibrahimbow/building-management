@@ -67,6 +67,6 @@ SELECT
     true,
     NOW(),
     '+32471' || LPAD(n::text, 6, '0'),
-    'Tenant ' || n
+    'Tenant_DisplayName-' || n
 FROM generate_series(1, 30) AS n
 ON CONFLICT (email) DO NOTHING;

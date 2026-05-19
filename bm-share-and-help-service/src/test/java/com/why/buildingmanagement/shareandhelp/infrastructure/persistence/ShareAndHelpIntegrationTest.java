@@ -188,6 +188,7 @@ class ShareAndHelpIntegrationTest {
                 .header("X-User-Email", "tenant@test.com")
                 .header("X-User-Role", "TENANT")
                 .header("X-Username", "Tenant One")
+                .header("X-User-Display-Name","Tenant DisplayName")
                 .header("X-User-Avatar-Url", "");
     }
 }

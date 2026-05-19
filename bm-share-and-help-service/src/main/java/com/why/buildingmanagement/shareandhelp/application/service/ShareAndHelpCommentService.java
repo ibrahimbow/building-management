@@ -1,5 +1,6 @@
 package com.why.buildingmanagement.shareandhelp.application.service;
 
+import com.why.buildingmanagement.shareandhelp.application.mapper.ShareAndHelpResultMapper;
 import com.why.buildingmanagement.shareandhelp.application.port.in.AddCommentCommand;
 import com.why.buildingmanagement.shareandhelp.application.port.in.AddCommentUseCase;
 import com.why.buildingmanagement.shareandhelp.application.port.in.DeleteCommentCommand;
@@ -7,7 +8,6 @@ import com.why.buildingmanagement.shareandhelp.application.port.in.DeleteComment
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
-import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpResultMapper;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment;

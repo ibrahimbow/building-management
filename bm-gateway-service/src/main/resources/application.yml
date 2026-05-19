@@ -38,6 +38,13 @@ spring:
           predicates:
             - Path=/api/tenant/chat/**
 
+        - id: chat-websocket
+          uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
+          predicates:
+            - Path=/ws/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
+
 security:
   jwt:
     secret: ${AUTH_JWT_SECRET}

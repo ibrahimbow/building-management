@@ -50,7 +50,6 @@ public class GatewaySecurityConfig {
         return new CorsWebFilter(source);
     }
 
-
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
         return http
@@ -60,6 +59,7 @@ public class GatewaySecurityConfig {
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers("/api/auth/**").permitAll()
+                        .pathMatchers("/ws/**").permitAll()
                         .pathMatchers(HttpMethod.GET, "/api/files/**").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated())
@@ -67,12 +67,25 @@ public class GatewaySecurityConfig {
                     var response = exchange.getResponse();
                     response.setStatusCode(HttpStatus.UNAUTHORIZED);
                     response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
                     return response.writeWith(Mono.just(
                             response.bufferFactory().wrap(UNAUTHORIZED_BODY.getBytes(StandardCharsets.UTF_8))
                     ));
                 }))
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt(Customizer.withDefaults())
+                        .bearerTokenConverter(exchange -> {
+                            // Only extract token if Authorization header is present
+                            String auth = exchange.getRequest().getHeaders().getFirst("Authorization");
+                            if (auth == null || !auth.startsWith("Bearer ")) {
+                                return Mono.empty(); // no token = anonymous, let authz rules decide
+                            }
+                            return Mono.just(
+                                    new org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken(
+                                            auth.substring(7)
+                                    )
+                            );
+                        })
+                )
                 .build();
     }
 
