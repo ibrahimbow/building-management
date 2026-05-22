@@ -1,15 +1,14 @@
 package com.why.buildingmanagement.auth.infrastructure.persistence;
 
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -18,13 +17,12 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @Testcontainers
-@Disabled
 class BuildingUserRepositoryTest {
 
     @Container
-    static final PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>("postgres:16-alpine")
-                    .withDatabaseName("building_management_test_db")
+    static final PostgreSQLContainer postgres =
+            new PostgreSQLContainer("postgres:16")
+                    .withDatabaseName("building_test_db")
                     .withUsername("test")
                     .withPassword("test");
 
@@ -49,6 +47,7 @@ class BuildingUserRepositoryTest {
         assertEquals("ibrahim@test.com", saved.getEmail());
         assertEquals("ibrahimbow", saved.getDisplayName());
         assertEquals("+3200000000", saved.getPhoneNumber());
+        assertNull(saved.getAvatarUrl());
         assertEquals("HASHED_PASSWORD", saved.getPasswordHash());
         assertEquals(BuildingUserRole.TENANT.name(), saved.getRole());
         assertTrue(saved.isEnabled());
@@ -121,15 +120,16 @@ class BuildingUserRepositoryTest {
     }
 
     private BuildingUserEntity userEntity() {
-        return BuildingUserEntity.builder()
-                .username("ibrahim")
-                .email("ibrahim@test.com")
-                .passwordHash("HASHED_PASSWORD")
-                .displayName("ibrahimbow")
-                .phoneNumber("+3200000000")
-                .role(BuildingUserRole.TENANT.name())
-                .createdAt(Instant.now())
-                .enabled(true)
-                .build();
+        return new BuildingUserEntity(
+                null,
+                "ibrahim",
+                "ibrahim@test.com",
+                "HASHED_PASSWORD",
+                "ibrahimbow",
+                "+3200000000",
+                null,
+                BuildingUserRole.TENANT.name(),
+                true,
+                Instant.now());
     }
 }

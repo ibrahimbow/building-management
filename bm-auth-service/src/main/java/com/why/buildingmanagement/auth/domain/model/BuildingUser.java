@@ -1,23 +1,22 @@
 package com.why.buildingmanagement.auth.domain.model;
 
-import lombok.Builder;
 import lombok.Getter;
 
 import java.time.Instant;
 
 @Getter
-@Builder
 public class BuildingUser {
 
-    private Long id;
-    private String username;
-    private String email;
-    private String passwordHash;
-    private String displayName;
-    private String phoneNumber;
-    private BuildingUserRole role;
-    private Instant createdAt;
-    private boolean enabled;
+    private final Long id;
+    private final String username;
+    private final String email;
+    private final String passwordHash;
+    private final String displayName;
+    private final String phoneNumber;
+    private final String avatarUrl;
+    private final BuildingUserRole role;
+    private final Instant createdAt;
+    private final boolean enabled;
 
     public BuildingUser(final Long id,
                         final String username,
@@ -25,6 +24,7 @@ public class BuildingUser {
                         final String passwordHash,
                         final String displayName,
                         final String phoneNumber,
+                        final String avatarUrl,
                         final BuildingUserRole role,
                         final Instant createdAt,
                         final boolean enabled) {
@@ -34,6 +34,7 @@ public class BuildingUser {
         this.passwordHash = passwordHash;
         this.displayName = displayName;
         this.phoneNumber = phoneNumber;
+        this.avatarUrl = avatarUrl;
         this.role = role;
         this.createdAt = createdAt;
         this.enabled = enabled;
@@ -53,6 +54,7 @@ public class BuildingUser {
                 passwordHash,
                 displayName,
                 phoneNumber,
+                null,
                 role,
                 Instant.now(),
                 true);

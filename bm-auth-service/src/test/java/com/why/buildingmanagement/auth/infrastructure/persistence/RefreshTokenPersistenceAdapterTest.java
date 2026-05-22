@@ -1,7 +1,6 @@
 package com.why.buildingmanagement.auth.infrastructure.persistence;
 
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -15,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 @ActiveProfiles("test")
 @Import(RefreshTokenPersistenceAdapter.class)
-@Disabled
 class RefreshTokenPersistenceAdapterTest {
 
     @Autowired
@@ -23,15 +21,9 @@ class RefreshTokenPersistenceAdapterTest {
 
     @Test
     void save_shouldPersistRefreshToken() {
-        RefreshToken token = RefreshToken.builder()
-                .userId(1L)
-                .token("REFRESH_TOKEN_123")
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .revoked(false)
-                .createdAt(Instant.now())
-                .build();
 
-        RefreshToken saved = adapter.save(token);
+        final RefreshToken saved =
+                adapter.save(refreshToken(1L, "REFRESH_TOKEN_123"));
 
         assertNotNull(saved.getId());
         assertEquals(1L, saved.getUserId());
@@ -41,17 +33,10 @@ class RefreshTokenPersistenceAdapterTest {
 
     @Test
     void findByToken_shouldReturnRefreshToken() {
-        RefreshToken token = RefreshToken.builder()
-                .userId(1L)
-                .token("REFRESH_TOKEN_456")
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .revoked(false)
-                .createdAt(Instant.now())
-                .build();
 
-        adapter.save(token);
+        adapter.save(refreshToken(1L, "REFRESH_TOKEN_456"));
 
-        RefreshToken found = adapter.findByToken("REFRESH_TOKEN_456")
+        final RefreshToken found = adapter.findByToken("REFRESH_TOKEN_456")
                 .orElseThrow();
 
         assertEquals(1L, found.getUserId());
@@ -60,17 +45,10 @@ class RefreshTokenPersistenceAdapterTest {
 
     @Test
     void findByUserId_shouldReturnRefreshToken() {
-        RefreshToken token = RefreshToken.builder()
-                .userId(10L)
-                .token("REFRESH_TOKEN_USER")
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .revoked(false)
-                .createdAt(Instant.now())
-                .build();
 
-        adapter.save(token);
+        adapter.save(refreshToken(10L, "REFRESH_TOKEN_USER"));
 
-        RefreshToken found = adapter.findByUserId(10L)
+        final RefreshToken found = adapter.findByUserId(10L)
                 .orElseThrow();
 
         assertEquals("REFRESH_TOKEN_USER", found.getToken());
@@ -78,18 +56,23 @@ class RefreshTokenPersistenceAdapterTest {
 
     @Test
     void deleteByUserId_shouldDeleteRefreshToken() {
-        RefreshToken token = RefreshToken.builder()
-                .userId(1L)
-                .token("REFRESH_TOKEN_789")
-                .expiresAt(Instant.now().plusSeconds(3600))
-                .revoked(false)
-                .createdAt(Instant.now())
-                .build();
 
-        adapter.save(token);
+        adapter.save(refreshToken(1L, "REFRESH_TOKEN_789"));
 
         adapter.deleteByUserId(1L);
 
         assertTrue(adapter.findByToken("REFRESH_TOKEN_789").isEmpty());
+    }
+
+    private RefreshToken refreshToken(final Long userId,
+                                      final String token) {
+
+        return RefreshToken.builder()
+                .userId(userId)
+                .token(token)
+                .expiresAt(Instant.now().plusSeconds(3600))
+                .revoked(false)
+                .createdAt(Instant.now())
+                .build();
     }
 }

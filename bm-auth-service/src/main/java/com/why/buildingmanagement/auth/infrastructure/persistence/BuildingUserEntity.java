@@ -1,38 +1,37 @@
 package com.why.buildingmanagement.auth.infrastructure.persistence;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 
+@Getter
 @Entity
 @Table(
         name = "building_users",
         uniqueConstraints = {
                 @UniqueConstraint(
                         name = "uk_building_users_username",
-                        columnNames = "username"
-                ),
+                        columnNames = "username"),
                 @UniqueConstraint(
                         name = "uk_building_users_email",
-                        columnNames = "email"
-                )
+                        columnNames = "email")
         },
         indexes = {
                 @Index(
                         name = "idx_building_users_username",
-                        columnList = "username"
-                ),
+                        columnList = "username"),
                 @Index(
                         name = "idx_building_users_email",
-                        columnList = "email"
-                )
+                        columnList = "email")
         }
 )
-@Getter
+@Access(AccessType.FIELD)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-@Builder
+@AllArgsConstructor
 public class BuildingUserEntity {
 
     @Id
@@ -48,17 +47,19 @@ public class BuildingUserEntity {
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 150)
     private String displayName;
 
     @Column(name = "phone_number", nullable = false, length = 30)
     private String phoneNumber;
 
+    @Column(name = "avatar_url", length = 500)
+    private String avatarUrl;
+
     @Column(nullable = false, length = 20)
     private String role;
 
     @Column(nullable = false)
-    @Builder.Default
     private boolean enabled = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)

@@ -1,13 +1,10 @@
 package com.why.buildingmanagement.auth.infrastructure.api.controller;
 
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserUseCase;
-import com.why.buildingmanagement.auth.application.port.in.LogoutUseCase;
-import com.why.buildingmanagement.auth.application.port.in.RefreshAccessTokenUseCase;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
-import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserUseCase;
+import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
+import com.why.buildingmanagement.auth.infrastructure.api.mapper.BuildingUserProfileResponseMapper;
+import com.why.buildingmanagement.auth.infrastructure.security.CurrentBuildingUserService;
 import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
 import com.why.buildingmanagement.auth.infrastructure.security.SecurityConfig;
 import org.junit.jupiter.api.Test;
@@ -39,17 +36,28 @@ class AuthControllerTest {
     private LoginBuildingUserUseCase loginBuildingUserUseCase;
 
     @MockitoBean
-    private JwtTokenProvider jwtTokenProvider;
-
-    @MockitoBean
     private RefreshAccessTokenUseCase refreshAccessTokenUseCase;
 
     @MockitoBean
     private LogoutUseCase logoutUseCase;
 
+    @MockitoBean
+    private UpdateBuildingUserProfileUseCase updateBuildingUserProfileUseCase;
+
+    @MockitoBean
+    private BuildingUserProfileResponseMapper buildingUserProfileResponseMapper;
+
+    @MockitoBean
+    private CurrentBuildingUserService currentBuildingUserService;
+
+    @MockitoBean
+    private JwtTokenProvider jwtTokenProvider;
+
     @Test
     void register_shouldReturnCreatedUserId() throws Exception {
-        when(registerBuildingUserUseCase.register(ArgumentMatchers.any(RegisterBuildingUserCommand.class)))
+
+        when(registerBuildingUserUseCase.register(
+                ArgumentMatchers.any(RegisterBuildingUserCommand.class)))
                 .thenReturn(1L);
 
         final String body = """
@@ -75,6 +83,7 @@ class AuthControllerTest {
 
     @Test
     void register_shouldReturnBadRequest_whenRequestIsInvalid() throws Exception {
+
         final String body = """
                 {
                   "username": "",
@@ -95,7 +104,9 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturnAccessAndRefreshToken() throws Exception {
-        when(loginBuildingUserUseCase.login(ArgumentMatchers.any(LoginBuildingUserCommand.class)))
+
+        when(loginBuildingUserUseCase.login(
+                ArgumentMatchers.any(LoginBuildingUserCommand.class)))
                 .thenReturn(new LoginResult("JWT_TOKEN", "REFRESH_TOKEN"));
 
         final String body = """
@@ -119,7 +130,9 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturnUnauthorized_whenCredentialsAreInvalid() throws Exception {
-        when(loginBuildingUserUseCase.login(ArgumentMatchers.any(LoginBuildingUserCommand.class)))
+
+        when(loginBuildingUserUseCase.login(
+                ArgumentMatchers.any(LoginBuildingUserCommand.class)))
                 .thenThrow(new InvalidCredentialsException());
 
         final String body = """

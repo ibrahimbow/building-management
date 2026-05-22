@@ -40,6 +40,7 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .claim("email", buildingUser.getEmail())
                 .claim("displayName", buildingUser.getDisplayName())
                 .claim("phoneNumber", buildingUser.getPhoneNumber())
+                .claim("avatarUrl", buildingUser.getAvatarUrl())
                 .claim("role", buildingUser.getRole().name())
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiresAt))
@@ -82,5 +83,13 @@ public class JwtTokenProvider implements TokenProviderPort {
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
+    }
+
+    public String getPhoneNumber(final String token) {
+        return parseClaims(token).get("phoneNumber", String.class);
+    }
+
+    public String getAvatarUrl(final String token) {
+        return parseClaims(token).get("avatarUrl", String.class);
     }
 }

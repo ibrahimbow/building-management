@@ -24,6 +24,27 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
     }
 
     @Override
+    public Optional<BuildingUser> loadById(final Long id) {
+
+        return buildingUserRepository.findById(id)
+                .map(buildingUserMapper::toDomain);
+    }
+
+    @Override
+    public Optional<BuildingUser> loadByUsername(final String username) {
+
+        return buildingUserRepository.findByUsername(username)
+                .map(buildingUserMapper::toDomain);
+    }
+
+    @Override
+    public Optional<BuildingUser> loadByEmail(final String email) {
+
+        return buildingUserRepository.findByEmail(email)
+                .map(buildingUserMapper::toDomain);
+    }
+
+    @Override
     public boolean existsByUsername(final String username) {
 
         return buildingUserRepository.existsByUsername(username);
@@ -33,13 +54,6 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
     public boolean existsByEmail(final String email) {
 
         return buildingUserRepository.existsByEmail(email);
-    }
-
-    @Override
-    public Optional<BuildingUser> loadById(final Long id) {
-
-        return buildingUserRepository.findById(id)
-                .map(buildingUserMapper::toDomain);
     }
 
     @Override

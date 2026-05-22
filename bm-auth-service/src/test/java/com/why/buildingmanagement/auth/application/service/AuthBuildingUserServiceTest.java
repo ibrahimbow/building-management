@@ -2,18 +2,19 @@ package com.why.buildingmanagement.auth.application.service;
 
 import com.why.buildingmanagement.auth.application.port.in.LoginBuildingUserCommand;
 import com.why.buildingmanagement.auth.application.port.in.RegisterBuildingUserCommand;
+import com.why.buildingmanagement.auth.application.port.in.UpdateBuildingUserProfileCommand;
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.application.result.BuildingUserProfileResult;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
+import com.why.buildingmanagement.auth.domain.exception.BuildingUserNotFoundException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
-import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -56,28 +57,43 @@ class AuthBuildingUserServiceTest {
                 refreshTokenService);
     }
 
-
-
-    @Disabled // This test is disabled because the implementation of register method is not provided in the code snippet. You can enable and implement it once the method is implemented.
     @Test
     void register_shouldThrowDuplicateEmailException_whenEmailAlreadyExists() {
-        RegisterBuildingUserCommand command = registerCommand();
 
-        when(loadBuildingUserPort.existsByUsername(command.username())).thenReturn(false);
-        when(loadBuildingUserPort.existsByEmail(command.email())).thenReturn(true);
+        final RegisterBuildingUserCommand command =
+                registerCommand();
 
-        assertThrows(DuplicateEmailException.class, () -> authService.register(command));
+        when(loadBuildingUserPort.existsByUsername(command.username()))
+                .thenReturn(false);
 
-        verify(loadBuildingUserPort).existsByUsername(command.username());
-        verify(loadBuildingUserPort).existsByEmail(command.email());
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(saveBuildingUserPort, never()).save(any());
+        when(loadBuildingUserPort.existsByEmail(command.email()))
+                .thenReturn(true);
+
+        assertThrows(
+                DuplicateEmailException.class,
+                () -> authService.register(command));
+
+        verify(loadBuildingUserPort)
+                .existsByUsername(command.username());
+
+        verify(loadBuildingUserPort)
+                .existsByEmail(command.email());
+
+        verify(passwordEncoder, never())
+                .encode(anyString());
+
+        verify(saveBuildingUserPort, never())
+                .save(any());
     }
 
     @Test
     void login_shouldReturnAccessAndRefreshToken_whenCredentialsAreValid() {
-        LoginBuildingUserCommand command = loginCommand();
-        BuildingUser user = savedUser();
+
+        final LoginBuildingUserCommand command =
+                loginCommand();
+
+        final BuildingUser user =
+                savedUser();
 
         when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
                 .thenReturn(Optional.of(user));
@@ -88,7 +104,7 @@ class AuthBuildingUserServiceTest {
         when(tokenProviderPort.generateToken(user))
                 .thenReturn("JWT_TOKEN");
 
-        RefreshToken refreshToken = RefreshToken.builder()
+        final RefreshToken refreshToken = RefreshToken.builder()
                 .userId(user.getId())
                 .token("REFRESH_TOKEN")
                 .build();
@@ -96,36 +112,56 @@ class AuthBuildingUserServiceTest {
         when(refreshTokenService.createForUser(user.getId()))
                 .thenReturn(refreshToken);
 
-        LoginResult result = authService.login(command);
+        final LoginResult result =
+                authService.login(command);
 
         assertEquals("JWT_TOKEN", result.accessToken());
         assertEquals("REFRESH_TOKEN", result.refreshToken());
 
-        verify(refreshTokenService).createForUser(user.getId());
+        verify(refreshTokenService)
+                .createForUser(user.getId());
 
-        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
-        verify(passwordEncoder).matches(command.password(), user.getPasswordHash());
-        verify(tokenProviderPort).generateToken(user);
+        verify(loadBuildingUserPort)
+                .loadByUsernameOrEmail(command.usernameOrEmail());
+
+        verify(passwordEncoder)
+                .matches(command.password(), user.getPasswordHash());
+
+        verify(tokenProviderPort)
+                .generateToken(user);
     }
 
     @Test
     void login_shouldThrowInvalidCredentialsException_whenUserNotFound() {
-        LoginBuildingUserCommand command = loginCommand();
+
+        final LoginBuildingUserCommand command =
+                loginCommand();
 
         when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
                 .thenReturn(Optional.empty());
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(command));
+        assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.login(command));
 
-        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
-        verify(tokenProviderPort, never()).generateToken(any());
+        verify(loadBuildingUserPort)
+                .loadByUsernameOrEmail(command.usernameOrEmail());
+
+        verify(passwordEncoder, never())
+                .matches(anyString(), anyString());
+
+        verify(tokenProviderPort, never())
+                .generateToken(any());
     }
 
     @Test
     void login_shouldThrowInvalidCredentialsException_whenPasswordIsWrong() {
-        LoginBuildingUserCommand command = loginCommand();
-        BuildingUser user = savedUser();
+
+        final LoginBuildingUserCommand command =
+                loginCommand();
+
+        final BuildingUser user =
+                savedUser();
 
         when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
                 .thenReturn(Optional.of(user));
@@ -133,14 +169,155 @@ class AuthBuildingUserServiceTest {
         when(passwordEncoder.matches(command.password(), user.getPasswordHash()))
                 .thenReturn(false);
 
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(command));
+        assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.login(command));
 
-        verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
-        verify(passwordEncoder).matches(command.password(), user.getPasswordHash());
-        verify(tokenProviderPort, never()).generateToken(any());
+        verify(loadBuildingUserPort)
+                .loadByUsernameOrEmail(command.usernameOrEmail());
+
+        verify(passwordEncoder)
+                .matches(command.password(), user.getPasswordHash());
+
+        verify(tokenProviderPort, never())
+                .generateToken(any());
+    }
+
+    @Test
+    void updateProfile_shouldUpdateProfileAndReturnResult_whenUserExists() {
+
+        final BuildingUser existingUser =
+                savedUser();
+
+        final UpdateBuildingUserProfileCommand command =
+                new UpdateBuildingUserProfileCommand(
+                        existingUser.getId(),
+                        "Ibrahim Alolofi",
+                        "+32465570653",
+                        "/api/files/PROFILE_AVATAR/avatar.png",
+                        "EN",
+                        true);
+
+        final BuildingUser savedUser = new BuildingUser(
+                existingUser.getId(),
+                existingUser.getUsername(),
+                existingUser.getEmail(),
+                existingUser.getPasswordHash(),
+                command.displayName(),
+                command.phoneNumber(),
+                command.avatarUrl(),
+                existingUser.getRole(),
+                existingUser.getCreatedAt(),
+                existingUser.isEnabled());
+
+        when(loadBuildingUserPort.loadById(command.userId()))
+                .thenReturn(Optional.of(existingUser));
+
+        when(saveBuildingUserPort.save(any(BuildingUser.class)))
+                .thenReturn(savedUser);
+
+        final BuildingUserProfileResult result =
+                authService.updateProfile(command);
+
+        assertEquals(existingUser.getId(), result.id());
+        assertEquals(existingUser.getUsername(), result.username());
+        assertEquals(existingUser.getEmail(), result.email());
+        assertEquals("Ibrahim Alolofi", result.displayName());
+        assertEquals("+32465570653", result.phoneNumber());
+        assertEquals("/api/files/PROFILE_AVATAR/avatar.png", result.avatarUrl());
+        assertEquals("EN", result.preferredLanguage());
+        assertTrue(result.notificationsEnabled());
+        assertEquals(BuildingUserRole.TENANT.name(), result.role());
+
+        verify(loadBuildingUserPort)
+                .loadById(command.userId());
+
+        verify(saveBuildingUserPort)
+                .save(any(BuildingUser.class));
+    }
+
+    @Test
+    void updateProfile_shouldPreserveExistingAvatar_whenAvatarUrlIsNull() {
+
+        final BuildingUser existingUser = new BuildingUser(
+                1L,
+                "ibrahim",
+                "ibrahim@test.com",
+                "HASHED_PASSWORD",
+                "ibrahimbow",
+                "+32000000000",
+                "/api/files/PROFILE_AVATAR/existing.png",
+                BuildingUserRole.TENANT,
+                Instant.now(),
+                true);
+
+        final UpdateBuildingUserProfileCommand command =
+                new UpdateBuildingUserProfileCommand(
+                        existingUser.getId(),
+                        "Ibrahim Alolofi",
+                        "+32465570653",
+                        null,
+                        "EN",
+                        true);
+
+        final BuildingUser savedUser = new BuildingUser(
+                existingUser.getId(),
+                existingUser.getUsername(),
+                existingUser.getEmail(),
+                existingUser.getPasswordHash(),
+                command.displayName(),
+                command.phoneNumber(),
+                existingUser.getAvatarUrl(),
+                existingUser.getRole(),
+                existingUser.getCreatedAt(),
+                existingUser.isEnabled());
+
+        when(loadBuildingUserPort.loadById(command.userId()))
+                .thenReturn(Optional.of(existingUser));
+
+        when(saveBuildingUserPort.save(any(BuildingUser.class)))
+                .thenReturn(savedUser);
+
+        final BuildingUserProfileResult result =
+                authService.updateProfile(command);
+
+        assertEquals("/api/files/PROFILE_AVATAR/existing.png", result.avatarUrl());
+
+        verify(loadBuildingUserPort)
+                .loadById(command.userId());
+
+        verify(saveBuildingUserPort)
+                .save(any(BuildingUser.class));
+    }
+
+    @Test
+    void updateProfile_shouldThrowInvalidCredentialsException_whenUserDoesNotExist() {
+
+        final UpdateBuildingUserProfileCommand command =
+                new UpdateBuildingUserProfileCommand(
+                        999L,
+                        "Ibrahim Alolofi",
+                        "+32465570653",
+                        null,
+                        "EN",
+                        true);
+
+        when(loadBuildingUserPort.loadById(command.userId()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                BuildingUserNotFoundException.class,
+                () -> authService.updateProfile(command));
+
+        verify(loadBuildingUserPort)
+                .loadById(command.userId());
+
+        verify(saveBuildingUserPort, never())
+                .save(any());
     }
 
     private RegisterBuildingUserCommand registerCommand() {
+
         return new RegisterBuildingUserCommand(
                 "ibrahim",
                 "ibrahim@test.com",
@@ -151,13 +328,14 @@ class AuthBuildingUserServiceTest {
     }
 
     private LoginBuildingUserCommand loginCommand() {
+
         return new LoginBuildingUserCommand(
                 "ibrahim",
-                "12345678"
-        );
+                "12345678");
     }
 
     private BuildingUser savedUser() {
+
         return new BuildingUser(
                 1L,
                 "ibrahim",
@@ -165,10 +343,9 @@ class AuthBuildingUserServiceTest {
                 "HASHED_PASSWORD",
                 "ibrahimbow",
                 "+32000000000",
+                null,
                 BuildingUserRole.TENANT,
                 Instant.now(),
-                true
-        );
+                true);
     }
-
 }

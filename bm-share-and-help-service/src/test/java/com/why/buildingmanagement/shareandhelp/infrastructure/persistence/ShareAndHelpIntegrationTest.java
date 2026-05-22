@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ShareAndHelpIntegrationTest {
 
     @Container
-    static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
+    static final PostgreSQLContainer postgres =
             new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")

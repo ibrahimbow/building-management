@@ -26,16 +26,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
                                     @NonNull final HttpServletResponse response,
-                                    @NonNull final FilterChain filterChain) throws ServletException, IOException {
+                                    @NonNull final FilterChain filterChain)
+            throws ServletException, IOException {
 
         final String path = request.getServletPath();
 
-        if (path.startsWith("/actuator/")
-                || path.equals("/api/auth/welcome")
-                || path.equals("/api/auth/register")
-                || path.equals("/api/auth/login")
-                || path.equals("/api/auth/refresh")
-                || path.equals("/api/auth/logout")) {
+        if (isPublicEndpoint(path)) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -49,21 +45,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String token = authorizationHeader.substring(7);
 
-        if (jwtTokenProvider.isTokenValid(token)) {
-            final String username = jwtTokenProvider.getUsername(token);
-            final String role = jwtTokenProvider.getRole(token);
-
-            final UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            username,
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
-
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-        } else {
+        if (!jwtTokenProvider.isTokenValid(token)) {
             SecurityContextHolder.clearContext();
+            filterChain.doFilter(request, response);
+            return;
         }
 
+        final String username = jwtTokenProvider.getUsername(token);
+
+        final String role = jwtTokenProvider.getRole(token);
+
+        final Long userId = jwtTokenProvider.getUserId(token);
+
+        final UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(
+                        username,
+                        null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+
+        authentication.setDetails(userId);
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isPublicEndpoint(final String path) {
+
+        return path.startsWith("/actuator/")
+                || path.equals("/api/auth/welcome")
+                || path.equals("/api/auth/register")
+                || path.equals("/api/auth/login")
+                || path.equals("/api/auth/refresh")
+                || path.equals("/api/auth/logout");
     }
 }

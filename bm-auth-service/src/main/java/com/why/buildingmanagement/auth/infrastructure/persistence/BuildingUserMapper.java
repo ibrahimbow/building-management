@@ -9,17 +9,17 @@ public interface BuildingUserMapper {
 
     default BuildingUserEntity toEntity(final BuildingUser user) {
 
-        return BuildingUserEntity.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .passwordHash(user.getPasswordHash())
-                .displayName(user.getDisplayName())
-                .phoneNumber(user.getPhoneNumber())
-                .role(user.getRole().name())
-                .enabled(user.isEnabled())
-                .createdAt(user.getCreatedAt())
-                .build();
+        return new BuildingUserEntity(
+                user.getId(),
+                user.getUsername(),
+                user.getEmail(),
+                user.getPasswordHash(),
+                user.getDisplayName(),
+                user.getPhoneNumber(),
+                user.getAvatarUrl(),
+                user.getRole().name(),
+                user.isEnabled(),
+                user.getCreatedAt());
     }
 
     default BuildingUser toDomain(final BuildingUserEntity entity) {
@@ -31,9 +31,9 @@ public interface BuildingUserMapper {
                 entity.getPasswordHash(),
                 entity.getDisplayName(),
                 entity.getPhoneNumber(),
+                entity.getAvatarUrl(),
                 BuildingUserRole.valueOf(entity.getRole()),
                 entity.getCreatedAt(),
-                entity.isEnabled()
-        );
+                entity.isEnabled());
     }
 }

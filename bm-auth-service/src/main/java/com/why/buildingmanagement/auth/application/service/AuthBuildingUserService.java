@@ -4,7 +4,9 @@ import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.port.out.LoadBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.SaveBuildingUserPort;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
+import com.why.buildingmanagement.auth.application.result.BuildingUserProfileResult;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
+import com.why.buildingmanagement.auth.domain.exception.BuildingUserNotFoundException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateEmailException;
 import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameException;
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
@@ -18,7 +20,8 @@ import org.springframework.stereotype.Service;
 public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         LoginBuildingUserUseCase,
         RefreshAccessTokenUseCase,
-        LogoutUseCase {
+        LogoutUseCase,
+        UpdateBuildingUserProfileUseCase {
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
@@ -59,6 +62,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
     @Override
     public Long register(final RegisterBuildingUserCommand command) {
+
         if (loadBuildingUserPort.existsByUsername(command.username())) {
             throw new DuplicateUsernameException(command.username());
         }
@@ -80,7 +84,45 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
                 role);
 
         final BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
+
         return saved.getId();
+    }
+
+    @Override
+    public BuildingUserProfileResult updateProfile(final UpdateBuildingUserProfileCommand command) {
+
+        final BuildingUser existingUser = loadBuildingUserPort
+                .loadById(command.userId())
+                .orElseThrow(() ->
+                        new BuildingUserNotFoundException(command.userId()));
+
+        final BuildingUser updatedUser = new BuildingUser(
+                existingUser.getId(),
+                existingUser.getUsername(),
+                existingUser.getEmail(),
+                existingUser.getPasswordHash(),
+                command.displayName(),
+                command.phoneNumber(),
+                command.avatarUrl() != null
+                        ? command.avatarUrl()
+                        : existingUser.getAvatarUrl(),
+                existingUser.getRole(),
+                existingUser.getCreatedAt(),
+                existingUser.isEnabled());
+
+        final BuildingUser savedUser =
+                saveBuildingUserPort.save(updatedUser);
+
+        return new BuildingUserProfileResult(
+                savedUser.getId(),
+                savedUser.getUsername(),
+                savedUser.getEmail(),
+                savedUser.getDisplayName(),
+                savedUser.getPhoneNumber(),
+                savedUser.getAvatarUrl(),
+                command.preferredLanguage(),
+                command.notificationsEnabled(),
+                savedUser.getRole().name());
     }
 
     @Override
@@ -89,7 +131,6 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         refreshTokenService.deleteForUser(refreshToken.getUserId());
     }
-
 
     @Override
     public LoginResult refresh(final RefreshAccessTokenCommand command) {
