@@ -8,6 +8,8 @@ import com.why.buildingmanagement.announcement.domain.exception.AnnouncementNotF
 import com.why.buildingmanagement.announcement.domain.exception.AnnouncementOwnershipException;
 import com.why.buildingmanagement.announcement.domain.model.Announcement;
 import com.why.buildingmanagement.announcement.domain.model.AnnouncementCategory;
+import com.why.buildingmanagement.announcement.infrastructure.kafka.event.AnnouncementCreatedEvent;
+import com.why.buildingmanagement.announcement.infrastructure.kafka.publisher.AnnouncementEventPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +27,7 @@ class AnnouncementApplicationServiceTest {
 
     private AnnouncementRepositoryPort announcementRepositoryPort;
     private BuildingAccessPort buildingAccessPort;
+    private AnnouncementEventPublisher announcementEventPublisher;
     private AnnouncementApplicationService announcementApplicationService;
 
     private static final Long MANAGER_ID = 1L;
@@ -37,10 +40,12 @@ class AnnouncementApplicationServiceTest {
     void setUp() {
         announcementRepositoryPort = mock(AnnouncementRepositoryPort.class);
         buildingAccessPort = mock(BuildingAccessPort.class);
+        announcementEventPublisher = mock(AnnouncementEventPublisher.class);
 
         announcementApplicationService = new AnnouncementApplicationService(
-                announcementRepositoryPort,
-                buildingAccessPort);
+                        announcementRepositoryPort,
+                        buildingAccessPort,
+                        announcementEventPublisher);
 
         buildingId = UUID.randomUUID();
         announcementId = UUID.randomUUID();
@@ -49,21 +54,21 @@ class AnnouncementApplicationServiceTest {
     @Test
     void createAnnouncement_shouldResolveManagerBuildingAndSaveAnnouncement() {
         final CreateAnnouncementCommand command = new CreateAnnouncementCommand(
-                MANAGER_ID,
-                "Ibrahim",
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "https://example.com/image.jpg");
+                        MANAGER_ID,
+                        "Ibrahim",
+                        "Water maintenance",
+                        "Water will be off tomorrow",
+                        AnnouncementCategory.MAINTENANCE,
+                        "https://example.com/image.jpg");
 
         when(buildingAccessPort.getManagerBuildingId(MANAGER_ID))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(announcementRepositoryPort.save(any(Announcement.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         final AnnouncementResult result =
-                announcementApplicationService.createAnnouncement(command);
+                        announcementApplicationService.createAnnouncement(command);
 
         assertThat(result.buildingId()).isEqualTo(buildingId);
         assertThat(result.createdByManagerId()).isEqualTo(MANAGER_ID);
@@ -75,7 +80,7 @@ class AnnouncementApplicationServiceTest {
         assertThat(result.imageUrl()).isEqualTo("https://example.com/image.jpg");
 
         final ArgumentCaptor<Announcement> captor =
-                ArgumentCaptor.forClass(Announcement.class);
+                        ArgumentCaptor.forClass(Announcement.class);
 
         verify(announcementRepositoryPort).save(captor.capture());
 
@@ -84,6 +89,9 @@ class AnnouncementApplicationServiceTest {
         assertThat(savedAnnouncement.getBuildingId()).isEqualTo(buildingId);
         assertThat(savedAnnouncement.getCreatedByManagerId()).isEqualTo(MANAGER_ID);
         assertThat(savedAnnouncement.getCreatedBy()).isEqualTo("Ibrahim");
+
+        verify(announcementEventPublisher).publishAnnouncementCreated(
+                        any(AnnouncementCreatedEvent.class));
     }
 
     @Test
@@ -91,24 +99,24 @@ class AnnouncementApplicationServiceTest {
         final Announcement existingAnnouncement = announcement();
 
         final UpdateAnnouncementCommand command = new UpdateAnnouncementCommand(
-                announcementId,
-                MANAGER_ID,
-                "Updated title",
-                "Updated message",
-                EMERGENCY,
-                null);
+                        announcementId,
+                        MANAGER_ID,
+                        "Updated title",
+                        "Updated message",
+                        EMERGENCY,
+                        null);
 
         when(announcementRepositoryPort.findById(announcementId))
-                .thenReturn(Optional.of(existingAnnouncement));
+                        .thenReturn(Optional.of(existingAnnouncement));
 
         when(buildingAccessPort.getManagerBuildingId(MANAGER_ID))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(announcementRepositoryPort.save(any(Announcement.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         final AnnouncementResult result =
-                announcementApplicationService.updateAnnouncement(command);
+                        announcementApplicationService.updateAnnouncement(command);
 
         assertThat(result.title()).isEqualTo("Updated title");
         assertThat(result.message()).isEqualTo("Updated message");
@@ -117,25 +125,27 @@ class AnnouncementApplicationServiceTest {
         assertThat(result.updatedAt()).isNotNull();
 
         verify(announcementRepositoryPort).save(existingAnnouncement);
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
     void updateAnnouncement_shouldThrowException_whenAnnouncementDoesNotExist() {
         final UpdateAnnouncementCommand command = new UpdateAnnouncementCommand(
-                announcementId,
-                MANAGER_ID,
-                "Updated title",
-                "Updated message",
-                AnnouncementCategory.SAFETY,
-                null);
+                        announcementId,
+                        MANAGER_ID,
+                        "Updated title",
+                        "Updated message",
+                        AnnouncementCategory.SAFETY,
+                        null);
 
         when(announcementRepositoryPort.findById(announcementId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> announcementApplicationService.updateAnnouncement(command))
-                .isInstanceOf(AnnouncementNotFoundException.class);
+                        .isInstanceOf(AnnouncementNotFoundException.class);
 
         verify(announcementRepositoryPort, never()).save(any());
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
@@ -143,23 +153,24 @@ class AnnouncementApplicationServiceTest {
         final Announcement existingAnnouncement = announcement();
 
         final UpdateAnnouncementCommand command = new UpdateAnnouncementCommand(
-                announcementId,
-                MANAGER_ID,
-                "Updated title",
-                "Updated message",
-                AnnouncementCategory.SAFETY,
-                null);
+                        announcementId,
+                        MANAGER_ID,
+                        "Updated title",
+                        "Updated message",
+                        AnnouncementCategory.SAFETY,
+                        null);
 
         when(announcementRepositoryPort.findById(announcementId))
-                .thenReturn(Optional.of(existingAnnouncement));
+                        .thenReturn(Optional.of(existingAnnouncement));
 
         when(buildingAccessPort.getManagerBuildingId(MANAGER_ID))
-                .thenReturn(UUID.randomUUID());
+                        .thenReturn(UUID.randomUUID());
 
         assertThatThrownBy(() -> announcementApplicationService.updateAnnouncement(command))
-                .isInstanceOf(AnnouncementOwnershipException.class);
+                        .isInstanceOf(AnnouncementOwnershipException.class);
 
         verify(announcementRepositoryPort, never()).save(any());
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
@@ -167,33 +178,35 @@ class AnnouncementApplicationServiceTest {
         final Announcement existingAnnouncement = announcement();
 
         final DeleteAnnouncementCommand command = new DeleteAnnouncementCommand(
-                announcementId,
-                MANAGER_ID);
+                        announcementId,
+                        MANAGER_ID);
 
         when(announcementRepositoryPort.findById(announcementId))
-                .thenReturn(Optional.of(existingAnnouncement));
+                        .thenReturn(Optional.of(existingAnnouncement));
 
         when(buildingAccessPort.getManagerBuildingId(MANAGER_ID))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         announcementApplicationService.deleteAnnouncement(command);
 
         verify(announcementRepositoryPort).delete(existingAnnouncement);
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
     void deleteAnnouncement_shouldThrowException_whenAnnouncementDoesNotExist() {
         final DeleteAnnouncementCommand command = new DeleteAnnouncementCommand(
-                announcementId,
-                MANAGER_ID);
+                        announcementId,
+                        MANAGER_ID);
 
         when(announcementRepositoryPort.findById(announcementId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> announcementApplicationService.deleteAnnouncement(command))
-                .isInstanceOf(AnnouncementNotFoundException.class);
+                        .isInstanceOf(AnnouncementNotFoundException.class);
 
         verify(announcementRepositoryPort, never()).delete(any());
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
@@ -201,18 +214,19 @@ class AnnouncementApplicationServiceTest {
         final Announcement announcement = announcement();
 
         when(buildingAccessPort.getManagerBuildingId(MANAGER_ID))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(announcementRepositoryPort.findByBuildingId(buildingId))
-                .thenReturn(List.of(announcement));
+                        .thenReturn(List.of(announcement));
 
         final List<AnnouncementResult> results =
-                announcementApplicationService.getManagerAnnouncements(
-                        new GetManagerAnnouncementsQuery(MANAGER_ID));
+                        announcementApplicationService.getManagerAnnouncements(
+                                        new GetManagerAnnouncementsQuery(MANAGER_ID));
 
         assertThat(results).hasSize(1);
         assertThat(results.getFirst().buildingId()).isEqualTo(buildingId);
         assertThat(results.getFirst().createdByManagerId()).isEqualTo(MANAGER_ID);
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     @Test
@@ -220,31 +234,32 @@ class AnnouncementApplicationServiceTest {
         final Announcement announcement = announcement();
 
         when(buildingAccessPort.getTenantActiveBuildingId(TENANT_ID))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(announcementRepositoryPort.findByBuildingId(buildingId))
-                .thenReturn(List.of(announcement));
+                        .thenReturn(List.of(announcement));
 
         final List<AnnouncementResult> results =
-                announcementApplicationService.getTenantAnnouncements(
-                        new GetTenantAnnouncementsQuery(TENANT_ID));
+                        announcementApplicationService.getTenantAnnouncements(
+                                        new GetTenantAnnouncementsQuery(TENANT_ID));
 
         assertThat(results).hasSize(1);
         assertThat(results.getFirst().buildingId()).isEqualTo(buildingId);
+        verifyNoInteractions(announcementEventPublisher);
     }
 
     private Announcement announcement() {
         return Announcement.restore(
-                announcementId,
-                buildingId,
-                MANAGER_ID,
-                "Ibrahim",
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "build",
-                "https://example.com/image.jpg",
-                java.time.Instant.now(),
-                null);
+                        announcementId,
+                        buildingId,
+                        MANAGER_ID,
+                        "Ibrahim",
+                        "Water maintenance",
+                        "Water will be off tomorrow",
+                        AnnouncementCategory.MAINTENANCE,
+                        "build",
+                        "https://example.com/image.jpg",
+                        java.time.Instant.now(),
+                        null);
     }
 }

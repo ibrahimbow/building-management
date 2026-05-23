@@ -6,6 +6,7 @@ import com.why.buildingmanagement.announcement.application.port.out.BuildingAcce
 import com.why.buildingmanagement.announcement.domain.model.AnnouncementCategory;
 import com.why.buildingmanagement.announcement.infrastructure.api.dto.request.CreateAnnouncementRequest;
 import com.why.buildingmanagement.announcement.infrastructure.api.dto.request.UpdateAnnouncementRequest;
+import com.why.buildingmanagement.announcement.infrastructure.kafka.publisher.AnnouncementEventPublisher;
 import com.why.buildingmanagement.announcement.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.announcement.infrastructure.security.CurrentUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,11 +73,14 @@ class AnnouncementLifecycleIntegrationTest {
     @MockitoBean
     private BuildingAccessPort buildingAccessPort;
 
+    @MockitoBean
+    private AnnouncementEventPublisher announcementEventPublisher;
+
     private UUID buildingId;
 
     @BeforeEach
     void setUp() {
-        reset(currentUserService, buildingAccessPort);
+        reset(currentUserService, buildingAccessPort, announcementEventPublisher);
 
         buildingId = UUID.randomUUID();
 

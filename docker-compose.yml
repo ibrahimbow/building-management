@@ -17,6 +17,33 @@ services:
       - ./docker/init:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
 
+  kafka:
+    image: apache/kafka:3.9.0
+    container_name: bm-kafka
+    restart: unless-stopped
+
+    ports:
+      - "9094:9094"
+
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@bm-kafka:9093
+
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://bm-kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+
   bm-auth-service:
     build: ./bm-auth-service
     container_name: bm-auth-service
@@ -124,6 +151,21 @@ services:
       - postgres
       - bm-building-service
 
+  bm-notification-service:
+    build: ./bm-notification-service
+    container_name: bm-notification-service
+    restart: unless-stopped
+
+    expose:
+      - "8088"
+
+    environment:
+      NOTIFICATION_SERVICE_PORT: ${NOTIFICATION_SERVICE_PORT}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    depends_on:
+      - kafka
+
 
   bm-gateway-service:
     build: ./bm-gateway-service
@@ -153,3 +195,4 @@ services:
 volumes:
   postgres_data:
   file_uploads:
+  kafka_data:

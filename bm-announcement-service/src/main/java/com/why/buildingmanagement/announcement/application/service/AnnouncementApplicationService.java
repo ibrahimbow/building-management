@@ -7,6 +7,8 @@ import com.why.buildingmanagement.announcement.application.result.AnnouncementRe
 import com.why.buildingmanagement.announcement.domain.exception.AnnouncementNotFoundException;
 import com.why.buildingmanagement.announcement.domain.exception.AnnouncementOwnershipException;
 import com.why.buildingmanagement.announcement.domain.model.Announcement;
+import com.why.buildingmanagement.announcement.infrastructure.kafka.event.AnnouncementCreatedEvent;
+import com.why.buildingmanagement.announcement.infrastructure.kafka.publisher.AnnouncementEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,15 +20,16 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class AnnouncementApplicationService implements
-        CreateAnnouncementUseCase,
-        UpdateAnnouncementUseCase,
-        DeleteAnnouncementUseCase,
-        GetManagerAnnouncementsUseCase,
-        GetTenantAnnouncementsUseCase,
-        GetManagerAnnouncementByIdUseCase{
+                CreateAnnouncementUseCase,
+                UpdateAnnouncementUseCase,
+                DeleteAnnouncementUseCase,
+                GetManagerAnnouncementsUseCase,
+                GetTenantAnnouncementsUseCase,
+                GetManagerAnnouncementByIdUseCase {
 
     private final AnnouncementRepositoryPort announcementRepositoryPort;
     private final BuildingAccessPort buildingAccessPort;
+    private final AnnouncementEventPublisher announcementEventPublisher;
 
     @Override
     @Transactional
@@ -44,6 +47,15 @@ public class AnnouncementApplicationService implements
                 command.imageUrl());
 
         final Announcement savedAnnouncement = announcementRepositoryPort.save(announcement);
+
+        announcementEventPublisher.publishAnnouncementCreated(
+                        new AnnouncementCreatedEvent(
+                                        savedAnnouncement.getId(),
+                                        savedAnnouncement.getBuildingId(),
+                                        savedAnnouncement.getTitle(),
+                                        savedAnnouncement.getCategory().name(),
+                                        command.createdBy(),
+                                        savedAnnouncement.getCreatedAt()));
 
         return toResult(savedAnnouncement);
     }

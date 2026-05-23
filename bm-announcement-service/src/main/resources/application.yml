@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: bm-announcement-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:bm-kafka:9092}
 
   datasource:
     url: ${ANNOUNCEMENT_DB_URL}
