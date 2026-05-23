@@ -23,6 +23,7 @@ management:
 file:
   storage:
     upload-dir: ${FILE_STORAGE_UPLOAD_DIR:uploads}
+    max-file-size: 10MB
 
 info:
   app:

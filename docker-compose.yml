@@ -102,7 +102,7 @@ services:
       FILE_STORAGE_UPLOAD_DIR: ${FILE_STORAGE_UPLOAD_DIR}
 
     volumes:
-      - file_uploads:/app/uploads
+      - ./bm-file-service/uploads:/app/uploads
 
 
   bm-chat-service:

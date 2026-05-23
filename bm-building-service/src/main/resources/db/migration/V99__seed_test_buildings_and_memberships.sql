@@ -1,10 +1,50 @@
-INSERT INTO buildings (id, building_name, building_code, address, manager_id, total_apartments, emergency_phone)
+INSERT INTO buildings (
+    id,
+    building_name,
+    building_code,
+    address,
+    manager_id,
+    total_apartments,
+    emergency_phone
+)
 VALUES
-('11111111-1111-1111-1111-111111111111', 'Antwerp Residence Alpha', 'BM-TEST01', 'Meir 10, 2000 Antwerp', 1001, 40, '+3231111111'),
-('22222222-2222-2222-2222-222222222222', 'Brussels Residence Beta', 'BM-TEST02', 'Rue Neuve 25, 1000 Brussels', 1002, 55, '+3222222222'),
-('33333333-3333-3333-3333-333333333333', 'Gent Residence Gamma', 'BM-TEST03', 'Veldstraat 15, 9000 Gent', 1003, 35, '+3293333333')
-ON CONFLICT (id) DO NOTHING;
-
+(
+    '11111111-1111-1111-1111-111111111111',
+    'Antwerp Residence Alpha',
+    'BM-TEST01',
+    'Meir 10, 2000 Antwerp',
+    1001,
+    40,
+    '+3231111111'
+),
+(
+    '22222222-2222-2222-2222-222222222222',
+    'Brussels Residence Beta',
+    'BM-TEST02',
+    'Rue Neuve 25, 1000 Brussels',
+    1002,
+    55,
+    '+3222222222'
+),
+(
+    '33333333-3333-3333-3333-333333333333',
+    'Gent Residence Gamma',
+    'BM-TEST03',
+    'Veldstraat 15, 9000 Gent',
+    1003,
+    35,
+    '+3293333333'
+),
+(
+   '11111111-1111-1111-1111-111111111199',
+    'Antwerp Residence Demo',
+    'BM-TEST99',
+    'Meir 10, 2000 Antwerp',
+    3005,
+    40,
+    '+3231111111'
+)
+ON CONFLICT (building_code) DO NOTHING;
 
 INSERT INTO building_memberships (
     id,

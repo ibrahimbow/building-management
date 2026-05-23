@@ -120,6 +120,71 @@ class ChatMessageIntegrationTest {
                 .andExpect(jsonPath("$[0].deletedAt", notNullValue()));
     }
 
+
+    @Test
+    @WithMockUser(username = "tenant", roles = "TENANT")
+    void shouldAddAndRemoveReactionFromChatMessage() throws Exception {
+
+        when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(TENANT_USER_ID))
+                        .thenReturn(BUILDING_ID);
+
+        final String createMessageBody = objectMapper.writeValueAsString(Map.of(
+                        "content", "Message with removable reaction",
+                        "imageUrl", ""
+        ));
+
+        final String createResponse = mockMvc.perform(post("/api/tenant/chat/messages")
+                                        .with(csrf())
+                                        .headers(tenantHeaders())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(createMessageBody))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", notNullValue()))
+                        .andExpect(jsonPath("$.reactions", hasSize(0)))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
+
+        final JsonNode createJson = objectMapper.readTree(createResponse);
+        final String messageId = createJson.get("id").asText();
+
+        final String reactionBody = objectMapper.writeValueAsString(Map.of(
+                        "emoji", "👍"
+        ));
+
+        mockMvc.perform(post("/api/tenant/chat/messages/{messageId}/reactions", messageId)
+                                        .with(csrf())
+                                        .headers(tenantHeaders())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(reactionBody))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.emoji", is("👍")))
+                        .andExpect(jsonPath("$.userId", is(TENANT_USER_ID.intValue())));
+
+        mockMvc.perform(get("/api/tenant/chat/messages")
+                                        .headers(tenantHeaders()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", hasSize(1)))
+                        .andExpect(jsonPath("$[0].id", is(messageId)))
+                        .andExpect(jsonPath("$[0].reactions", hasSize(1)))
+                        .andExpect(jsonPath("$[0].reactions[0].emoji", is("👍")))
+                        .andExpect(jsonPath("$[0].reactions[0].count", is(1)))
+                        .andExpect(jsonPath("$[0].reactions[0].reactedByCurrentUser", is(true)));
+
+        mockMvc.perform(delete("/api/tenant/chat/messages/{messageId}/reactions", messageId)
+                                        .with(csrf())
+                                        .headers(tenantHeaders())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(reactionBody))
+                        .andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/tenant/chat/messages")
+                                        .headers(tenantHeaders()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", hasSize(1)))
+                        .andExpect(jsonPath("$[0].id", is(messageId)))
+                        .andExpect(jsonPath("$[0].reactions", hasSize(0)));
+    }
     private org.springframework.http.HttpHeaders tenantHeaders() {
 
         final org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
