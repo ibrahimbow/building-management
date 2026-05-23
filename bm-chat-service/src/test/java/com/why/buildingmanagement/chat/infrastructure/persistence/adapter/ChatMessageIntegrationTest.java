@@ -3,6 +3,9 @@ package com.why.buildingmanagement.chat.infrastructure.persistence.adapter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.chat.infrastructure.persistence.repository.ChatMessageRepository;
+import com.why.buildingmanagement.chat.infrastructure.persistence.repository.ChatReactionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -37,10 +40,10 @@ class ChatMessageIntegrationTest {
 
     @Container
     static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
-                    .withDatabaseName("building_test_db")
-                    .withUsername("test")
-                    .withPassword("test");
+                    new PostgreSQLContainer("postgres:16")
+                                    .withDatabaseName("building_test_db")
+                                    .withUsername("test")
+                                    .withPassword("test");
 
     @DynamicPropertySource
     static void registerProperties(final DynamicPropertyRegistry registry) {
@@ -60,66 +63,77 @@ class ChatMessageIntegrationTest {
     @MockitoBean
     private LoadTenantBuildingPort loadTenantBuildingPort;
 
+    @Autowired
+    private ChatReactionRepository chatReactionRepository;
+
+    @Autowired
+    private ChatMessageRepository chatMessageRepository;
+
+    @BeforeEach
+    void cleanDatabase() {
+        chatReactionRepository.deleteAllInBatch();
+        chatMessageRepository.deleteAllInBatch();
+    }
+
     @Test
     @WithMockUser(username = "tenant", roles = "TENANT")
     void shouldCreateReactAndSoftDeleteChatMessage() throws Exception {
 
         when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(TENANT_USER_ID))
-                .thenReturn(BUILDING_ID);
+                        .thenReturn(BUILDING_ID);
 
         final String createMessageBody = objectMapper.writeValueAsString(Map.of(
-                "content", "Hello from chat integration test",
-                "imageUrl", ""
+                        "content", "Hello from chat integration test",
+                        "imageUrl", ""
         ));
 
         final String createResponse = mockMvc.perform(post("/api/tenant/chat/messages")
-                        .with(csrf())
-                        .headers(tenantHeaders())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createMessageBody))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", notNullValue()))
-                .andExpect(jsonPath("$.senderUserId", is(TENANT_USER_ID.intValue())))
-                .andExpect(jsonPath("$.senderDisplayName", is("Integration Tenant")))
-                .andExpect(jsonPath("$.content", is("Hello from chat integration test")))
-                .andExpect(jsonPath("$.deleted", is(false)))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                                        .with(csrf())
+                                        .headers(tenantHeaders())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(createMessageBody))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", notNullValue()))
+                        .andExpect(jsonPath("$.senderUserId", is(TENANT_USER_ID.intValue())))
+                        .andExpect(jsonPath("$.senderDisplayName", is("Integration Tenant")))
+                        .andExpect(jsonPath("$.content", is("Hello from chat integration test")))
+                        .andExpect(jsonPath("$.deleted", is(false)))
+                        .andReturn()
+                        .getResponse()
+                        .getContentAsString();
 
         final JsonNode createJson = objectMapper.readTree(createResponse);
         final String messageId = createJson.get("id").asText();
 
         mockMvc.perform(get("/api/tenant/chat/messages")
-                        .headers(tenantHeaders()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)));
+                                        .headers(tenantHeaders()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$", hasSize(1)));
 
         final String reactionBody = objectMapper.writeValueAsString(Map.of(
-                "emoji", "👍"
+                        "emoji", "👍"
         ));
 
         mockMvc.perform(post("/api/tenant/chat/messages/{messageId}/reactions", messageId)
-                        .with(csrf())
-                        .headers(tenantHeaders())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(reactionBody))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.emoji", is("👍")))
-                .andExpect(jsonPath("$.userId", is(TENANT_USER_ID.intValue())));
+                                        .with(csrf())
+                                        .headers(tenantHeaders())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(reactionBody))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.emoji", is("👍")))
+                        .andExpect(jsonPath("$.userId", is(TENANT_USER_ID.intValue())));
 
         mockMvc.perform(delete("/api/tenant/chat/messages/{messageId}", messageId)
-                        .with(csrf())
-                        .headers(tenantHeaders()))
-                .andExpect(status().isNoContent());
+                                        .with(csrf())
+                                        .headers(tenantHeaders()))
+                        .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/tenant/chat/messages")
-                        .headers(tenantHeaders()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].deleted", is(true)))
-                .andExpect(jsonPath("$[0].deletedAt", notNullValue()));
+                                        .headers(tenantHeaders()))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$[0].deleted", is(true)))
+                        .andExpect(jsonPath("$[0].deletedAt", notNullValue()));
     }
-
 
     @Test
     @WithMockUser(username = "tenant", roles = "TENANT")
@@ -130,8 +144,7 @@ class ChatMessageIntegrationTest {
 
         final String createMessageBody = objectMapper.writeValueAsString(Map.of(
                         "content", "Message with removable reaction",
-                        "imageUrl", ""
-        ));
+                        "imageUrl", ""));
 
         final String createResponse = mockMvc.perform(post("/api/tenant/chat/messages")
                                         .with(csrf())
@@ -149,8 +162,7 @@ class ChatMessageIntegrationTest {
         final String messageId = createJson.get("id").asText();
 
         final String reactionBody = objectMapper.writeValueAsString(Map.of(
-                        "emoji", "👍"
-        ));
+                        "emoji", "👍"));
 
         mockMvc.perform(post("/api/tenant/chat/messages/{messageId}/reactions", messageId)
                                         .with(csrf())
@@ -185,6 +197,7 @@ class ChatMessageIntegrationTest {
                         .andExpect(jsonPath("$[0].id", is(messageId)))
                         .andExpect(jsonPath("$[0].reactions", hasSize(0)));
     }
+
     private org.springframework.http.HttpHeaders tenantHeaders() {
 
         final org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
