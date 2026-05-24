@@ -36,7 +36,7 @@ public class TenantBuildingController {
                 new JoinBuildingCommand(
                         request.code(),
                         current.userId(),
-                        current.username(),
+                        current.displayName(),
                         current.email(),
                         current.phoneNumber()));
 

@@ -164,10 +164,12 @@ services:
       NOTIFICATION_DB_URL: ${NOTIFICATION_DB_URL}
       NOTIFICATION_DB_USERNAME: ${NOTIFICATION_DB_USERNAME}
       NOTIFICATION_DB_PASSWORD: ${NOTIFICATION_DB_PASSWORD}
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
 
     depends_on:
       - postgres
+      - bm-building-service
       - kafka
 
 
@@ -186,6 +188,7 @@ services:
       SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
       FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
+      NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     depends_on:
@@ -195,6 +198,7 @@ services:
       - bm-share-and-help-service
       - bm-file-service
       - bm-chat-service
+      - bm-notification-service
 
 volumes:
   postgres_data:

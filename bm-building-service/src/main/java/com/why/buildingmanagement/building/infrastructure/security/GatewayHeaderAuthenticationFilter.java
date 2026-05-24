@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -17,29 +18,31 @@ public class GatewayHeaderAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
-                                    @NonNull final HttpServletResponse response,
-                                    @NonNull final FilterChain filterChain
-    ) throws ServletException, IOException {
+                                    @NotNull final HttpServletResponse response,
+                                    @NonNull final FilterChain filterChain)
+                    throws ServletException, IOException {
 
-        String userId = request.getHeader("X-User-Id");
-        String email = request.getHeader("X-User-Email");
-        String role = request.getHeader("X-User-Role");
-        String username = request.getHeader("X-Username");
-        String phoneNumber = request.getHeader("X-User-Phone");
+        final String userId = request.getHeader("X-User-Id");
+        final String email = request.getHeader("X-User-Email");
+        final String role = request.getHeader("X-User-Role");
+        final String displayName = request.getHeader("X-User-Display-Name");
+        final String avatarUrl = request.getHeader("X-User-Avatar-Url");
+        final String phoneNumber = request.getHeader( "X-User-Phone");
 
-        if (userId != null && email != null && role != null && username != null && phoneNumber != null) {
-            CurrentUser currentUser = new CurrentUser(
-                    Long.valueOf(userId),
-                    username,
-                    email,
-                    phoneNumber,
-                    role);
+        if (userId != null && email != null && role != null && displayName != null) {
+            final CurrentUser currentUser = new CurrentUser(
+                            Long.valueOf(userId),
+                            email,
+                            role,
+                            displayName,
+                            avatarUrl,
+                            phoneNumber);
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            currentUser,
-                            null,
-                            List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+            final UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                            currentUser,
+                                            null,
+                                            List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

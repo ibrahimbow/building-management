@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.chat.infrastructure.persistence.client;
+package com.why.buildingmanagement.notification.infrastructure.client;
 
 import java.util.UUID;
 

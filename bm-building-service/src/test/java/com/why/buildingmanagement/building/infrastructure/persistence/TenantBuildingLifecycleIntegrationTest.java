@@ -255,19 +255,21 @@ class TenantBuildingLifecycleIntegrationTest {
 
     private CurrentUser currentTenant() {
         return new CurrentUser(
-                TENANT_ID,
-                "tenant",
-                "tenant@example.com",
-                "+32000000000",
-                "TENANT");
+                        TENANT_ID,
+                        "ibrahim@example.com",
+                        "TENANT",
+                        "Brimoo",
+                        "/images/avatar_me.jpg",
+                        "+32000000000" );
     }
 
     private CurrentUser currentManager() {
         return new CurrentUser(
-                MANAGER_ID,
-                "manager",
-                "manager@example.com",
-                "+32000000000",
-                "MANAGER");
+                        MANAGER_ID,
+                        "ibrahim.manager@example.com",
+                        "MANAGER",
+                        "Manager_Brimo",
+                        "/images/avatar_manager.jpg",
+                        "+32000000000" );
     }
 }

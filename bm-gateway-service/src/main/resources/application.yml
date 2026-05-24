@@ -38,13 +38,24 @@ spring:
           predicates:
             - Path=/api/tenant/chat/**,/api/manager/chat/**
 
-        - id: chat-websocket
-          uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
+        - id: bm-notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://bm-notification-service:8088}
           predicates:
-            - Path=/ws/**
+            - Path=/api/notifications/**
+
+        - id: notification-websocket
+          uri: ${NOTIFICATION_SERVICE_URL:http://bm-notification-service:8088}
+          predicates:
+            - Path=/ws/notifications/**
           filters:
             - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
 
+        - id: chat-websocket
+          uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
+          predicates:
+           - Path=/ws/chat/**
+          filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials RETAIN_UNIQUE
 security:
   jwt:
     secret: ${AUTH_JWT_SECRET}

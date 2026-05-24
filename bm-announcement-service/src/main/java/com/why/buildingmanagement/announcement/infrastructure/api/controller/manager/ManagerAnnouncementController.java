@@ -40,7 +40,7 @@ public class ManagerAnnouncementController {
         final AnnouncementResult result = createAnnouncementUseCase.createAnnouncement(
                 new CreateAnnouncementCommand(
                         currentUser.userId(),
-                        currentUser.username(),
+                        currentUser.displayName(),
                         request.title(),
                         request.message(),
                         request.category(),

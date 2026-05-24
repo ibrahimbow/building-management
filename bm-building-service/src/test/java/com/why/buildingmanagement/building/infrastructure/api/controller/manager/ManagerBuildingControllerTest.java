@@ -276,11 +276,12 @@ class ManagerBuildingControllerTest {
 
     private CurrentUser currentManager() {
         return new CurrentUser(
-                1L,
-                "Ibrahim",
-                "ibrahim@example.com",
-                "+32000000000",
-                "MANAGER");
+                        1L,
+                        "ibrahim@example.com",
+                        "MANAGER",
+                        "Brimoo",
+                        "/images/avatar_me.jpg",
+                        "+32000000000" );
     }
 
     private BuildingInfoResult createBuildingInfoResult() {

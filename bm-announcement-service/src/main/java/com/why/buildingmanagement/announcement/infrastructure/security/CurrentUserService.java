@@ -2,9 +2,17 @@ package com.why.buildingmanagement.announcement.infrastructure.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.annotation.RequestScope;
 
 @Service
+@RequestScope
 public class CurrentUserService {
+
+    private static final String USER_ID_HEADER = "X-User-Id";
+    private static final String USER_EMAIL_HEADER = "X-User-Email";
+    private static final String USER_ROLE_HEADER = "X-User-Role";
+    private static final String USER_DISPLAY_NAME_HEADER = "X-User-Display-Name";
+    private static final String USER_AVATAR_URL_HEADER = "X-User-Avatar-Url";
 
     private final HttpServletRequest request;
 
@@ -13,21 +21,28 @@ public class CurrentUserService {
     }
 
     public CurrentUser getCurrentUser() {
-        final String userId = request.getHeader("X-User-Id");
-        final String username = request.getHeader("X-Username");
-        final String email = request.getHeader("X-User-Email");
-        final String phoneNumber = request.getHeader("X-User-Phone");
-        final String role = request.getHeader("X-User-Role");
-
-        if (userId == null || username == null || email == null || role == null) {
-            throw new IllegalStateException("Missing authenticated user headers");
-        }
 
         return new CurrentUser(
-                Long.valueOf(userId),
-                username,
-                email,
-                phoneNumber,
-                role);
+                        Long.valueOf(requiredHeader(USER_ID_HEADER)),
+                        requiredHeader(USER_EMAIL_HEADER),
+                        requiredHeader(USER_ROLE_HEADER),
+                        requiredHeader(USER_DISPLAY_NAME_HEADER),
+                        optionalHeader(USER_AVATAR_URL_HEADER));
+    }
+
+    private String requiredHeader(final String name) {
+
+        final String value = request.getHeader(name);
+
+        if (value == null || value.isBlank()) {
+            throw new IllegalStateException("Missing required user header: " + name);
+        }
+
+        return value;
+    }
+
+    private String optionalHeader(final String name) {
+
+        return request.getHeader(name);
     }
 }

@@ -58,11 +58,12 @@ class TenantBuildingControllerTest {
     void setUp() {
         when(currentUserService.getCurrentUser())
                 .thenReturn(new CurrentUser(
-                        10L,
-                        "Tenant",
-                        "tenant@example.com",
-                        "+32000000000",
-                        "TENANT"));
+                                10L,
+                                "ibrahim@example.com",
+                                "TENANT",
+                                "Brimoo",
+                                "/images/avatar_me.jpg",
+                                "+32000000000" ));
     }
 
     @Test
@@ -97,7 +98,7 @@ class TenantBuildingControllerTest {
 
         assertThat(captor.getValue().code()).isEqualTo("BM-123456");
         assertThat(captor.getValue().tenantUserId()).isEqualTo(10L);
-        assertThat(captor.getValue().tenantEmail()).isEqualTo("tenant@example.com");
+        assertThat(captor.getValue().tenantEmail()).isEqualTo("ibrahim@example.com");
     }
 
     @Test
@@ -174,7 +175,6 @@ class TenantBuildingControllerTest {
                 "Antwerp",
                 12L,
                 "Ibrahim Aref",
-
                 10,
                 "+320000000");
     }

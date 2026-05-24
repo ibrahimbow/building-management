@@ -1,8 +1,7 @@
-package com.why.buildingmanagement.chat.infrastructure.client.building;
+package com.why.buildingmanagement.chat.infrastructure.client;
 
 import com.why.buildingmanagement.chat.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.chat.domain.exception.ManagerBuildingNotFoundException;
-import com.why.buildingmanagement.chat.infrastructure.persistence.client.ManagerBuildingResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -23,13 +22,13 @@ public class BuildingServiceManagerBuildingAdapter implements LoadManagerBuildin
     public UUID loadBuildingIdByManagerUserId(final Long managerUserId) {
 
         final ManagerBuildingResponse response = restClientBuilder.build()
-                .get()
-                .uri(buildingServiceUrl
-                        + "/internal/managers/"
-                        + managerUserId
-                        + "/building")
-                .retrieve()
-                .body(ManagerBuildingResponse.class);
+                        .get()
+                        .uri(buildingServiceUrl
+                                        + "/internal/managers/"
+                                        + managerUserId
+                                        + "/building")
+                        .retrieve()
+                        .body(ManagerBuildingResponse.class);
 
         if (response == null) {
             throw new ManagerBuildingNotFoundException(managerUserId);

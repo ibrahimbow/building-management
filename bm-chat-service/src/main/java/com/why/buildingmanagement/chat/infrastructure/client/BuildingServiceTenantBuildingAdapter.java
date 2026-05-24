@@ -1,4 +1,4 @@
-package com.why.buildingmanagement.chat.infrastructure.persistence.client;
+package com.why.buildingmanagement.chat.infrastructure.client;
 
 import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
 import lombok.RequiredArgsConstructor;

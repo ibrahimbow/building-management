@@ -7,14 +7,14 @@ import jakarta.validation.constraints.Pattern;
 
 public record JoinBuildingCommand(
 
-        @NotBlank(message = "building code required")
-        String code,
+                @NotBlank(message = "building code required")
+                String code,
 
-        @NotNull(message = "tenant user id required")
-        Long tenantUserId,
+                @NotNull(message = "tenant user id required")
+                Long tenantUserId,
 
-        @NotBlank(message = "tenant username required")
-        String tenantUsername,
+                @NotBlank(message = "tenant username required")
+                String tenantUsername,
 
         @Email(message = "tenant email must be valid")
         @NotBlank(message = "tenant email required")

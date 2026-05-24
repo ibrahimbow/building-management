@@ -7,6 +7,10 @@ import com.why.buildingmanagement.notification.infrastructure.persistence.reposi
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 @Component
 @RequiredArgsConstructor
 public class NotificationPersistenceAdapter implements NotificationRepositoryPort {
@@ -16,7 +20,32 @@ public class NotificationPersistenceAdapter implements NotificationRepositoryPor
 
     @Override
     public Notification save(final Notification notification) {
-        return notificationPersistenceMapper.toDomain(notificationRepository
-                        .save(notificationPersistenceMapper.toEntity(notification)));
+
+        return notificationPersistenceMapper.toDomain(
+                        notificationRepository.save(notificationPersistenceMapper.toEntity(notification)));
+    }
+
+    @Override
+    public List<Notification> findByUserIdAndBuildingIdOrderByCreatedAtDesc(final Long userId, final UUID buildingId) {
+
+        return notificationRepository
+                        .findByUserIdAndBuildingIdOrderByCreatedAtDesc(
+                                        userId,
+                                        buildingId)
+                        .stream()
+                        .map(notificationPersistenceMapper::toDomain)
+                        .toList();
+    }
+
+    @Override
+    public long countByUserIdAndReadFalse(final Long userId) {
+
+        return notificationRepository.countByUserIdAndReadFalse(userId);
+    }
+
+    @Override
+    public Optional<Notification> findById(final UUID notificationId) {
+
+        return notificationRepository.findById(notificationId).map(notificationPersistenceMapper::toDomain);
     }
 }

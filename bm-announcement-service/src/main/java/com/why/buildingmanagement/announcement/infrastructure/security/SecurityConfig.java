@@ -8,11 +8,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.why.buildingmanagement.announcement.infrastructure.security.SecurityConstants.MANAGER;
+import static com.why.buildingmanagement.announcement.infrastructure.security.SecurityConstants.TENANT;
+
 @Configuration
 public class SecurityConfig {
-
-    private static final String MANAGER = "MANAGER";
-    private static final String TENANT = "TENANT";
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {

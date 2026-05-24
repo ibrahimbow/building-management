@@ -1,9 +1,9 @@
 package com.why.buildingmanagement.announcement.infrastructure.security;
 
 public record CurrentUser(
-        Long userId,
-        String username,
-        String email,
-        String phoneNumber,
-        String role) {
+                Long userId,
+                String email,
+                String role,
+                String displayName,
+                String avatarUrl) {
 }
