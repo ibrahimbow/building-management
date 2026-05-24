@@ -88,11 +88,11 @@ class TenantAnnouncementControllerTest {
 
     private CurrentUser currentTenant() {
         return new CurrentUser(
-                2L,
-                "tenant",
-                "tenant@example.com",
-                "+32000000000",
-                "TENANT");
+                        2L,
+                        "ibrahim@example.com",
+                        "TENANT",
+                        "Ibrahim",
+                        null);
     }
 
     private AnnouncementResult announcementResult() {

@@ -265,10 +265,10 @@ class ManagerAnnouncementControllerTest {
     private CurrentUser currentManager() {
         return new CurrentUser(
                 1L,
-                "Ibrahim",
                 "ibrahim@example.com",
-                "+32000000000",
-                "MANAGER");
+                "MANAGER",
+                "Ibrahim",
+                null);
     }
 
     private AnnouncementResult announcementResult() {

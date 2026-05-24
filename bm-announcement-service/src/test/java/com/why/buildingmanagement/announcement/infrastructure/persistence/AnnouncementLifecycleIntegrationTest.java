@@ -172,21 +172,19 @@ class AnnouncementLifecycleIntegrationTest {
 
     private CurrentUser currentManager() {
         return new CurrentUser(
-                1L,
-                "Ibrahim",
-                "ibrahim@example.com",
-                "+32000000000",
-                "MANAGER"
-        );
+                        1L,
+                        "ibrahim@example.com",
+                        "MANAGER",
+                        "Ibrahim",
+                        null);
     }
 
     private CurrentUser currentTenant() {
         return new CurrentUser(
-                2L,
-                "tenant",
-                "tenant@example.com",
-                "+32000000000",
-                "TENANT"
-        );
+                        2L,
+                        "tenant@example.com",
+                        "TENANT",
+                "Ibrahimbow",
+                null);
     }
 }
