@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: bm-chat-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:bm-kafka:9092}
+
 
   datasource:
     url: ${CHAT_DB_URL}

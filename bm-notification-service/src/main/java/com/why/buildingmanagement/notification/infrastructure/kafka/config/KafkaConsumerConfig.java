@@ -1,6 +1,5 @@
 package com.why.buildingmanagement.notification.infrastructure.kafka.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.AnnouncementCreatedEvent;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ChatMessageCreatedEvent;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ShareAndHelpCommentCreatedEvent;
@@ -89,34 +88,23 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, ChatMessageCreatedEvent>
-    chatMessageCreatedConsumerFactory(
-                    final KafkaProperties kafkaProperties,
-                    final ObjectMapper objectMapper) {
+    public ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory(
+                    final KafkaProperties kafkaProperties) {
 
-        final JsonDeserializer<ChatMessageCreatedEvent> jsonDeserializer =
-                        new JsonDeserializer<>(
-                                        ChatMessageCreatedEvent.class,
-                                        objectMapper,
-                                        false);
-
-        jsonDeserializer.addTrustedPackages("*");
-
-        return new DefaultKafkaConsumerFactory<>(
-                        kafkaProperties.buildConsumerProperties(),
-                        new StringDeserializer(),
-                        jsonDeserializer);
+        return consumerFactory(
+                        kafkaProperties,
+                        ChatMessageCreatedEvent.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent>
     chatMessageCreatedKafkaListenerContainerFactory(
-                    final ConsumerFactory<String, ChatMessageCreatedEvent> consumerFactory) {
+                    final ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory) {
 
-        final ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent>
-                        factory = new ConcurrentKafkaListenerContainerFactory<>();
+        final ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent> factory =
+                        new ConcurrentKafkaListenerContainerFactory<>();
 
-        factory.setConsumerFactory(consumerFactory);
+        factory.setConsumerFactory(chatMessageCreatedConsumerFactory);
 
         return factory;
     }
@@ -125,21 +113,17 @@ public class KafkaConsumerConfig {
                     final KafkaProperties kafkaProperties,
                     final Class<T> eventType) {
 
-        final Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
+        final Map<String, Object> config =
+                        new HashMap<>(kafkaProperties.buildConsumerProperties());
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
-
         config.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
-
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
-
         config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, eventType.getName());
-
-        config.put(JsonDeserializer.TRUSTED_PACKAGES,
+        config.put(
+                        JsonDeserializer.TRUSTED_PACKAGES,
                         "com.why.buildingmanagement.notification.infrastructure.kafka.event");
-
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         return new DefaultKafkaConsumerFactory<>(config);

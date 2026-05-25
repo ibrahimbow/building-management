@@ -1,6 +1,5 @@
 package com.why.buildingmanagement.chat.infrastructure.kafka.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -18,28 +17,14 @@ import java.util.Map;
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, Object> producerFactory(
-                    final KafkaProperties kafkaProperties,
-                    final ObjectMapper objectMapper) {
+    public ProducerFactory<String, Object> producerFactory(final KafkaProperties kafkaProperties) {
 
-        final Map<String, Object> configs = new HashMap<>(
-                        kafkaProperties.buildProducerProperties());
+        final Map<String, Object> config = new HashMap<>(kafkaProperties.buildProducerProperties());
 
-        configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
-                        StringSerializer.class);
+        config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+        config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
 
-        configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
-                        JsonSerializer.class);
-
-        final JsonSerializer<Object> jsonSerializer =
-                        new JsonSerializer<>(objectMapper);
-
-        jsonSerializer.setAddTypeInfo(false);
-
-        return new DefaultKafkaProducerFactory<>(
-                        configs,
-                        new StringSerializer(),
-                        jsonSerializer);
+        return new DefaultKafkaProducerFactory<>(config);
     }
 
     @Bean
