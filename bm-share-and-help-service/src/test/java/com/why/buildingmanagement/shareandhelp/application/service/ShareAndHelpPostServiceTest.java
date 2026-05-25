@@ -10,6 +10,7 @@ import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAnd
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.infrastructure.kafka.publisher.ShareAndHelpEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +43,11 @@ class ShareAndHelpPostServiceTest {
 
     @InjectMocks
     private ShareAndHelpPostService shareAndHelpPostService;
+
+    @Mock
+    private ShareAndHelpEventPublisher shareAndHelpEventPublisher;
+
+
 
     @Test
     void shouldCreateShareAndHelpPost() {
@@ -61,7 +68,7 @@ class ShareAndHelpPostServiceTest {
 
         final ShareAndHelpPostResult result = createResult(savedPost.getId(),savedPost.getBuildingId());
 
-        when(saveShareAndHelpPostPort.save(org.mockito.ArgumentMatchers.any(ShareAndHelpPost.class)))
+        when(saveShareAndHelpPostPort.save(any(ShareAndHelpPost.class)))
                 .thenReturn(savedPost);
 
         when(shareAndHelpResultMapper.toResult(savedPost))
@@ -71,8 +78,10 @@ class ShareAndHelpPostServiceTest {
 
         assertThat(actual).isEqualTo(result);
 
+        verify(shareAndHelpEventPublisher).publishPostCreated(any());
+
         verify(saveShareAndHelpPostPort)
-                .save(org.mockito.ArgumentMatchers.any(ShareAndHelpPost.class));
+                .save(any(ShareAndHelpPost.class));
 
         verify(shareAndHelpResultMapper).toResult(savedPost);
     }

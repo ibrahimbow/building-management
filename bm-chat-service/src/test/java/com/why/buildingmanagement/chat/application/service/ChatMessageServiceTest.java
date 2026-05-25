@@ -1,14 +1,10 @@
 package com.why.buildingmanagement.chat.application.service;
 
 import com.why.buildingmanagement.chat.application.port.in.SendChatMessageCommand;
-import com.why.buildingmanagement.chat.application.port.out.DeleteChatReactionPort;
-import com.why.buildingmanagement.chat.application.port.out.LoadChatMessagePort;
-import com.why.buildingmanagement.chat.application.port.out.LoadChatReactionPort;
-import com.why.buildingmanagement.chat.application.port.out.LoadManagerBuildingPort;
-import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
-import com.why.buildingmanagement.chat.application.port.out.SaveChatMessagePort;
-import com.why.buildingmanagement.chat.application.port.out.SaveChatReactionPort;
+import com.why.buildingmanagement.chat.application.port.out.*;
 import com.why.buildingmanagement.chat.domain.model.ChatMessage;
+import com.why.buildingmanagement.chat.infrastructure.kafka.event.ChatMessageCreatedEvent;
+import com.why.buildingmanagement.chat.infrastructure.kafka.publisher.ChatEventPublisher;
 import com.why.buildingmanagement.chat.infrastructure.websocket.ChatWebSocketPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -57,6 +53,9 @@ class ChatMessageServiceTest {
     @Mock
     private ChatWebSocketPublisher chatWebSocketPublisher;
 
+    @Mock
+    private ChatEventPublisher chatEventPublisher;
+
     @InjectMocks
     private ChatMessageService chatMessageService;
 
@@ -64,24 +63,37 @@ class ChatMessageServiceTest {
     void shouldSendMessageForTenantActiveBuilding() {
 
         final SendChatMessageCommand command = new SendChatMessageCommand(
-                TENANT_USER_ID,
-                "Tenant User",
-                "",
-                "Hello chat",
-                "");
+                        TENANT_USER_ID,
+                        "Tenant User",
+                        "",
+                        "Hello chat",
+                        "");
 
         when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(TENANT_USER_ID))
-                .thenReturn(BUILDING_ID);
+                        .thenReturn(BUILDING_ID);
 
         when(saveChatMessagePort.save(any(ChatMessage.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         chatMessageService.send(command);
 
         verify(chatWebSocketPublisher).publishMessageCreated(any());
 
+        final ArgumentCaptor<ChatMessageCreatedEvent> eventCaptor =
+                        ArgumentCaptor.forClass(ChatMessageCreatedEvent.class);
+
+        verify(chatEventPublisher).publishMessageCreated(eventCaptor.capture());
+
+        final ChatMessageCreatedEvent event = eventCaptor.getValue();
+
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.senderUserId()).isEqualTo(TENANT_USER_ID);
+        assertThat(event.senderDisplayName()).isEqualTo("Tenant User");
+        assertThat(event.content()).isEqualTo("Hello chat");
+        assertThat(event.imageUrl()).isBlank();
+
         final ArgumentCaptor<ChatMessage> messageCaptor =
-                ArgumentCaptor.forClass(ChatMessage.class);
+                        ArgumentCaptor.forClass(ChatMessage.class);
 
         verify(saveChatMessagePort).save(messageCaptor.capture());
 
@@ -100,24 +112,24 @@ class ChatMessageServiceTest {
     void shouldSendMessageForManagerOwnedBuilding() {
 
         final SendChatMessageCommand command = new SendChatMessageCommand(
-                MANAGER_USER_ID,
-                "Manager User",
-                "",
-                "Hello tenants",
-                "");
+                        MANAGER_USER_ID,
+                        "Manager User",
+                        "",
+                        "Hello tenants",
+                        "");
 
         when(loadManagerBuildingPort.loadBuildingIdByManagerUserId(MANAGER_USER_ID))
-                .thenReturn(BUILDING_ID);
+                        .thenReturn(BUILDING_ID);
 
         when(saveChatMessagePort.save(any(ChatMessage.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         chatMessageService.sendFromCurrentManagerBuilding(command);
 
         verify(chatWebSocketPublisher).publishMessageCreated(any());
 
         final ArgumentCaptor<ChatMessage> messageCaptor =
-                ArgumentCaptor.forClass(ChatMessage.class);
+                        ArgumentCaptor.forClass(ChatMessage.class);
 
         verify(saveChatMessagePort).save(messageCaptor.capture());
 
@@ -134,18 +146,18 @@ class ChatMessageServiceTest {
     void shouldSoftDeleteOwnMessage() {
 
         final ChatMessage message = ChatMessage.createNew(
-                BUILDING_ID,
-                TENANT_USER_ID,
-                "Tenant User",
-                "",
-                "Hello chat",
-                "");
+                        BUILDING_ID,
+                        TENANT_USER_ID,
+                        "Tenant User",
+                        "",
+                        "Hello chat",
+                        "");
 
         when(loadChatMessagePort.findById(MESSAGE_ID))
-                .thenReturn(Optional.of(message));
+                        .thenReturn(Optional.of(message));
 
         when(saveChatMessagePort.save(any(ChatMessage.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         chatMessageService.delete(MESSAGE_ID, TENANT_USER_ID);
 

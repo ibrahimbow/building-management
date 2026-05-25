@@ -1,0 +1,51 @@
+package com.why.buildingmanagement.chat.infrastructure.kafka.config;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
+import org.springframework.kafka.support.serializer.JsonSerializer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+public class KafkaProducerConfig {
+
+    @Bean
+    public ProducerFactory<String, Object> producerFactory(
+                    final KafkaProperties kafkaProperties,
+                    final ObjectMapper objectMapper) {
+
+        final Map<String, Object> configs = new HashMap<>(
+                        kafkaProperties.buildProducerProperties());
+
+        configs.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                        StringSerializer.class);
+
+        configs.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                        JsonSerializer.class);
+
+        final JsonSerializer<Object> jsonSerializer =
+                        new JsonSerializer<>(objectMapper);
+
+        jsonSerializer.setAddTypeInfo(false);
+
+        return new DefaultKafkaProducerFactory<>(
+                        configs,
+                        new StringSerializer(),
+                        jsonSerializer);
+    }
+
+    @Bean
+    public KafkaTemplate<String, Object> kafkaTemplate(
+                    final ProducerFactory<String, Object> producerFactory) {
+
+        return new KafkaTemplate<>(producerFactory);
+    }
+}

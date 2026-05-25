@@ -10,6 +10,7 @@ import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpComm
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.infrastructure.kafka.publisher.ShareAndHelpEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,6 +24,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +39,9 @@ class ShareAndHelpCommentServiceTest {
 
     @Mock
     private ShareAndHelpResultMapper shareAndHelpResultMapper;
+
+    @Mock
+    private ShareAndHelpEventPublisher shareAndHelpEventPublisher;
 
     @InjectMocks
     private ShareAndHelpCommentService shareAndHelpCommentService;
@@ -77,6 +82,7 @@ class ShareAndHelpCommentServiceTest {
         assertThat(post.getComments().getFirst().getCreatedByUserId())
                 .isEqualTo(1001L);
 
+        verify(shareAndHelpEventPublisher).publishCommentCreated(any());
         verify(loadShareAndHelpPostPort).loadById(postId);
         verify(saveShareAndHelpPostPort).save(post);
         verify(shareAndHelpResultMapper).toResult(post);

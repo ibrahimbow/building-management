@@ -3,8 +3,10 @@ package com.why.buildingmanagement.chat.infrastructure.persistence.adapter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.chat.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.chat.infrastructure.kafka.publisher.ChatEventPublisher;
 import com.why.buildingmanagement.chat.infrastructure.persistence.repository.ChatMessageRepository;
 import com.why.buildingmanagement.chat.infrastructure.persistence.repository.ChatReactionRepository;
+import com.why.buildingmanagement.chat.infrastructure.websocket.ChatWebSocketPublisher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,14 +62,20 @@ class ChatMessageIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockitoBean
-    private LoadTenantBuildingPort loadTenantBuildingPort;
-
     @Autowired
     private ChatReactionRepository chatReactionRepository;
 
     @Autowired
     private ChatMessageRepository chatMessageRepository;
+
+    @MockitoBean
+    private LoadTenantBuildingPort loadTenantBuildingPort;
+
+    @MockitoBean
+    private ChatEventPublisher chatEventPublisher;
+
+    @MockitoBean
+    private ChatWebSocketPublisher chatWebSocketPublisher;
 
     @BeforeEach
     void cleanDatabase() {

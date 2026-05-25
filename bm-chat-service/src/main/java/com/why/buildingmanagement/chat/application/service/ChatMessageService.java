@@ -9,6 +9,8 @@ import com.why.buildingmanagement.chat.domain.exception.ChatMessageAccessDeniedE
 import com.why.buildingmanagement.chat.domain.exception.ChatMessageNotFoundException;
 import com.why.buildingmanagement.chat.domain.model.ChatMessage;
 import com.why.buildingmanagement.chat.domain.model.ChatReaction;
+import com.why.buildingmanagement.chat.infrastructure.kafka.event.ChatMessageCreatedEvent;
+import com.why.buildingmanagement.chat.infrastructure.kafka.publisher.ChatEventPublisher;
 import com.why.buildingmanagement.chat.infrastructure.websocket.ChatWebSocketPublisher;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ public class ChatMessageService implements SendChatMessageUseCase,
     private final DeleteChatReactionPort deleteChatReactionPort;
     private final LoadManagerBuildingPort loadManagerBuildingPort;
     private final ChatWebSocketPublisher chatWebSocketPublisher;
+    private final ChatEventPublisher chatEventPublisher;
 
     @Override
     public ChatMessageResult send(final SendChatMessageCommand command) {
@@ -57,6 +60,16 @@ public class ChatMessageService implements SendChatMessageUseCase,
                 command.senderUserId());
 
         chatWebSocketPublisher.publishMessageCreated(result);
+
+        chatEventPublisher.publishMessageCreated(
+                        new ChatMessageCreatedEvent(
+                                        savedMessage.getId(),
+                                        savedMessage.getBuildingId(),
+                                        savedMessage.getSenderUserId(),
+                                        savedMessage.getSenderDisplayName(),
+                                        savedMessage.getContent(),
+                                        savedMessage.getImageUrl(),
+                                        savedMessage.getCreatedAt()));
 
         return result;
     }

@@ -9,6 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,13 +59,13 @@ class ShareAndHelpPersistenceAdapterTest {
         final ShareAndHelpPostEntity entity = createEntity(post);
 
         when(repository.findAllByBuildingIdAndDeletedAtIsNullOrderByCreatedAtDesc(buildingId))
-                .thenReturn(List.of(entity));
+                        .thenReturn(List.of(entity));
         when(mapper.toDomain(entity)).thenReturn(post);
 
         final List<ShareAndHelpPost> result = adapter.loadByBuildingId(buildingId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getFirst()).isEqualTo(post);
+        assertThat(result.get(0)).isEqualTo(post);
 
         verify(repository).findAllByBuildingIdAndDeletedAtIsNullOrderByCreatedAtDesc(buildingId);
         verify(mapper).toDomain(entity);
@@ -78,15 +79,13 @@ class ShareAndHelpPersistenceAdapterTest {
         final ShareAndHelpPostEntity entity = createEntity(post);
 
         when(repository.findByIdAndDeletedAtIsNull(postId))
-                .thenReturn(Optional.of(entity));
+                        .thenReturn(Optional.of(entity));
         when(mapper.toDomain(entity)).thenReturn(post);
 
         final Optional<ShareAndHelpPost> result = adapter.loadById(postId);
 
         assertThat(result).isPresent();
-
         assertThat(result).contains(post);
-
 
         verify(repository).findByIdAndDeletedAtIsNull(postId);
         verify(mapper).toDomain(entity);
@@ -98,7 +97,7 @@ class ShareAndHelpPersistenceAdapterTest {
         final UUID postId = UUID.randomUUID();
 
         when(repository.findByIdAndDeletedAtIsNull(postId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         final Optional<ShareAndHelpPost> result = adapter.loadById(postId);
 
@@ -116,11 +115,11 @@ class ShareAndHelpPersistenceAdapterTest {
         final ShareAndHelpPostEntity entity = createEntity(post);
 
         when(repository.findByIdAndCreatedByUserIdAndDeletedAtIsNull(postId, createdByUserId))
-                .thenReturn(Optional.of(entity));
+                        .thenReturn(Optional.of(entity));
         when(mapper.toDomain(entity)).thenReturn(post);
 
         final Optional<ShareAndHelpPost> result =
-                adapter.loadByIdAndCreatedByUserId(postId, createdByUserId);
+                        adapter.loadByIdAndCreatedByUserId(postId, createdByUserId);
 
         assertThat(result).isPresent();
         assertThat(result.get()).isEqualTo(post);
@@ -136,10 +135,10 @@ class ShareAndHelpPersistenceAdapterTest {
         final Long createdByUserId = 1001L;
 
         when(repository.findByIdAndCreatedByUserIdAndDeletedAtIsNull(postId, createdByUserId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         final Optional<ShareAndHelpPost> result =
-                adapter.loadByIdAndCreatedByUserId(postId, createdByUserId);
+                        adapter.loadByIdAndCreatedByUserId(postId, createdByUserId);
 
         assertThat(result).isEmpty();
 
@@ -149,34 +148,34 @@ class ShareAndHelpPersistenceAdapterTest {
     private static ShareAndHelpPost createPost() {
 
         return ShareAndHelpPost.restore(
-                UUID.randomUUID(),
-                UUID.randomUUID(),
-                1001L,
-                "Tenant One",
-                null,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                null,
-                List.of());
+                        UUID.randomUUID(),
+                        UUID.randomUUID(),
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        null,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        null,
+                        List.of());
     }
 
     private static ShareAndHelpPostEntity createEntity(final ShareAndHelpPost post) {
 
         return new ShareAndHelpPostEntity(
-                post.getId(),
-                post.getBuildingId(),
-                post.getCreatedByUserId(),
-                post.getCreatedByDisplayName(),
-                post.getCreatedByAvatarUrl(),
-                post.getTitle(),
-                post.getDescription(),
-                post.getImageUrl(),
-                post.getCreatedAt(),
-                post.getUpdatedAt(),
-                post.getDeletedAt(),
-                new java.util.ArrayList<>());
+                        post.getId(),
+                        post.getBuildingId(),
+                        post.getCreatedByUserId(),
+                        post.getCreatedByDisplayName(),
+                        post.getCreatedByAvatarUrl(),
+                        post.getTitle(),
+                        post.getDescription(),
+                        post.getImageUrl(),
+                        post.getCreatedAt(),
+                        post.getUpdatedAt(),
+                        post.getDeletedAt(),
+                        new ArrayList<>());
     }
 }

@@ -2,6 +2,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.shareandhelp.infrastructure.kafka.publisher.ShareAndHelpEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -60,6 +61,9 @@ class ShareAndHelpIntegrationTest {
 
     @MockitoBean
     private LoadTenantBuildingPort loadTenantBuildingPort;
+
+    @MockitoBean
+    private ShareAndHelpEventPublisher shareAndHelpEventPublisher;
 
     @Test
     void shouldCreateAndLoadShareAndHelpPost() throws Exception {

@@ -1,6 +1,8 @@
 package com.why.buildingmanagement.notification.infrastructure.kafka.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.AnnouncementCreatedEvent;
+import com.why.buildingmanagement.notification.infrastructure.kafka.event.ChatMessageCreatedEvent;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ShareAndHelpCommentCreatedEvent;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ShareAndHelpPostCreatedEvent;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -82,6 +84,39 @@ public class KafkaConsumerConfig {
                         new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(shareAndHelpCommentCreatedConsumerFactory);
+
+        return factory;
+    }
+
+    @Bean
+    public ConsumerFactory<String, ChatMessageCreatedEvent>
+    chatMessageCreatedConsumerFactory(
+                    final KafkaProperties kafkaProperties,
+                    final ObjectMapper objectMapper) {
+
+        final JsonDeserializer<ChatMessageCreatedEvent> jsonDeserializer =
+                        new JsonDeserializer<>(
+                                        ChatMessageCreatedEvent.class,
+                                        objectMapper,
+                                        false);
+
+        jsonDeserializer.addTrustedPackages("*");
+
+        return new DefaultKafkaConsumerFactory<>(
+                        kafkaProperties.buildConsumerProperties(),
+                        new StringDeserializer(),
+                        jsonDeserializer);
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent>
+    chatMessageCreatedKafkaListenerContainerFactory(
+                    final ConsumerFactory<String, ChatMessageCreatedEvent> consumerFactory) {
+
+        final ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent>
+                        factory = new ConcurrentKafkaListenerContainerFactory<>();
+
+        factory.setConsumerFactory(consumerFactory);
 
         return factory;
     }
