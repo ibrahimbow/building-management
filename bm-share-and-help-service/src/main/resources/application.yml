@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: bm-share-and-help-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:bm-kafka:9092}
 
   datasource:
     url: ${SHARE_AND_HELP_DB_URL}
