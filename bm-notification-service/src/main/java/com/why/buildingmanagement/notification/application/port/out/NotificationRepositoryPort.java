@@ -10,7 +10,7 @@ public interface NotificationRepositoryPort {
 
     Notification save(Notification notification);
 
-    List<Notification> findByUserIdAndBuildingIdOrderByCreatedAtDesc(Long userId, UUID buildingId);
+    List<Notification> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     long countByUserIdAndReadFalse(Long userId);
 

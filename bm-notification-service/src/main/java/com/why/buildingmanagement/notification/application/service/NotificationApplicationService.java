@@ -48,9 +48,7 @@ public class NotificationApplicationService implements
     @Override
     public List<NotificationResult> getMyNotifications(final GetMyNotificationsCommand command) {
 
-        return notificationRepositoryPort.findByUserIdAndBuildingIdOrderByCreatedAtDesc(
-                                        command.userId(),
-                                        command.buildingId())
+        return notificationRepositoryPort.findByUserIdOrderByCreatedAtDesc(command.userId())
                         .stream()
                         .map(this::toResult)
                         .toList();
@@ -67,13 +65,17 @@ public class NotificationApplicationService implements
     public NotificationResult markNotificationAsRead(final MarkNotificationAsReadCommand command) {
 
         final Notification notification = notificationRepositoryPort
-                        .findById(command.notificationId()).orElseThrow(() ->
-                                        new NotificationNotFoundException(
-                                                        command.notificationId()));
+                        .findById(command.notificationId())
+                        .orElseThrow(() -> new NotificationNotFoundException(command.notificationId()));
 
         notification.markAsRead();
 
-        return toResult(notificationRepositoryPort.save(notification));
+        final NotificationResult result =
+                        toResult(notificationRepositoryPort.save(notification));
+
+        notificationWebSocketPublisher.publishNotification(result);
+
+        return result;
     }
 
     private NotificationResult toResult(final Notification notification) {

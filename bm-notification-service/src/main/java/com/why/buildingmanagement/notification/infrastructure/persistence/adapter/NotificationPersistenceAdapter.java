@@ -26,12 +26,10 @@ public class NotificationPersistenceAdapter implements NotificationRepositoryPor
     }
 
     @Override
-    public List<Notification> findByUserIdAndBuildingIdOrderByCreatedAtDesc(final Long userId, final UUID buildingId) {
+    public List<Notification> findByUserIdOrderByCreatedAtDesc(final Long userId) {
 
         return notificationRepository
-                        .findByUserIdAndBuildingIdOrderByCreatedAtDesc(
-                                        userId,
-                                        buildingId)
+                        .findByUserIdOrderByCreatedAtDesc(userId)
                         .stream()
                         .map(notificationPersistenceMapper::toDomain)
                         .toList();

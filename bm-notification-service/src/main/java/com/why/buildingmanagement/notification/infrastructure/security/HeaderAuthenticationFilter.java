@@ -28,7 +28,10 @@ public class HeaderAuthenticationFilter  extends OncePerRequestFilter {
         final String displayName = request.getHeader("X-User-Display-Name");
         final String avatarUrl = request.getHeader("X-User-Avatar-Url");
 
-        if (userId != null && email != null && role != null && displayName != null) {
+        if (userId != null && !userId.isBlank()
+                           && email != null && !email.isBlank()
+                           && role != null && !role.isBlank()
+                           && displayName != null && !displayName.isBlank()) {
             final CurrentUser currentUser = new CurrentUser(
                             Long.valueOf(userId),
                             email,

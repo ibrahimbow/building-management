@@ -26,14 +26,12 @@ public class NotificationController {
     private final CurrentUserService currentUserService;
 
     @GetMapping
-    public List<NotificationResult> getMyNotifications(@RequestParam final UUID buildingId) {
+    public List<NotificationResult> getMyNotifications() {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         return getMyNotificationsUseCase.getMyNotifications(
-                        new GetMyNotificationsCommand(
-                                        currentUser.id(),
-                                        buildingId));
+                        new GetMyNotificationsCommand(currentUser.id()));
     }
 
     @GetMapping("/unread-count")

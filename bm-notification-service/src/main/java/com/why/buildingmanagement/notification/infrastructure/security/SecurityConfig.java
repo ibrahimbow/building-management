@@ -23,10 +23,19 @@ public class SecurityConfig {
                                         UsernamePasswordAuthenticationFilter.class)
                         .authorizeHttpRequests(auth -> auth
                                         .requestMatchers("/ws/**").permitAll()
-                                        .requestMatchers(HttpMethod.GET, "/api/notifications/**")
+
+                                        .requestMatchers(HttpMethod.GET,
+                                                        "/api/notifications",
+                                                        "/api/notifications/**",
+                                                        "/notifications",
+                                                        "/notifications/**")
                                         .hasAnyRole(TENANT, MANAGER)
-                                        .requestMatchers(HttpMethod.PATCH, "/api/notifications/**")
+
+                                        .requestMatchers(HttpMethod.PATCH,
+                                                        "/api/notifications/**",
+                                                        "/notifications/**")
                                         .hasAnyRole(TENANT, MANAGER)
+
                                         .anyRequest().authenticated())
                         .build();
     }
