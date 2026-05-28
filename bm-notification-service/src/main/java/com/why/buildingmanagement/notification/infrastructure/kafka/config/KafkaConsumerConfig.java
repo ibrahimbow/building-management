@@ -121,8 +121,7 @@ public class KafkaConsumerConfig {
         config.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, eventType.getName());
-        config.put(
-                        JsonDeserializer.TRUSTED_PACKAGES,
+        config.put(JsonDeserializer.TRUSTED_PACKAGES,
                         "com.why.buildingmanagement.notification.infrastructure.kafka.event");
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 

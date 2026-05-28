@@ -42,6 +42,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Transactional
 class TenantBuildingLifecycleIntegrationTest {
 
+    private static final Long MANAGER_ID = 1L;
+    private static final Long TENANT_ID = 2L;
+    private static final Long SECOND_MANAGER_ID = 3L;
+
+    private static final String BUILDING_CODE = "BM-751788";
+    private static final String SECOND_BUILDING_CODE = "BM-999111";
+
     @Container
     static final PostgreSQLContainer postgres =
             new PostgreSQLContainer("postgres:16")
@@ -77,180 +84,176 @@ class TenantBuildingLifecycleIntegrationTest {
     @MockitoBean
     private LoadManagerInfoPort loadManagerInfoPort;
 
-    private static final Long MANAGER_ID = 1L;
-    private static final Long TENANT_ID = 2L;
-    private static final String BUILDING_CODE = "BM-751788";
-    private static final String SECOND_BUILDING_CODE = "BM-999111";
-    private static final Long SECOND_MANAGER_ID = 3L;
-
-
     @BeforeEach
     void setUp() {
-        reset(currentUserService);
-
-        when(currentUserService.getCurrentUser())
-                .thenReturn(currentTenant());
-
-        final Building building = Building.createNew(
-                "Antwerp Residence",
-                BUILDING_CODE,
-                "Berchem, Antwerp",
-                MANAGER_ID,
-                12,
-                "+32000000000");
-
-        final Building secondBuilding = Building.createNew(
-                "Brussels Residence",
-                SECOND_BUILDING_CODE,
-                "Brussels",
-                SECOND_MANAGER_ID,
-                20,
-                "+32111111111");
-
-        reset(loadManagerInfoPort);
+        reset(currentUserService, loadManagerInfoPort);
 
         when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
-                .thenAnswer(invocation -> {
-                    final Long managerId = invocation.getArgument(0);
+                        .thenAnswer(invocation -> {
+                            final Long managerId = invocation.getArgument(0);
 
-                    return new ManagerInfoResult(
-                            managerId,
-                            "Ibrahim Aref",
-                            "manager@example.com",
-                            null);
-                });
+                            return new ManagerInfoResult(
+                                            managerId,
+                                            "Manager " + managerId,
+                                            "manager" + managerId + "@example.com",
+                                            null);
+                        });
 
-        buildingRepository.save(buildingMapper.toEntity(building));
-        buildingRepository.save(buildingMapper.toEntity(secondBuilding));
+        buildingRepository.save(buildingMapper.toEntity(Building.createNew(
+                        "Antwerp Residence",
+                        BUILDING_CODE,
+                        "Berchem, Antwerp",
+                        MANAGER_ID,
+                        12,
+                        "+32000000000")));
+
+        buildingRepository.save(buildingMapper.toEntity(Building.createNew(
+                        "Brussels Residence",
+                        SECOND_BUILDING_CODE,
+                        "Brussels",
+                        SECOND_MANAGER_ID,
+                        20,
+                        "+32111111111")));
     }
 
     @Test
-    void tenantLifecycle_shouldJoinViewLeaveAndThenReturn404() throws Exception {
-        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
+    void tenantShouldJoinViewLeaveAndThenNoLongerHaveActiveBuilding() throws Exception {
+        when(currentUserService.getCurrentUser())
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(joinRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.code").value(BUILDING_CODE));
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(BUILDING_CODE))))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.code").value(BUILDING_CODE));
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
-                        .with(user("tenant").roles("TENANT")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.code").value(BUILDING_CODE))
-                .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"));
+                                        .with(user("tenant").roles("TENANT")))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.code").value(BUILDING_CODE))
+                        .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"));
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf()))
+                        .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
-                        .with(user("tenant").roles("TENANT")))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
+                                        .with(user("tenant").roles("TENANT")))
+                        .andExpect(status().isNotFound())
+                        .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
-    void tenantCannotJoinTwice_shouldReturnConflict() throws Exception {
-        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
+    void tenantShouldNotJoinSameBuildingTwiceWhileMembershipIsActive() throws Exception {
+        when(currentUserService.getCurrentUser())
+                        .thenReturn(currentTenant());
+
+        final JoinBuildingRequest request =
+                        new JoinBuildingRequest(BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(joinRequest)))
-                .andExpect(status().isCreated());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(joinRequest)))
-                .andExpect(status().isConflict());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isConflict());
     }
 
     @Test
-    void tenantCannotJoinAnotherBuildingWhileActive_shouldReturnConflict() throws Exception {
-        final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
-        final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
+    void tenantShouldNotJoinAnotherBuildingWhileMembershipIsActive() throws Exception {
+        when(currentUserService.getCurrentUser())
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstJoinRequest)))
-                .andExpect(status().isCreated());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(BUILDING_CODE))))
+                        .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(secondJoinRequest)))
-                .andExpect(status().isConflict());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(SECOND_BUILDING_CODE))))
+                        .andExpect(status().isConflict());
     }
 
     @Test
-    void tenantCanJoinAgainAfterLeaving_shouldReturnCreated() throws Exception {
-        final JoinBuildingRequest firstJoinRequest = new JoinBuildingRequest(BUILDING_CODE);
-        final JoinBuildingRequest secondJoinRequest = new JoinBuildingRequest(SECOND_BUILDING_CODE);
+    void tenantShouldJoinAnotherBuildingAfterLeavingCurrentBuilding() throws Exception {
+        when(currentUserService.getCurrentUser())
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(firstJoinRequest)))
-                .andExpect(status().isCreated());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(BUILDING_CODE))))
+                        .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf()))
+                        .andExpect(status().isNoContent());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(secondJoinRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(SECOND_BUILDING_CODE))))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
     }
 
     @Test
-    void managerRemovesTenant_shouldPreventTenantFromAccessingBuilding() throws Exception {
-        final JoinBuildingRequest joinRequest = new JoinBuildingRequest(BUILDING_CODE);
-
+    void managerShouldRemoveTenantAndTenantShouldNoLongerAccessBuilding() throws Exception {
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentTenant());
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
-                        .with(user("tenant").roles("TENANT"))
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(joinRequest)))
-                .andExpect(status().isCreated());
+                                        .with(user("tenant").roles("TENANT"))
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(
+                                                        new JoinBuildingRequest(BUILDING_CODE))))
+                        .andExpect(status().isCreated());
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentManager());
+                        .thenReturn(currentManager());
 
         final UUID buildingId = buildingRepository.findByCode(BUILDING_CODE)
-                .orElseThrow()
-                .getId();
+                        .orElseThrow()
+                        .getId();
 
-        mockMvc.perform(delete("/api/manager/buildings/{id}/tenants/{tenantUserId}", buildingId, TENANT_ID)
-                        .with(user("manager").roles("MANAGER"))
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/manager/buildings/{id}/tenants/{tenantUserId}",
+                                        buildingId,
+                                        TENANT_ID)
+                                        .with(user("manager").roles("MANAGER"))
+                                        .with(csrf()))
+                        .andExpect(status().isNoContent());
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentTenant());
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
-                        .with(user("tenant").roles("TENANT")))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.status").value(404));
+                                        .with(user("tenant").roles("TENANT")))
+                        .andExpect(status().isNotFound())
+                        .andExpect(jsonPath("$.status").value(404));
     }
 
     private CurrentUser currentTenant() {
@@ -260,7 +263,7 @@ class TenantBuildingLifecycleIntegrationTest {
                         "TENANT",
                         "Brimoo",
                         "/images/avatar_me.jpg",
-                        "+32000000000" );
+                        "+32000000000");
     }
 
     private CurrentUser currentManager() {
@@ -270,6 +273,6 @@ class TenantBuildingLifecycleIntegrationTest {
                         "MANAGER",
                         "Manager_Brimo",
                         "/images/avatar_manager.jpg",
-                        "+32000000000" );
+                        "+32000000000");
     }
 }
