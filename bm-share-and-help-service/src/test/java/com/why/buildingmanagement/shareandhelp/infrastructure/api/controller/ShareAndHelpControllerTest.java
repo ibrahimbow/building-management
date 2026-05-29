@@ -2,6 +2,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.why.buildingmanagement.shareandhelp.application.port.in.*;
+import com.why.buildingmanagement.shareandhelp.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
@@ -67,6 +68,9 @@ class ShareAndHelpControllerTest {
 
     @MockitoBean
     private LoadTenantBuildingPort loadTenantBuildingPort;
+
+    @MockitoBean
+    private LoadManagerBuildingPort loadManagerBuildingPort;
 
     @Test
     @WithMockUser(roles = "TENANT")
@@ -247,6 +251,82 @@ class ShareAndHelpControllerTest {
         assertThat(command.postId()).isEqualTo(postId);
         assertThat(command.commentId()).isEqualTo(commentId);
         assertThat(command.userId()).isEqualTo(1001L);
+    }
+
+    @Test
+    @WithMockUser(roles = "MANAGER")
+    void shouldCreateShareAndHelpPostForManager() throws Exception {
+
+        final UUID buildingId = UUID.randomUUID();
+        final UUID postId = UUID.randomUUID();
+
+        final CurrentUser currentUser = new CurrentUser(
+                        2001L,
+                        "manager@test.com",
+                        "MANAGER",
+                        "Manager One",
+                        null);
+
+        final CreateShareAndHelpPostRequest request =
+                        new CreateShareAndHelpPostRequest(
+                                        "Building update",
+                                        "I can help residents with this topic.",
+                                        null);
+
+        final ShareAndHelpPostResult result = new ShareAndHelpPostResult(
+                        postId,
+                        buildingId,
+                        "Building update",
+                        "I can help residents with this topic.",
+                        2001L,
+                        "Manager One",
+                        null,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        null,
+                        List.of());
+
+        final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
+                        postId,
+                        2001L,
+                        "Manager One",
+                        null,
+                        "Building update",
+                        "I can help residents with this topic.",
+                        null,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        List.of());
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+
+        when(loadManagerBuildingPort.loadManagedBuildingIdByManagerUserId(2001L))
+                        .thenReturn(buildingId);
+
+        when(createShareAndHelpPostUseCase.create(any(CreateShareAndHelpPostCommand.class)))
+                        .thenReturn(result);
+
+        when(shareAndHelpApiMapper.toResponse(result))
+                        .thenReturn(response);
+
+        mockMvc.perform(post("/api/tenant/share-and-help/posts")
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+                        .andExpect(status().isCreated());
+
+        final ArgumentCaptor<CreateShareAndHelpPostCommand> commandCaptor =
+                        ArgumentCaptor.forClass(CreateShareAndHelpPostCommand.class);
+
+        verify(createShareAndHelpPostUseCase).create(commandCaptor.capture());
+
+        final CreateShareAndHelpPostCommand command = commandCaptor.getValue();
+
+        assertThat(command.buildingId()).isEqualTo(buildingId);
+        assertThat(command.createdByUserId()).isEqualTo(2001L);
+        assertThat(command.createdByDisplayName()).isEqualTo("Manager One");
+        assertThat(command.title()).isEqualTo("Building update");
+        assertThat(command.description()).isEqualTo("I can help residents with this topic.");
     }
 
 }

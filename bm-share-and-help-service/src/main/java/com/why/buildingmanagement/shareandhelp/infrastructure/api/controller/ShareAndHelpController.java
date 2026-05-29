@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.api.controller;
 
 import com.why.buildingmanagement.shareandhelp.application.port.in.*;
+import com.why.buildingmanagement.shareandhelp.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.CreateShareAndHelpPostRequest;
@@ -32,13 +33,13 @@ public class ShareAndHelpController {
     private final CurrentUserService currentUserService;
     private final ShareAndHelpApiMapper shareAndHelpApiMapper;
     private final LoadTenantBuildingPort loadTenantBuildingPort;
+    private final LoadManagerBuildingPort loadManagerBuildingPort;
 
     @PostMapping
     public ResponseEntity<ShareAndHelpPostResponse> create(@Valid @RequestBody final CreateShareAndHelpPostRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
-        final UUID buildingId = loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(
-                currentUser.userId());
+        final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
         final var result = createShareAndHelpPostUseCase.create(
                 new CreateShareAndHelpPostCommand(
@@ -58,8 +59,7 @@ public class ShareAndHelpController {
     public ResponseEntity<List<ShareAndHelpPostResponse>> getPosts() {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
-        final UUID buildingId = loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(
-                currentUser.userId());
+        final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
         final List<ShareAndHelpPostResponse> response = getShareAndHelpPostsUseCase
                 .getByBuildingId(buildingId)
@@ -131,4 +131,18 @@ public class ShareAndHelpController {
         return ResponseEntity.noContent().build();
     }
 
+
+    private UUID resolveBuildingIdForCurrentUser(final CurrentUser currentUser) {
+
+        final String role = currentUser.role().toUpperCase();
+
+        if ("MANAGER".equals(role) || "ADMIN".equals(role)) {
+
+            return loadManagerBuildingPort.loadManagedBuildingIdByManagerUserId(
+                                            currentUser.userId());
+        }
+
+        return loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(
+                                        currentUser.userId());
+    }
 }

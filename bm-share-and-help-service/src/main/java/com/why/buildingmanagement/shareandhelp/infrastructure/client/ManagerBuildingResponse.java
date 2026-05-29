@@ -1,4 +1,6 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.client;
 
-public record ManagerBuildingResponse() {
+import java.util.UUID;
+
+public record ManagerBuildingResponse(UUID buildingId) {
 }
