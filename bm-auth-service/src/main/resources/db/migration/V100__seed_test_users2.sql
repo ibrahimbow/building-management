@@ -39,7 +39,7 @@ VALUES
     '$2a$10$vXFAT8W/HQrs0OzRNNpEX.MJx3xhsi3LSZBw73upIaqc0MaJFsSSu',
     'Michael Rodriguez',
     '+32471001002',
-    '/api/files/profile_avatar/avatar_michael.png',
+    '/api/files/PROFILE_AVATAR/avatar_michael.png',
     'TENANT',
     true,
     NOW()
@@ -51,7 +51,7 @@ VALUES
     '$2a$10$vXFAT8W/HQrs0OzRNNpEX.MJx3xhsi3LSZBw73upIaqc0MaJFsSSu',
     'Emma Williams',
     '+32471001003',
-    '/api/files/profile_avatar/avatar_emma.png',
+    '/api/files/PROFILE_AVATAR/avatar_emma.png',
     'TENANT',
     true,
     NOW()
@@ -63,7 +63,7 @@ VALUES
     '$2a$10$vXFAT8W/HQrs0OzRNNpEX.MJx3xhsi3LSZBw73upIaqc0MaJFsSSu',
     'Ibrahim Dev',
     '+32471001004',
-    '/api/files/profile_avatar/ibrahimAref.png',
+    '/api/files/PROFILE_AVATAR/ibrahimAref.png',
     'TENANT',
     true,
     NOW()
@@ -75,7 +75,7 @@ VALUES
     '$2a$10$vXFAT8W/HQrs0OzRNNpEX.MJx3xhsi3LSZBw73upIaqc0MaJFsSSu',
     'sophie Mad',
     '+32471001004',
-    '/api/files/profile_avatar/avatar_emma.png',
+    '/api/files/PROFILE_AVATAR/avatar_emma.png',
     'MANAGER',
      true,
      NOW()
