@@ -13,15 +13,18 @@ import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsExcept
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
-        LoginBuildingUserUseCase,
-        RefreshAccessTokenUseCase,
-        LogoutUseCase,
-        UpdateBuildingUserProfileUseCase {
+                LoginBuildingUserUseCase,
+                RefreshAccessTokenUseCase,
+                LogoutUseCase,
+                UpdateBuildingUserProfileUseCase,
+                ChangePasswordUseCase {
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
@@ -29,24 +32,12 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenService refreshTokenService;
 
-    public AuthBuildingUserService(final LoadBuildingUserPort loadBuildingUserPort,
-                                   final SaveBuildingUserPort saveBuildingUserPort,
-                                   final TokenProviderPort tokenProviderPort,
-                                   final PasswordEncoder passwordEncoder,
-                                   final RefreshTokenService refreshTokenService) {
-        this.loadBuildingUserPort = loadBuildingUserPort;
-        this.saveBuildingUserPort = saveBuildingUserPort;
-        this.tokenProviderPort = tokenProviderPort;
-        this.passwordEncoder = passwordEncoder;
-        this.refreshTokenService = refreshTokenService;
-    }
-
     @Override
     public LoginResult login(final LoginBuildingUserCommand command) {
 
         final BuildingUser buildingUser = loadBuildingUserPort
-                .loadByUsernameOrEmail(command.usernameOrEmail())
-                .orElseThrow(InvalidCredentialsException::new);
+                        .loadByUsernameOrEmail(command.usernameOrEmail())
+                        .orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(command.password(), buildingUser.getPasswordHash())) {
             throw new InvalidCredentialsException();
@@ -54,8 +45,7 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         final String accessToken = tokenProviderPort.generateToken(buildingUser);
 
-        final RefreshToken refreshToken =
-                refreshTokenService.createForUser(buildingUser.getId());
+        final RefreshToken refreshToken = refreshTokenService.createForUser(buildingUser.getId());
 
         return new LoginResult(accessToken, refreshToken.getToken());
     }
@@ -76,12 +66,12 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         final BuildingUserRole role = BuildingUserRole.valueOf(command.role().toUpperCase());
 
         final BuildingUser newBuildingUser = BuildingUser.createNew(
-                command.username(),
-                command.email(),
-                hash,
-                command.displayName(),
-                command.phoneNumber(),
-                role);
+                        command.username(),
+                        command.email(),
+                        hash,
+                        command.displayName(),
+                        command.phoneNumber(),
+                        role);
 
         final BuildingUser saved = saveBuildingUserPort.save(newBuildingUser);
 
@@ -92,37 +82,36 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     public BuildingUserProfileResult updateProfile(final UpdateBuildingUserProfileCommand command) {
 
         final BuildingUser existingUser = loadBuildingUserPort
-                .loadById(command.userId())
-                .orElseThrow(() ->
-                        new BuildingUserNotFoundException(command.userId()));
+                        .loadById(command.userId())
+                        .orElseThrow(() ->
+                                        new BuildingUserNotFoundException(command.userId()));
 
         final BuildingUser updatedUser = new BuildingUser(
-                existingUser.getId(),
-                existingUser.getUsername(),
-                existingUser.getEmail(),
-                existingUser.getPasswordHash(),
-                command.displayName(),
-                command.phoneNumber(),
-                command.avatarUrl() != null
-                        ? command.avatarUrl()
-                        : existingUser.getAvatarUrl(),
-                existingUser.getRole(),
-                existingUser.getCreatedAt(),
-                existingUser.isEnabled());
+                        existingUser.getId(),
+                        existingUser.getUsername(),
+                        existingUser.getEmail(),
+                        existingUser.getPasswordHash(),
+                        command.displayName(),
+                        command.phoneNumber(),
+                        command.avatarUrl() != null
+                                        ? command.avatarUrl()
+                                        : existingUser.getAvatarUrl(),
+                        existingUser.getRole(),
+                        existingUser.getCreatedAt(),
+                        existingUser.isEnabled());
 
-        final BuildingUser savedUser =
-                saveBuildingUserPort.save(updatedUser);
+        final BuildingUser savedUser = saveBuildingUserPort.save(updatedUser);
 
         return new BuildingUserProfileResult(
-                savedUser.getId(),
-                savedUser.getUsername(),
-                savedUser.getEmail(),
-                savedUser.getDisplayName(),
-                savedUser.getPhoneNumber(),
-                savedUser.getAvatarUrl(),
-                command.preferredLanguage(),
-                command.notificationsEnabled(),
-                savedUser.getRole().name());
+                        savedUser.getId(),
+                        savedUser.getUsername(),
+                        savedUser.getEmail(),
+                        savedUser.getDisplayName(),
+                        savedUser.getPhoneNumber(),
+                        savedUser.getAvatarUrl(),
+                        command.preferredLanguage(),
+                        command.notificationsEnabled(),
+                        savedUser.getRole().name());
     }
 
     @Override
@@ -138,12 +127,43 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         final RefreshToken refreshToken = refreshTokenService.validate(command.refreshToken());
 
         final BuildingUser buildingUser = loadBuildingUserPort
-                .loadById(refreshToken.getUserId())
-                .orElseThrow(InvalidCredentialsException::new);
+                        .loadById(refreshToken.getUserId())
+                        .orElseThrow(InvalidCredentialsException::new);
 
-        final String accessToken =
-                tokenProviderPort.generateToken(buildingUser);
+        final String accessToken = tokenProviderPort.generateToken(buildingUser);
 
         return new LoginResult(accessToken, refreshToken.getToken());
+    }
+
+    @Override
+    public void changePassword(final ChangePasswordCommand command) {
+
+        final BuildingUser existingUser = loadBuildingUserPort
+                        .loadById(command.userId())
+                        .orElseThrow(() ->
+                                        new BuildingUserNotFoundException(command.userId()));
+
+        if (!passwordEncoder.matches(
+                        command.currentPassword(),
+                        existingUser.getPasswordHash())) {
+
+            throw new InvalidCredentialsException();
+        }
+
+        final String newPasswordHash = passwordEncoder.encode(command.newPassword());
+
+        final BuildingUser updatedUser = new BuildingUser(
+                        existingUser.getId(),
+                        existingUser.getUsername(),
+                        existingUser.getEmail(),
+                        newPasswordHash,
+                        existingUser.getDisplayName(),
+                        existingUser.getPhoneNumber(),
+                        existingUser.getAvatarUrl(),
+                        existingUser.getRole(),
+                        existingUser.getCreatedAt(),
+                        existingUser.isEnabled());
+
+        saveBuildingUserPort.save(updatedUser);
     }
 }

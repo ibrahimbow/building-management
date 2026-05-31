@@ -3,10 +3,7 @@ package com.why.buildingmanagement.auth.infrastructure.api.controller;
 import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.result.BuildingUserProfileResult;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
-import com.why.buildingmanagement.auth.infrastructure.api.dto.request.LoginRequest;
-import com.why.buildingmanagement.auth.infrastructure.api.dto.request.RefreshTokenRequest;
-import com.why.buildingmanagement.auth.infrastructure.api.dto.request.RegisterRequest;
-import com.why.buildingmanagement.auth.infrastructure.api.dto.request.UpdateBuildingUserProfileRequest;
+import com.why.buildingmanagement.auth.infrastructure.api.dto.request.*;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.BuildingUserProfileResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.CurrentBuildingUserResponse;
@@ -15,11 +12,13 @@ import com.why.buildingmanagement.auth.infrastructure.api.mapper.BuildingUserPro
 import com.why.buildingmanagement.auth.infrastructure.security.CurrentBuildingUserService;
 import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -32,25 +31,7 @@ public class AuthController {
     private final BuildingUserProfileResponseMapper buildingUserProfileResponseMapper;
     private final JwtTokenProvider jwtTokenProvider;
     private final CurrentBuildingUserService currentBuildingUserService;
-
-
-    public AuthController(final RegisterBuildingUserUseCase registerUserUseCase,
-                          final LoginBuildingUserUseCase loginUserUseCase,
-                          final RefreshAccessTokenUseCase refreshAccessTokenUseCase,
-                          final LogoutUseCase logoutUseCase,
-                          final UpdateBuildingUserProfileUseCase updateBuildingUserProfileUseCase,
-                          final BuildingUserProfileResponseMapper buildingUserProfileResponseMapper,
-                          final JwtTokenProvider jwtTokenProvider,
-                          final CurrentBuildingUserService currentBuildingUserService) {
-        this.registerUserUseCase = registerUserUseCase;
-        this.loginUserUseCase = loginUserUseCase;
-        this.refreshAccessTokenUseCase = refreshAccessTokenUseCase;
-        this.logoutUseCase = logoutUseCase;
-        this.updateBuildingUserProfileUseCase = updateBuildingUserProfileUseCase;
-        this.buildingUserProfileResponseMapper = buildingUserProfileResponseMapper;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.currentBuildingUserService = currentBuildingUserService;
-    }
+    private final ChangePasswordUseCase changePasswordUseCase;
 
     @GetMapping("/welcome")
     public String welcomeToMyFirstHomePage() {
@@ -141,6 +122,22 @@ public class AuthController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+                    @Valid @RequestBody final ChangePasswordRequest request) {
+
+        final Long userId = currentBuildingUserService.getCurrentUserId();
+
+        changePasswordUseCase.changePassword(
+                        new ChangePasswordCommand(
+                                        userId,
+                                        request.currentPassword(),
+                                        request.newPassword()));
+
+        return ResponseEntity.noContent().build();
+    }
+
 
     private String extractValidToken(final String authorizationHeader) {
 
