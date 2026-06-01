@@ -25,9 +25,9 @@ import java.util.stream.Collectors;
 @Transactional
 @RequiredArgsConstructor
 public class ChatMessageService implements SendChatMessageUseCase,
-        GetBuildingChatUseCase,
-        DeleteChatMessageUseCase,
-        ReactToChatMessageUseCase {
+                GetBuildingChatUseCase,
+                DeleteChatMessageUseCase,
+                ReactToChatMessageUseCase {
 
     private final SaveChatMessagePort saveChatMessagePort;
     private final LoadChatMessagePort loadChatMessagePort;
@@ -43,21 +43,21 @@ public class ChatMessageService implements SendChatMessageUseCase,
     public ChatMessageResult send(final SendChatMessageCommand command) {
 
         final UUID buildingId = loadTenantBuildingPort
-                .loadActiveBuildingIdByTenantUserId(command.senderUserId());
+                        .loadActiveBuildingIdByTenantUserId(command.senderUserId());
 
         final ChatMessage message = ChatMessage.createNew(
-                buildingId,
-                command.senderUserId(),
-                command.senderDisplayName(),
-                command.senderAvatarUrl(),
-                command.content(),
-                command.imageUrl());
+                        buildingId,
+                        command.senderUserId(),
+                        command.senderDisplayName(),
+                        command.senderAvatarUrl(),
+                        command.content(),
+                        command.imageUrl());
 
         final ChatMessage savedMessage = saveChatMessagePort.save(message);
 
         final ChatMessageResult result = toMessageResult(
-                savedMessage,
-                command.senderUserId());
+                        savedMessage,
+                        command.senderUserId());
 
         chatWebSocketPublisher.publishMessageCreated(result);
 
@@ -76,26 +76,36 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
     @Override
     public ChatMessageResult sendFromCurrentManagerBuilding(
-            final SendChatMessageCommand command) {
+                    final SendChatMessageCommand command) {
 
         final UUID buildingId = loadManagerBuildingPort
-                .loadBuildingIdByManagerUserId(command.senderUserId());
+                        .loadBuildingIdByManagerUserId(command.senderUserId());
 
         final ChatMessage message = ChatMessage.createNew(
-                buildingId,
-                command.senderUserId(),
-                command.senderDisplayName(),
-                command.senderAvatarUrl(),
-                command.content(),
-                command.imageUrl());
+                        buildingId,
+                        command.senderUserId(),
+                        command.senderDisplayName(),
+                        command.senderAvatarUrl(),
+                        command.content(),
+                        command.imageUrl());
 
         final ChatMessage savedMessage = saveChatMessagePort.save(message);
 
         final ChatMessageResult result = toMessageResult(
-                savedMessage,
-                command.senderUserId());
+                        savedMessage,
+                        command.senderUserId());
 
         chatWebSocketPublisher.publishMessageCreated(result);
+
+        chatEventPublisher.publishMessageCreated(
+                        new ChatMessageCreatedEvent(
+                                        savedMessage.getId(),
+                                        savedMessage.getBuildingId(),
+                                        savedMessage.getSenderUserId(),
+                                        savedMessage.getSenderDisplayName(),
+                                        savedMessage.getContent(),
+                                        savedMessage.getImageUrl(),
+                                        savedMessage.getCreatedAt()));
 
         return result;
     }
@@ -105,48 +115,48 @@ public class ChatMessageService implements SendChatMessageUseCase,
     public List<ChatMessageResult> getMessagesForCurrentTenantBuilding(final Long tenantUserId) {
 
         final UUID buildingId = loadTenantBuildingPort
-                .loadActiveBuildingIdByTenantUserId(tenantUserId);
+                        .loadActiveBuildingIdByTenantUserId(tenantUserId);
 
         final List<ChatMessage> messages = loadChatMessagePort
-                .findByBuildingIdOrderByCreatedAtAsc(buildingId);
+                        .findByBuildingIdOrderByCreatedAtAsc(buildingId);
 
         final List<UUID> messageIds = messages.stream()
-                .map(ChatMessage::getId)
-                .toList();
+                        .map(ChatMessage::getId)
+                        .toList();
 
         final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(messageIds);
 
         return messages.stream()
-                .map(message -> toMessageResult(
-                        message,
-                        reactions,
-                        tenantUserId))
-                .toList();
+                        .map(message -> toMessageResult(
+                                        message,
+                                        reactions,
+                                        tenantUserId))
+                        .toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<ChatMessageResult> getMessagesForCurrentManagerBuilding(
-            final Long managerUserId) {
+                    final Long managerUserId) {
 
         final UUID buildingId = loadManagerBuildingPort
-                .loadBuildingIdByManagerUserId(managerUserId);
+                        .loadBuildingIdByManagerUserId(managerUserId);
 
         final List<ChatMessage> messages = loadChatMessagePort
-                .findByBuildingIdOrderByCreatedAtAsc(buildingId);
+                        .findByBuildingIdOrderByCreatedAtAsc(buildingId);
 
         final List<UUID> messageIds = messages.stream()
-                .map(ChatMessage::getId)
-                .toList();
+                        .map(ChatMessage::getId)
+                        .toList();
 
         final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(messageIds);
 
         return messages.stream()
-                .map(message -> toMessageResult(
-                        message,
-                        reactions,
-                        managerUserId))
-                .toList();
+                        .map(message -> toMessageResult(
+                                        message,
+                                        reactions,
+                                        managerUserId))
+                        .toList();
     }
 
     @Override
@@ -154,7 +164,7 @@ public class ChatMessageService implements SendChatMessageUseCase,
                        final Long currentUserId) {
 
         final ChatMessage message = loadChatMessagePort.findById(messageId)
-                .orElseThrow(() -> new ChatMessageNotFoundException(messageId));
+                        .orElseThrow(() -> new ChatMessageNotFoundException(messageId));
 
         if (!message.isOwnedBy(currentUserId)) {
             throw new ChatMessageAccessDeniedException(messageId, currentUserId);
@@ -164,8 +174,8 @@ public class ChatMessageService implements SendChatMessageUseCase,
 
         final ChatMessage savedMessage = saveChatMessagePort.save(message);
         final ChatMessageResult result = toMessageResult(
-                savedMessage,
-                currentUserId);
+                        savedMessage,
+                        currentUserId);
 
         chatWebSocketPublisher.publishMessageDeleted(result);
     }
@@ -174,31 +184,31 @@ public class ChatMessageService implements SendChatMessageUseCase,
     public ChatReactionResult react(final ReactToChatMessageCommand command) {
 
         final ChatMessage message = loadChatMessagePort.findById(command.messageId())
-                .orElseThrow(() -> new ChatMessageNotFoundException(command.messageId()));
+                        .orElseThrow(() -> new ChatMessageNotFoundException(command.messageId()));
 
         if (message.isDeleted()) {
             throw new ChatMessageNotFoundException(command.messageId());
         }
 
         final boolean alreadyReacted = loadChatReactionPort.existsByMessageIdAndUserIdAndEmoji(
-                command.messageId(),
-                command.userId(),
-                command.emoji());
+                        command.messageId(),
+                        command.userId(),
+                        command.emoji());
 
         if (alreadyReacted) {
 
             deleteChatReactionPort.deleteByMessageIdAndUserIdAndEmoji(
-                    command.messageId(),
-                    command.userId(),
-                    command.emoji());
+                            command.messageId(),
+                            command.userId(),
+                            command.emoji());
 
             return null;
         }
 
         final ChatReaction reaction = ChatReaction.createNew(
-                command.messageId(),
-                command.userId(),
-                command.emoji());
+                        command.messageId(),
+                        command.userId(),
+                        command.emoji());
 
         final ChatReaction savedReaction = saveChatReactionPort.save(reaction);
 
@@ -211,12 +221,12 @@ public class ChatMessageService implements SendChatMessageUseCase,
     public void removeReaction(final ReactToChatMessageCommand command) {
 
         deleteChatReactionPort.deleteByMessageIdAndUserIdAndEmoji(
-                command.messageId(),
-                command.userId(),
-                command.emoji());
+                        command.messageId(),
+                        command.userId(),
+                        command.emoji());
 
         final ChatMessage message = loadChatMessagePort.findById(command.messageId())
-                .orElseThrow(() -> new ChatMessageNotFoundException(command.messageId()));
+                        .orElseThrow(() -> new ChatMessageNotFoundException(command.messageId()));
 
         publishReactionUpdated(message, command.userId());
     }
@@ -225,9 +235,9 @@ public class ChatMessageService implements SendChatMessageUseCase,
                                               final Long currentUserId) {
 
         return toMessageResult(
-                message,
-                message.getReactions(),
-                currentUserId);
+                        message,
+                        message.getReactions(),
+                        currentUserId);
     }
 
     private ChatMessageResult toMessageResult(final ChatMessage message,
@@ -235,21 +245,21 @@ public class ChatMessageService implements SendChatMessageUseCase,
                                               final Long currentUserId) {
 
         return new ChatMessageResult(
-                message.getId(),
-                message.getBuildingId(),
-                message.getSenderUserId(),
-                message.getSenderDisplayName(),
-                message.getSenderAvatarUrl(),
-                message.getContent(),
-                message.getImageUrl(),
-                message.isDeleted(),
-                message.getCreatedAt(),
-                message.getUpdatedAt(),
-                message.getDeletedAt(),
-                toReactionSummaryResults(
                         message.getId(),
-                        reactions,
-                        currentUserId));
+                        message.getBuildingId(),
+                        message.getSenderUserId(),
+                        message.getSenderDisplayName(),
+                        message.getSenderAvatarUrl(),
+                        message.getContent(),
+                        message.getImageUrl(),
+                        message.isDeleted(),
+                        message.getCreatedAt(),
+                        message.getUpdatedAt(),
+                        message.getDeletedAt(),
+                        toReactionSummaryResults(
+                                        message.getId(),
+                                        reactions,
+                                        currentUserId));
     }
 
     private List<ChatReactionSummaryResult> toReactionSummaryResults(final UUID messageId,
@@ -257,39 +267,39 @@ public class ChatMessageService implements SendChatMessageUseCase,
                                                                      final Long currentUserId) {
 
         final Map<String, List<ChatReaction>> groupedByEmoji = reactions.stream()
-                .filter(reaction -> reaction.getMessageId().equals(messageId))
-                .collect(Collectors.groupingBy(ChatReaction::getEmoji));
+                        .filter(reaction -> reaction.getMessageId().equals(messageId))
+                        .collect(Collectors.groupingBy(ChatReaction::getEmoji));
 
         return groupedByEmoji.entrySet()
-                .stream()
-                .map(entry -> new ChatReactionSummaryResult(
-                        entry.getKey(),
-                        entry.getValue().size(),
-                        entry.getValue()
-                                .stream()
-                                .anyMatch(reaction -> reaction.getUserId().equals(currentUserId))))
-                .toList();
+                        .stream()
+                        .map(entry -> new ChatReactionSummaryResult(
+                                        entry.getKey(),
+                                        entry.getValue().size(),
+                                        entry.getValue()
+                                                        .stream()
+                                                        .anyMatch(reaction -> reaction.getUserId().equals(currentUserId))))
+                        .toList();
     }
 
     private ChatReactionResult toReactionResult(final ChatReaction reaction) {
 
         return new ChatReactionResult(
-                reaction.getId(),
-                reaction.getMessageId(),
-                reaction.getUserId(),
-                reaction.getEmoji(),
-                reaction.getCreatedAt());
+                        reaction.getId(),
+                        reaction.getMessageId(),
+                        reaction.getUserId(),
+                        reaction.getEmoji(),
+                        reaction.getCreatedAt());
     }
 
     private void publishReactionUpdated(final ChatMessage message, final Long currentUserId) {
 
         final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(
-                List.of(message.getId()));
+                        List.of(message.getId()));
 
         final ChatMessageResult result = toMessageResult(
-                message,
-                reactions,
-                currentUserId);
+                        message,
+                        reactions,
+                        currentUserId);
 
         chatWebSocketPublisher.publishReactionUpdated(result);
     }
