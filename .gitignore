@@ -27,3 +27,6 @@ replay_pid*
 
 # File uploads
 uploads/
+
+#Production ENV
+deployment/production/.env

@@ -28,8 +28,8 @@ INSERT INTO building_memberships (
         gen_random_uuid(),
         '11111111-1111-1111-1111-111111111199',
         3002,
-        'michael.r',
-        'michael.r@bm.test',
+        'sam.kim',
+        'sam.kim@bm.test',
         '+32471001002',
         NOW(),
         NULL
@@ -38,8 +38,8 @@ INSERT INTO building_memberships (
         gen_random_uuid(),
         '11111111-1111-1111-1111-111111111199',
         3003,
-        'emma.w',
-        'emma.w@bm.test',
+        'Layan Bra',
+        'layan.bra@bm.test',
         '+32471001003',
         NOW(),
         NULL
