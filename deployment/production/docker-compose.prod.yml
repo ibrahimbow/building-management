@@ -95,6 +95,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     expose:
@@ -102,7 +103,35 @@ services:
 
     depends_on:
       - bm-auth-service
+      - bm-building-service
       - bm-kafka
+
+    networks:
+      - joritna-network
+
+  bm-building-service:
+    build:
+      context: ../../
+      dockerfile: bm-building-service/Dockerfile.prod
+
+    container_name: joritna-building-service
+    restart: unless-stopped
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      BUILDING_DB_URL: ${BUILDING_DB_URL}
+      BUILDING_DB_USERNAME: ${BUILDING_DB_USERNAME}
+      BUILDING_DB_PASSWORD: ${BUILDING_DB_PASSWORD}
+
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+
+    expose:
+      - "8083"
+
+    depends_on:
+      - postgres
+      - bm-auth-service
 
     networks:
       - joritna-network
