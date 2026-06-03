@@ -98,6 +98,7 @@ services:
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
       SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
+      CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
@@ -109,6 +110,7 @@ services:
       - bm-building-service
       - bm-announcement-service
       - bm-share-and-help-service
+      - bm-chat-service
       - bm-file-service
       - bm-kafka
 
@@ -191,6 +193,36 @@ services:
 
     expose:
       - "8085"
+
+    depends_on:
+      - postgres
+      - bm-building-service
+      - bm-kafka
+
+    networks:
+      - joritna-network
+
+  bm-chat-service:
+    build:
+      context: ../../
+      dockerfile: bm-chat-service/Dockerfile.prod
+
+    container_name: joritna-chat-service
+    restart: unless-stopped
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      CHAT_SERVICE_PORT: ${CHAT_SERVICE_PORT}
+      CHAT_DB_URL: ${CHAT_DB_URL}
+      CHAT_DB_USERNAME: ${CHAT_DB_USERNAME}
+      CHAT_DB_PASSWORD: ${CHAT_DB_PASSWORD}
+
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    expose:
+      - "8087"
 
     depends_on:
       - postgres
