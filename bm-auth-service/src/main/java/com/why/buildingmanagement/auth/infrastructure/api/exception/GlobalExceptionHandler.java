@@ -94,10 +94,13 @@ public class GlobalExceptionHandler {
     public ApiErrorResponse handleGenericException(
                     Exception ex,
                     HttpServletRequest request) {
+
+        ex.printStackTrace();
+
         return error(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "INTERNAL_SERVER_ERROR",
-                        "Unexpected server error",
+                        ex.getMessage(),
                         request.getRequestURI(),
                         null);
     }
