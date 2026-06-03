@@ -16,7 +16,7 @@ COPY bm-chat-service ./bm-chat-service
 COPY bm-notification-service ./bm-notification-service
 COPY bm-file-service ./bm-file-service
 
-RUN mvn -pl bm-building-service \
+RUN mvn -pl bm-announcement-service \
     -am \
     clean package \
     -DskipTests
@@ -35,9 +35,9 @@ USER spring:spring
 WORKDIR /app
 
 COPY --from=build \
-    /build/bm-building-service/target/*.jar \
+    /build/bm-announcement-service/target/*.jar \
     app.jar
 
-EXPOSE 8083
+EXPOSE 8084
 
 ENTRYPOINT ["java", "-jar", "app.jar"]

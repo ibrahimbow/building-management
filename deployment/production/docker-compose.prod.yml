@@ -96,6 +96,7 @@ services:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+      ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     expose:
@@ -104,6 +105,7 @@ services:
     depends_on:
       - bm-auth-service
       - bm-building-service
+      - bm-announcement-service
       - bm-kafka
 
     networks:
@@ -135,6 +137,36 @@ services:
 
     networks:
       - joritna-network
+
+  bm-announcement-service:
+    build:
+      context: ../../
+      dockerfile: bm-announcement-service/Dockerfile.prod
+
+    container_name: joritna-announcement-service
+    restart: unless-stopped
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      ANNOUNCEMENT_DB_URL: ${ANNOUNCEMENT_DB_URL}
+      ANNOUNCEMENT_DB_USERNAME: ${ANNOUNCEMENT_DB_USERNAME}
+      ANNOUNCEMENT_DB_PASSWORD: ${ANNOUNCEMENT_DB_PASSWORD}
+
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    expose:
+      - "8084"
+
+    depends_on:
+      - postgres
+      - bm-building-service
+      - bm-kafka
+
+    networks:
+      - joritna-network
+
 
 networks:
   joritna-network:
