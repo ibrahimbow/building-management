@@ -97,6 +97,7 @@ services:
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
+      SHARE_AND_HELP_SERVICE_URL: ${SHARE_AND_HELP_SERVICE_URL}
       FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
@@ -107,6 +108,7 @@ services:
       - bm-auth-service
       - bm-building-service
       - bm-announcement-service
+      - bm-share-and-help-service
       - bm-file-service
       - bm-kafka
 
@@ -160,6 +162,35 @@ services:
 
     expose:
       - "8084"
+
+    depends_on:
+      - postgres
+      - bm-building-service
+      - bm-kafka
+
+    networks:
+      - joritna-network
+
+  bm-share-and-help-service:
+    build:
+      context: ../../
+      dockerfile: bm-share-and-help-service/Dockerfile.prod
+
+    container_name: joritna-share-and-help-service
+    restart: unless-stopped
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      SHARE_AND_HELP_DB_URL: ${SHARE_AND_HELP_DB_URL}
+      SHARE_AND_HELP_DB_USERNAME: ${SHARE_AND_HELP_DB_USERNAME}
+      SHARE_AND_HELP_DB_PASSWORD: ${SHARE_AND_HELP_DB_PASSWORD}
+
+      BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    expose:
+      - "8085"
 
     depends_on:
       - postgres
