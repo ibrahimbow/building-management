@@ -1,0 +1,45 @@
+# =========================================
+# BUILD STAGE
+# =========================================
+
+FROM maven:3.9.9-eclipse-temurin-21 AS build
+
+WORKDIR /build
+
+COPY pom.xml .
+COPY bm-gateway-service ./bm-gateway-service
+COPY bm-auth-service ./bm-auth-service
+COPY bm-building-service ./bm-building-service
+COPY bm-announcement-service ./bm-announcement-service
+COPY bm-share-and-help-service ./bm-share-and-help-service
+COPY bm-chat-service ./bm-chat-service
+COPY bm-notification-service ./bm-notification-service
+COPY bm-file-service ./bm-file-service
+
+RUN mvn -pl bm-file-service \
+    -am \
+    clean package \
+    -DskipTests
+
+# =========================================
+# RUNTIME STAGE
+# =========================================
+
+FROM eclipse-temurin:21-jre-alpine
+
+RUN addgroup -S spring \
+    && adduser -S spring -G spring
+
+USER spring:spring
+
+WORKDIR /app
+
+RUN mkdir -p /app/uploads
+
+COPY --from=build \
+    /build/bm-file-service/target/*.jar \
+    app.jar
+
+EXPOSE 8086
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

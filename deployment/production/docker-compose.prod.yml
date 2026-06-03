@@ -97,6 +97,7 @@ services:
       AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
       BUILDING_SERVICE_URL: ${BUILDING_SERVICE_URL}
       ANNOUNCEMENT_SERVICE_URL: ${ANNOUNCEMENT_SERVICE_URL}
+      FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     expose:
@@ -106,6 +107,7 @@ services:
       - bm-auth-service
       - bm-building-service
       - bm-announcement-service
+      - bm-file-service
       - bm-kafka
 
     networks:
@@ -167,6 +169,36 @@ services:
     networks:
       - joritna-network
 
+  bm-file-service:
+    build:
+      context: ../../
+      dockerfile: bm-file-service/Dockerfile.prod
+
+    container_name: joritna-file-service
+    restart: unless-stopped
+
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+
+      FILE_DB_URL: ${FILE_DB_URL}
+      FILE_DB_USERNAME: ${FILE_DB_USERNAME}
+      FILE_DB_PASSWORD: ${FILE_DB_PASSWORD}
+
+      FILE_STORAGE_PATH: ${FILE_STORAGE_PATH}
+
+    expose:
+      - "8086"
+
+    volumes:
+      - joritna_file_uploads:/app/uploads
+
+    depends_on:
+      - postgres
+
+    networks:
+      - joritna-network
+
+
 
 networks:
   joritna-network:
@@ -175,3 +207,4 @@ networks:
 volumes:
   joritna_postgres_data:
   joritna_kafka_data:
+  joritna_file_uploads:
