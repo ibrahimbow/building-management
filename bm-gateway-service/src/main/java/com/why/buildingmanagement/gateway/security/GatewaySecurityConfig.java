@@ -40,7 +40,17 @@ public class GatewaySecurityConfig {
         config.setAllowedOriginPatterns(List.of(
                         "http://localhost",
                         "http://localhost:4200",
-                        "http://localhost:8080"));
+                        "http://localhost:8080",
+                        "http://167.233.48.218",
+
+                        "http://joritna.com",
+                        "https://joritna.com",
+
+                        "http://www.joritna.com",
+                        "https://www.joritna.com",
+
+                        "http://app.joritna.com",
+                        "https://app.joritna.com"));
         config.setAllowedMethods(List.of(
                         "GET",
                         "POST",
