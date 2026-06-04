@@ -2,6 +2,7 @@ package com.why.buildingmanagement.notification.infrastructure.kafka.listener;
 
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationCommand;
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationUseCase;
+import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingTenantUsersPort;
 import com.why.buildingmanagement.notification.domain.model.NotificationType;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ShareAndHelpCommentCreatedEvent;
@@ -27,15 +28,19 @@ class ShareAndHelpEventListenerTest {
     private LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
 
     @Mock
+    private LoadBuildingManagerUserPort loadBuildingManagerUserPort;
+
+    @Mock
     private CreateNotificationUseCase createNotificationUseCase;
 
     @InjectMocks
     private ShareAndHelpEventListener shareAndHelpEventListener;
 
     @Test
-    void shouldCreatePostNotificationForAllTenantsExceptPostCreator() {
+    void shouldCreatePostNotificationForOtherTenantsAndManagerExceptPostCreator() {
         final UUID buildingId = UUID.randomUUID();
         final Long creatorUserId = 10L;
+        final Long managerUserId = 99L;
 
         final ShareAndHelpPostCreatedEvent event = new ShareAndHelpPostCreatedEvent(
                         UUID.randomUUID(),
@@ -48,17 +53,20 @@ class ShareAndHelpEventListenerTest {
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of(10L, 20L, 30L));
 
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
         shareAndHelpEventListener.onShareAndHelpPostCreated(event);
 
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
 
-        verify(createNotificationUseCase, times(2))
+        verify(createNotificationUseCase, times(3))
                         .createNotification(captor.capture());
 
         assertThat(captor.getAllValues())
                         .extracting(CreateNotificationCommand::userId)
-                        .containsExactly(20L, 30L);
+                        .containsExactly(20L, 30L, managerUserId);
 
         assertThat(captor.getAllValues())
                         .allSatisfy(command -> {
@@ -69,13 +77,18 @@ class ShareAndHelpEventListenerTest {
                         });
 
         verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
-        verifyNoMoreInteractions(loadBuildingTenantUsersPort, createNotificationUseCase);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
+        verifyNoMoreInteractions(
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort,
+                        createNotificationUseCase);
     }
 
     @Test
-    void shouldNotCreatePostNotificationWhenOnlyCreatorIsTenant() {
+    void shouldCreatePostNotificationOnlyForManagerWhenOnlyCreatorIsTenant() {
         final UUID buildingId = UUID.randomUUID();
         final Long creatorUserId = 10L;
+        final Long managerUserId = 99L;
 
         final ShareAndHelpPostCreatedEvent event = new ShareAndHelpPostCreatedEvent(
                         UUID.randomUUID(),
@@ -88,11 +101,97 @@ class ShareAndHelpEventListenerTest {
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of(creatorUserId));
 
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        shareAndHelpEventListener.onShareAndHelpPostCreated(event);
+
+        final ArgumentCaptor<CreateNotificationCommand> captor =
+                        ArgumentCaptor.forClass(CreateNotificationCommand.class);
+
+        verify(createNotificationUseCase)
+                        .createNotification(captor.capture());
+
+        assertThat(captor.getValue().userId()).isEqualTo(managerUserId);
+        assertThat(captor.getValue().buildingId()).isEqualTo(buildingId);
+        assertThat(captor.getValue().type()).isEqualTo(NotificationType.SHARE_AND_HELP);
+        assertThat(captor.getValue().title()).isEqualTo("New help & share post");
+        assertThat(captor.getValue().message()).isEqualTo("Free table");
+
+        verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
+        verifyNoMoreInteractions(
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort,
+                        createNotificationUseCase);
+    }
+
+    @Test
+    void shouldCreatePostNotificationForManagerWhenBuildingHasNoTenants() {
+        final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
+
+        final ShareAndHelpPostCreatedEvent event = new ShareAndHelpPostCreatedEvent(
+                        UUID.randomUUID(),
+                        buildingId,
+                        10L,
+                        "Free table",
+                        "Ibrahim",
+                        Instant.now());
+
+        when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
+                        .thenReturn(List.of());
+
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        shareAndHelpEventListener.onShareAndHelpPostCreated(event);
+
+        final ArgumentCaptor<CreateNotificationCommand> captor =
+                        ArgumentCaptor.forClass(CreateNotificationCommand.class);
+
+        verify(createNotificationUseCase)
+                        .createNotification(captor.capture());
+
+        assertThat(captor.getValue().userId()).isEqualTo(managerUserId);
+        assertThat(captor.getValue().buildingId()).isEqualTo(buildingId);
+        assertThat(captor.getValue().type()).isEqualTo(NotificationType.SHARE_AND_HELP);
+        assertThat(captor.getValue().title()).isEqualTo("New help & share post");
+        assertThat(captor.getValue().message()).isEqualTo("Free table");
+
+        verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
+        verifyNoMoreInteractions(
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort,
+                        createNotificationUseCase);
+    }
+
+    @Test
+    void shouldNotCreatePostNotificationWhenCreatorIsManagerAndBuildingHasNoOtherRecipients() {
+        final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
+
+        final ShareAndHelpPostCreatedEvent event = new ShareAndHelpPostCreatedEvent(
+                        UUID.randomUUID(),
+                        buildingId,
+                        managerUserId,
+                        "Manager post",
+                        "Manager One",
+                        Instant.now());
+
+        when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
+                        .thenReturn(List.of());
+
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
         shareAndHelpEventListener.onShareAndHelpPostCreated(event);
 
         verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
         verifyNoInteractions(createNotificationUseCase);
-        verifyNoMoreInteractions(loadBuildingTenantUsersPort);
+        verifyNoMoreInteractions(loadBuildingTenantUsersPort, loadBuildingManagerUserPort);
     }
 
     @Test
@@ -116,7 +215,8 @@ class ShareAndHelpEventListenerTest {
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
 
-        verify(createNotificationUseCase).createNotification(captor.capture());
+        verify(createNotificationUseCase)
+                        .createNotification(captor.capture());
 
         final CreateNotificationCommand command = captor.getValue();
 
@@ -126,7 +226,7 @@ class ShareAndHelpEventListenerTest {
         assertThat(command.title()).isEqualTo("New comment on your post");
         assertThat(command.message()).isEqualTo("Free table");
 
-        verifyNoInteractions(loadBuildingTenantUsersPort);
+        verifyNoInteractions(loadBuildingTenantUsersPort, loadBuildingManagerUserPort);
         verifyNoMoreInteractions(createNotificationUseCase);
     }
 
@@ -147,6 +247,9 @@ class ShareAndHelpEventListenerTest {
 
         shareAndHelpEventListener.onShareAndHelpCommentCreated(event);
 
-        verifyNoInteractions(createNotificationUseCase, loadBuildingTenantUsersPort);
+        verifyNoInteractions(
+                        createNotificationUseCase,
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort);
     }
 }

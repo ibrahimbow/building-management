@@ -2,6 +2,7 @@ package com.why.buildingmanagement.notification.infrastructure.kafka.listener;
 
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationCommand;
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationUseCase;
+import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingTenantUsersPort;
 import com.why.buildingmanagement.notification.domain.model.NotificationType;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.ChatMessageCreatedEvent;
@@ -11,7 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -23,6 +25,7 @@ public class ChatMessageEventListener {
 
     private final CreateNotificationUseCase createNotificationUseCase;
     private final LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
+    private final LoadBuildingManagerUserPort loadBuildingManagerUserPort;
 
     @KafkaListener(
                     topics = CHAT_MESSAGE_CREATED_TOPIC,
@@ -35,17 +38,18 @@ public class ChatMessageEventListener {
                         event.buildingId(),
                         event.senderUserId());
 
-        final List<Long> tenantUserIds =
-                        loadBuildingTenantUsersPort.loadTenantUserIds(
-                                        event.buildingId());
+        final Set<Long> recipientUserIds = new LinkedHashSet<>(
+                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
 
-        final List<Long> recipientUserIds = tenantUserIds.stream()
-                                        .filter(userId -> !userId.equals(event.senderUserId()))
-                                        .toList();
+        final Long managerUserId =
+                        loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
+
+        recipientUserIds.add(managerUserId);
+        recipientUserIds.remove(event.senderUserId());
 
         if (recipientUserIds.isEmpty()) {
 
-            log.info("No recipients found for buildingId={}, senderUserId={}",
+            log.info("No chat notification recipients found for buildingId={}, senderUserId={}",
                             event.buildingId(),
                             event.senderUserId());
 

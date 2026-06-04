@@ -2,6 +2,7 @@ package com.why.buildingmanagement.notification.infrastructure.kafka.listener;
 
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationCommand;
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationUseCase;
+import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingTenantUsersPort;
 import com.why.buildingmanagement.notification.domain.model.NotificationType;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.AnnouncementCreatedEvent;
@@ -11,16 +12,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class AnnouncementEventListener {
-    private static final String ANNOUNCEMENT_CREATED_TOPIC = KafkaTopics.ANNOUNCEMENT_CREATED_V1;
+
+    private static final String ANNOUNCEMENT_CREATED_TOPIC =
+                    KafkaTopics.ANNOUNCEMENT_CREATED_V1;
 
     private final CreateNotificationUseCase createNotificationUseCase;
     private final LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
+    private final LoadBuildingManagerUserPort loadBuildingManagerUserPort;
 
     @KafkaListener(
                     topics = ANNOUNCEMENT_CREATED_TOPIC,
@@ -33,16 +38,23 @@ public class AnnouncementEventListener {
                         event.buildingId(),
                         event.title());
 
-        final List<Long> tenantUserIds =
-                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId());
+        final Set<Long> recipientUserIds = new LinkedHashSet<>(
+                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
 
-        if (tenantUserIds.isEmpty()) {
-            log.info("No active tenants found for buildingId={}",
+        final Long managerUserId =
+                        loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
+
+        recipientUserIds.remove(managerUserId);
+
+        if (recipientUserIds.isEmpty()) {
+
+            log.info("No announcement recipients found for buildingId={}",
                             event.buildingId());
+
             return;
         }
 
-        tenantUserIds.forEach(userId ->
+        recipientUserIds.forEach(userId ->
                         createNotificationUseCase.createNotification(
                                         new CreateNotificationCommand(
                                                         userId,
@@ -52,7 +64,7 @@ public class AnnouncementEventListener {
                                                         event.title())));
 
         log.info("Created {} announcement notifications for buildingId={}",
-                        tenantUserIds.size(),
+                        recipientUserIds.size(),
                         event.buildingId());
     }
 }

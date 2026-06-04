@@ -37,9 +37,19 @@ public class GatewaySecurityConfig {
     public CorsWebFilter corsWebFilter() {
         final CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedOriginPatterns(List.of(
+                        "http://localhost",
+                        "http://localhost:4200",
+                        "http://localhost:8080"));
+        config.setAllowedMethods(List.of(
+                        "GET",
+                        "POST",
+                        "PUT",
+                        "PATCH",
+                        "DELETE",
+                        "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
+        config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
         final UrlBasedCorsConfigurationSource source =

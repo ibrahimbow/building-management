@@ -2,6 +2,7 @@ package com.why.buildingmanagement.notification.infrastructure.kafka.listener;
 
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationCommand;
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationUseCase;
+import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingTenantUsersPort;
 import com.why.buildingmanagement.notification.domain.model.NotificationType;
 import com.why.buildingmanagement.notification.infrastructure.kafka.event.AnnouncementCreatedEvent;
@@ -28,6 +29,9 @@ class AnnouncementEventListenerTest {
     @Mock
     private LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
 
+    @Mock
+    private LoadBuildingManagerUserPort loadBuildingManagerUserPort;
+
     @InjectMocks
     private AnnouncementEventListener announcementEventListener;
 
@@ -35,6 +39,7 @@ class AnnouncementEventListenerTest {
     void shouldCreateNotificationForEachTenantWhenAnnouncementCreated() {
         final UUID announcementId = UUID.randomUUID();
         final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
 
         final AnnouncementCreatedEvent event = new AnnouncementCreatedEvent(
                         announcementId,
@@ -46,6 +51,9 @@ class AnnouncementEventListenerTest {
 
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of(10L, 20L, 30L));
+
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
 
         announcementEventListener.handleAnnouncementCreated(event);
 
@@ -68,12 +76,56 @@ class AnnouncementEventListenerTest {
                         });
 
         verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
-        verifyNoMoreInteractions(loadBuildingTenantUsersPort, createNotificationUseCase);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
+        verifyNoMoreInteractions(
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort,
+                        createNotificationUseCase);
+    }
+
+    @Test
+    void shouldExcludeManagerWhenManagerIsAlsoReturnedAsTenantRecipient() {
+        final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 20L;
+
+        final AnnouncementCreatedEvent event = new AnnouncementCreatedEvent(
+                        UUID.randomUUID(),
+                        buildingId,
+                        "General update",
+                        "GENERAL",
+                        "Manager One",
+                        Instant.now());
+
+        when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
+                        .thenReturn(List.of(10L, managerUserId, 30L));
+
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        announcementEventListener.handleAnnouncementCreated(event);
+
+        final ArgumentCaptor<CreateNotificationCommand> captor =
+                        ArgumentCaptor.forClass(CreateNotificationCommand.class);
+
+        verify(createNotificationUseCase, times(2))
+                        .createNotification(captor.capture());
+
+        assertThat(captor.getAllValues())
+                        .extracting(CreateNotificationCommand::userId)
+                        .containsExactly(10L, 30L);
+
+        verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
+        verifyNoMoreInteractions(
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort,
+                        createNotificationUseCase);
     }
 
     @Test
     void shouldNotCreateNotificationsWhenBuildingHasNoActiveTenants() {
         final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
 
         final AnnouncementCreatedEvent event = new AnnouncementCreatedEvent(
                         UUID.randomUUID(),
@@ -86,10 +138,14 @@ class AnnouncementEventListenerTest {
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of());
 
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
         announcementEventListener.handleAnnouncementCreated(event);
 
         verify(loadBuildingTenantUsersPort).loadTenantUserIds(buildingId);
+        verify(loadBuildingManagerUserPort).loadManagerUserIdByBuildingId(buildingId);
         verifyNoInteractions(createNotificationUseCase);
-        verifyNoMoreInteractions(loadBuildingTenantUsersPort);
+        verifyNoMoreInteractions(loadBuildingTenantUsersPort, loadBuildingManagerUserPort);
     }
 }

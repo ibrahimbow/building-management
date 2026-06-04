@@ -22,7 +22,10 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
 
         registry.addEndpoint("/ws/chat")
-                .setAllowedOriginPatterns("http://localhost:4200","http://localhost:8080")
+                        .setAllowedOriginPatterns(
+                                        "http://localhost",
+                                        "http://localhost:4200",
+                                        "http://localhost:8080")
                 .withSockJS()
                 .setSessionCookieNeeded(false);
     }

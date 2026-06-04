@@ -2,6 +2,7 @@ package com.why.buildingmanagement.notification.infrastructure.kafka;
 
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationCommand;
 import com.why.buildingmanagement.notification.application.port.in.CreateNotificationUseCase;
+import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingTenantUsersPort;
 import com.why.buildingmanagement.notification.domain.model.NotificationType;
 import com.why.buildingmanagement.notification.infrastructure.kafka.config.KafkaConsumerConfig;
@@ -87,25 +88,39 @@ class KafkaNotificationIntegrationTest {
     @MockitoBean
     private LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
 
+    @MockitoBean
+    private LoadBuildingManagerUserPort loadBuildingManagerUserPort;
+
     @BeforeEach
     void resetMocks() {
-        reset(createNotificationUseCase, loadBuildingTenantUsersPort);
+        reset(
+                        createNotificationUseCase,
+                        loadBuildingTenantUsersPort,
+                        loadBuildingManagerUserPort);
     }
 
     @Test
-    void shouldConsumeAnnouncementCreatedEventAndCreateNotificationForEveryTenant() throws Exception {
+    void shouldConsumeAnnouncementCreatedEventAndCreateNotificationForEveryTenantExceptManager()
+                    throws Exception {
+
         final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
 
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
-                        .thenReturn(List.of(10L, 20L));
+                        .thenReturn(List.of(10L, 20L, managerUserId));
 
-        kafkaTemplate.send(KafkaTopics.ANNOUNCEMENT_CREATED_V1, new AnnouncementCreatedEvent(
-                        UUID.randomUUID(),
-                        buildingId,
-                        "Water maintenance",
-                        "MAINTENANCE",
-                        "Manager One",
-                        Instant.now())).get();
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        kafkaTemplate.send(
+                        KafkaTopics.ANNOUNCEMENT_CREATED_V1,
+                        new AnnouncementCreatedEvent(
+                                        UUID.randomUUID(),
+                                        buildingId,
+                                        "Water maintenance",
+                                        "MAINTENANCE",
+                                        "Manager One",
+                                        Instant.now())).get();
 
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
@@ -121,50 +136,63 @@ class KafkaNotificationIntegrationTest {
 
         assertThat(captor.getAllValues())
                         .allSatisfy(command ->
-                                        assertThat(command.type()).isEqualTo(NotificationType.ANNOUNCEMENT));
+                                        assertThat(command.type())
+                                                        .isEqualTo(NotificationType.ANNOUNCEMENT));
     }
 
     @Test
-    void shouldConsumeShareAndHelpPostCreatedEventAndNotNotifyCreator() throws Exception {
+    void shouldConsumeShareAndHelpPostCreatedEventAndNotifyOtherTenantsAndManager()
+                    throws Exception {
+
         final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
 
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of(10L, 20L, 30L));
 
-        kafkaTemplate.send(KafkaTopics.SHARE_AND_HELP_POST_CREATED_V1, new ShareAndHelpPostCreatedEvent(
-                        UUID.randomUUID(),
-                        buildingId,
-                        10L,
-                        "Free table",
-                        "Ibrahim",
-                        Instant.now())).get();
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        kafkaTemplate.send(
+                        KafkaTopics.SHARE_AND_HELP_POST_CREATED_V1,
+                        new ShareAndHelpPostCreatedEvent(
+                                        UUID.randomUUID(),
+                                        buildingId,
+                                        10L,
+                                        "Free table",
+                                        "Ibrahim",
+                                        Instant.now())).get();
 
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
 
         await().atMost(Duration.ofSeconds(10))
                         .untilAsserted(() ->
-                                        verify(createNotificationUseCase, times(2))
+                                        verify(createNotificationUseCase, times(3))
                                                         .createNotification(captor.capture()));
 
         assertThat(captor.getAllValues())
                         .extracting(CreateNotificationCommand::userId)
-                        .containsExactlyInAnyOrder(20L, 30L);
+                        .containsExactlyInAnyOrder(20L, 30L, managerUserId);
     }
 
     @Test
-    void shouldConsumeShareAndHelpCommentCreatedEventAndNotifyPostOwner() throws Exception {
+    void shouldConsumeShareAndHelpCommentCreatedEventAndNotifyPostOwner()
+                    throws Exception {
+
         final UUID buildingId = UUID.randomUUID();
 
-        kafkaTemplate.send(KafkaTopics.SHARE_AND_HELP_COMMENT_CREATED_V1, new ShareAndHelpCommentCreatedEvent(
-                        UUID.randomUUID(),
-                        UUID.randomUUID(),
-                        buildingId,
-                        10L,
-                        20L,
-                        "Free table",
-                        "Sarah",
-                        Instant.now())).get();
+        kafkaTemplate.send(
+                        KafkaTopics.SHARE_AND_HELP_COMMENT_CREATED_V1,
+                        new ShareAndHelpCommentCreatedEvent(
+                                        UUID.randomUUID(),
+                                        UUID.randomUUID(),
+                                        buildingId,
+                                        10L,
+                                        20L,
+                                        "Free table",
+                                        "Sarah",
+                                        Instant.now())).get();
 
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
@@ -180,32 +208,40 @@ class KafkaNotificationIntegrationTest {
     }
 
     @Test
-    void shouldConsumeChatMessageCreatedEventAndNotNotifySender() throws Exception {
+    void shouldConsumeChatMessageCreatedEventAndNotifyOtherTenantsAndManager()
+                    throws Exception {
+
         final UUID buildingId = UUID.randomUUID();
+        final Long managerUserId = 99L;
 
         when(loadBuildingTenantUsersPort.loadTenantUserIds(buildingId))
                         .thenReturn(List.of(10L, 20L, 30L));
 
-        kafkaTemplate.send(KafkaTopics.CHAT_MESSAGE_CREATED_V1, new ChatMessageCreatedEvent(
-                        UUID.randomUUID(),
-                        buildingId,
-                        10L,
-                        "Ibrahim",
-                        "Hello everyone",
-                        null,
-                        Instant.now())).get();
+        when(loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(buildingId))
+                        .thenReturn(managerUserId);
+
+        kafkaTemplate.send(
+                        KafkaTopics.CHAT_MESSAGE_CREATED_V1,
+                        new ChatMessageCreatedEvent(
+                                        UUID.randomUUID(),
+                                        buildingId,
+                                        10L,
+                                        "Ibrahim",
+                                        "Hello everyone",
+                                        null,
+                                        Instant.now())).get();
 
         final ArgumentCaptor<CreateNotificationCommand> captor =
                         ArgumentCaptor.forClass(CreateNotificationCommand.class);
 
         await().atMost(Duration.ofSeconds(10))
                         .untilAsserted(() ->
-                                        verify(createNotificationUseCase, times(2))
+                                        verify(createNotificationUseCase, times(3))
                                                         .createNotification(captor.capture()));
 
         assertThat(captor.getAllValues())
                         .extracting(CreateNotificationCommand::userId)
-                        .containsExactlyInAnyOrder(20L, 30L);
+                        .containsExactlyInAnyOrder(20L, 30L, managerUserId);
     }
 
     @TestConfiguration
@@ -218,10 +254,21 @@ class KafkaNotificationIntegrationTest {
 
         @Bean
         KafkaTemplate<String, Object> kafkaTemplate() {
+
             final Map<String, Object> config = new HashMap<>();
-            config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, kafka.getBootstrapServers());
-            config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-            config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+
+            config.put(
+                            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
+                            kafka.getBootstrapServers());
+
+            config.put(
+                            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
+                            StringSerializer.class);
+
+            config.put(
+                            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
+                            JsonSerializer.class);
+
             config.put(JsonSerializer.ADD_TYPE_INFO_HEADERS, false);
             config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
