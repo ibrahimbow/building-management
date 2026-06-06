@@ -34,7 +34,6 @@ public class SecurityConfig {
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/auth/refresh",
-                                "/api/auth/logout",
                                 "/internal/**",
                                 "/actuator/health",
                                 "/actuator/info")

@@ -11,4 +11,6 @@ public interface LoadChatMessagePort {
     Optional<ChatMessage> findById(final UUID messageId);
 
     List<ChatMessage> findByBuildingIdOrderByCreatedAtAsc(final UUID buildingId);
+
+    List<ChatMessage> findAllOrderByCreatedAtDesc();
 }

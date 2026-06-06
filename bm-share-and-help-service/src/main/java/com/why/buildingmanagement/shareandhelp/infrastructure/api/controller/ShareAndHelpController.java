@@ -42,17 +42,17 @@ public class ShareAndHelpController {
         final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
         final var result = createShareAndHelpPostUseCase.create(
-                new CreateShareAndHelpPostCommand(
-                        buildingId,
-                        currentUser.userId(),
-                        currentUser.displayName(),
-                        currentUser.avatarUrl(),
-                        request.title(),
-                        request.description(),
-                        request.imageUrl()));
+                        new CreateShareAndHelpPostCommand(
+                                        buildingId,
+                                        currentUser.userId(),
+                                        currentUser.displayName(),
+                                        currentUser.avatarUrl(),
+                                        request.title(),
+                                        request.description(),
+                                        request.imageUrl()));
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(shareAndHelpApiMapper.toResponse(result));
+                        .body(shareAndHelpApiMapper.toResponse(result));
     }
 
     @GetMapping
@@ -62,10 +62,10 @@ public class ShareAndHelpController {
         final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
         final List<ShareAndHelpPostResponse> response = getShareAndHelpPostsUseCase
-                .getByBuildingId(buildingId)
-                .stream()
-                .map(shareAndHelpApiMapper::toResponse)
-                .toList();
+                        .getByBuildingId(buildingId)
+                        .stream()
+                        .map(shareAndHelpApiMapper::toResponse)
+                        .toList();
 
         return ResponseEntity.ok(response);
     }
@@ -77,12 +77,12 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final var result = updateShareAndHelpPostUseCase.update(
-                new UpdateShareAndHelpPostCommand(
-                        postId,
-                        currentUser.userId(),
-                        request.title(),
-                        request.description(),
-                        request.imageUrl()));
+                        new UpdateShareAndHelpPostCommand(
+                                        postId,
+                                        currentUser.userId(),
+                                        request.title(),
+                                        request.description(),
+                                        request.imageUrl()));
 
         return ResponseEntity.ok(shareAndHelpApiMapper.toResponse(result));
     }
@@ -93,7 +93,7 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         deleteShareAndHelpPostUseCase.delete(
-                new DeleteShareAndHelpPostCommand(postId, currentUser.userId()));
+                        new DeleteShareAndHelpPostCommand(postId, currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }
@@ -105,15 +105,15 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final var result = addCommentUseCase.addComment(
-                new AddCommentCommand(
-                        postId,
-                        currentUser.userId(),
-                        currentUser.displayName(),
-                        currentUser.avatarUrl(),
-                        request.comment()));
+                        new AddCommentCommand(
+                                        postId,
+                                        currentUser.userId(),
+                                        currentUser.displayName(),
+                                        currentUser.avatarUrl(),
+                                        request.comment()));
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(shareAndHelpApiMapper.toResponse(result));
+                        .body(shareAndHelpApiMapper.toResponse(result));
     }
 
     @DeleteMapping("/{postId}/comments/{commentId}")
@@ -123,10 +123,10 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         deleteCommentUseCase.deleteComment(
-                new DeleteCommentCommand(
-                        postId,
-                        commentId,
-                        currentUser.userId()));
+                        new DeleteCommentCommand(
+                                        postId,
+                                        commentId,
+                                        currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }
@@ -139,10 +139,10 @@ public class ShareAndHelpController {
         if ("MANAGER".equals(role) || "ADMIN".equals(role)) {
 
             return loadManagerBuildingPort.loadManagedBuildingIdByManagerUserId(
-                                            currentUser.userId());
+                            currentUser.userId());
         }
 
         return loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(
-                                        currentUser.userId());
+                        currentUser.userId());
     }
 }

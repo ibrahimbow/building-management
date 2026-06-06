@@ -25,7 +25,9 @@ public class AnnouncementApplicationService implements
                 DeleteAnnouncementUseCase,
                 GetManagerAnnouncementsUseCase,
                 GetTenantAnnouncementsUseCase,
-                GetManagerAnnouncementByIdUseCase {
+                GetManagerAnnouncementByIdUseCase,
+                AdminGetAnnouncementsUseCase,
+                AdminDeleteAnnouncementUseCase {
 
     private final AnnouncementRepositoryPort announcementRepositoryPort;
     private final BuildingAccessPort buildingAccessPort;
@@ -38,13 +40,13 @@ public class AnnouncementApplicationService implements
         final UUID buildingId = buildingAccessPort.getManagerBuildingId(command.managerId());
 
         final Announcement announcement = Announcement.createNew(
-                buildingId,
-                command.managerId(),
-                command.createdBy(),
-                command.title(),
-                command.message(),
-                command.category(),
-                command.imageUrl());
+                        buildingId,
+                        command.managerId(),
+                        command.createdBy(),
+                        command.title(),
+                        command.message(),
+                        command.category(),
+                        command.imageUrl());
 
         final Announcement savedAnnouncement = announcementRepositoryPort.save(announcement);
 
@@ -65,21 +67,21 @@ public class AnnouncementApplicationService implements
     public AnnouncementResult updateAnnouncement(final UpdateAnnouncementCommand command) {
 
         final Announcement announcement = announcementRepositoryPort
-                .findById(command.announcementId())
-                .orElseThrow(() -> new AnnouncementNotFoundException(command.announcementId()));
+                        .findById(command.announcementId())
+                        .orElseThrow(() -> new AnnouncementNotFoundException(command.announcementId()));
 
         final UUID managerBuildingId = buildingAccessPort.getManagerBuildingId(command.managerId());
 
         if (!announcement.belongsToBuilding(managerBuildingId)
-                || !announcement.createdByManager(command.managerId())) {
+                        || !announcement.createdByManager(command.managerId())) {
             throw new AnnouncementOwnershipException(command.announcementId());
         }
 
         announcement.update(
-                command.title(),
-                command.message(),
-                command.category(),
-                command.imageUrl());
+                        command.title(),
+                        command.message(),
+                        command.category(),
+                        command.imageUrl());
 
         final Announcement savedAnnouncement = announcementRepositoryPort.save(announcement);
 
@@ -91,13 +93,13 @@ public class AnnouncementApplicationService implements
     public void deleteAnnouncement(final DeleteAnnouncementCommand command) {
 
         final Announcement announcement = announcementRepositoryPort
-                .findById(command.announcementId())
-                .orElseThrow(() -> new AnnouncementNotFoundException(command.announcementId()));
+                        .findById(command.announcementId())
+                        .orElseThrow(() -> new AnnouncementNotFoundException(command.announcementId()));
 
         final UUID managerBuildingId = buildingAccessPort.getManagerBuildingId(command.managerId());
 
         if (!announcement.belongsToBuilding(managerBuildingId)
-                || !announcement.createdByManager(command.managerId())) {
+                        || !announcement.createdByManager(command.managerId())) {
             throw new AnnouncementOwnershipException(command.announcementId());
         }
 
@@ -110,9 +112,9 @@ public class AnnouncementApplicationService implements
         final UUID buildingId = buildingAccessPort.getManagerBuildingId(query.managerId());
 
         return announcementRepositoryPort.findByBuildingId(buildingId)
-                .stream()
-                .map(this::toResult)
-                .toList();
+                        .stream()
+                        .map(this::toResult)
+                        .toList();
     }
 
     @Override
@@ -121,37 +123,57 @@ public class AnnouncementApplicationService implements
         final UUID buildingId = buildingAccessPort.getTenantActiveBuildingId(query.tenantUserId());
 
         return announcementRepositoryPort.findByBuildingId(buildingId)
-                .stream()
-                .map(this::toResult)
-                .toList();
+                        .stream()
+                        .map(this::toResult)
+                        .toList();
     }
 
     private AnnouncementResult toResult(final Announcement announcement) {
         return new AnnouncementResult(
-                announcement.getId(),
-                announcement.getBuildingId(),
-                announcement.getCreatedByManagerId(),
-                announcement.getCreatedBy(),
-                announcement.getTitle(),
-                announcement.getMessage(),
-                announcement.getCategory(),
-                announcement.getIcon(),
-                announcement.getImageUrl(),
-                announcement.getCreatedAt(),
-                announcement.getUpdatedAt());
+                        announcement.getId(),
+                        announcement.getBuildingId(),
+                        announcement.getCreatedByManagerId(),
+                        announcement.getCreatedBy(),
+                        announcement.getTitle(),
+                        announcement.getMessage(),
+                        announcement.getCategory(),
+                        announcement.getIcon(),
+                        announcement.getImageUrl(),
+                        announcement.getCreatedAt(),
+                        announcement.getUpdatedAt());
     }
 
     @Override
     public AnnouncementResult getManagerAnnouncementById(
-            final GetManagerAnnouncementByIdQuery query) {
+                    final GetManagerAnnouncementByIdQuery query) {
 
         final Announcement announcement = announcementRepositoryPort
-                .findByIdAndManagerId(
-                        query.announcementId(),
-                        query.managerId())
-                .orElseThrow(() -> new AnnouncementNotFoundException(
-                        query.announcementId()));
+                        .findByIdAndManagerId(
+                                        query.announcementId(),
+                                        query.managerId())
+                        .orElseThrow(() -> new AnnouncementNotFoundException(
+                                        query.announcementId()));
 
         return toResult(announcement);
+    }
+
+    @Override
+    public List<AnnouncementResult> getAllAnnouncements() {
+
+        return announcementRepositoryPort.findAll()
+                        .stream()
+                        .map(this::toResult)
+                        .toList();
+    }
+
+    @Override
+    @Transactional
+    public void deleteAnnouncementByAdmin(final UUID announcementId) {
+
+        final Announcement announcement = announcementRepositoryPort
+                        .findById(announcementId)
+                        .orElseThrow(() -> new AnnouncementNotFoundException(announcementId));
+
+        announcementRepositoryPort.delete(announcement);
     }
 }

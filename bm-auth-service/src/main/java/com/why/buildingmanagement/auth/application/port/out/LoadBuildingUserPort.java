@@ -2,6 +2,7 @@ package com.why.buildingmanagement.auth.application.port.out;
 
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface LoadBuildingUserPort {
@@ -17,4 +18,6 @@ public interface LoadBuildingUserPort {
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);
+
+    List<BuildingUser> loadAll();
 }

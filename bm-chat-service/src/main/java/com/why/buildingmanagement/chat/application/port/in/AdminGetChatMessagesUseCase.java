@@ -1,0 +1,10 @@
+package com.why.buildingmanagement.chat.application.port.in;
+
+import com.why.buildingmanagement.chat.application.result.ChatMessageResult;
+
+import java.util.List;
+
+public interface AdminGetChatMessagesUseCase {
+
+    List<ChatMessageResult> getAllMessages();
+}

@@ -1,6 +1,8 @@
 package com.why.buildingmanagement.auth.infrastructure.security;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -10,28 +12,42 @@ public class CurrentBuildingUserService {
     public Long getCurrentUserId() {
 
         final UsernamePasswordAuthenticationToken authentication =
-                (UsernamePasswordAuthenticationToken)
-                        SecurityContextHolder.getContext()
-                                .getAuthentication();
+                        getAuthentication();
 
-        if (authentication == null || authentication.getDetails() == null) {
-            throw new IllegalStateException("No authenticated user found");
+        if (authentication.getDetails() == null) {
+            throw new AccessDeniedException("No authenticated user found.");
         }
 
         return (Long) authentication.getDetails();
     }
 
     public String getCurrentUsername() {
+        return getAuthentication().getName();
+    }
 
-        final UsernamePasswordAuthenticationToken authentication =
-                (UsernamePasswordAuthenticationToken)
-                        SecurityContextHolder.getContext()
-                                .getAuthentication();
+    public boolean isCurrentUserAdmin() {
+        return getAuthentication()
+                        .getAuthorities()
+                        .stream()
+                        .anyMatch(authority ->
+                                        "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
 
-        if (authentication == null) {
-            throw new IllegalStateException("No authenticated user found");
+    public void requireAdmin() {
+        if (!isCurrentUserAdmin()) {
+            throw new AccessDeniedException("Only ADMIN can access this resource.");
+        }
+    }
+
+    private UsernamePasswordAuthenticationToken getAuthentication() {
+
+        final Authentication authentication =
+                        SecurityContextHolder.getContext().getAuthentication();
+
+        if (!(authentication instanceof UsernamePasswordAuthenticationToken token)) {
+            throw new AccessDeniedException("No authenticated user found.");
         }
 
-        return authentication.getName();
+        return token;
     }
 }

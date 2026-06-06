@@ -15,4 +15,6 @@ public interface ShareAndHelpRepository extends JpaRepository<ShareAndHelpPostEn
 
     Optional<ShareAndHelpPostEntity> findByIdAndCreatedByUserIdAndDeletedAtIsNull(final UUID id,
                                                                                   final Long createdByUserId);
+
+    List<ShareAndHelpPostEntity> findAllByDeletedAtIsNullOrderByCreatedAtDesc();
 }

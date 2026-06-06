@@ -11,12 +11,12 @@ spring:
         - id: bm-auth-service
           uri: ${AUTH_SERVICE_URL:http://bm-auth-service:8081}
           predicates:
-            - Path=/api/auth/**
+            - Path=/api/auth/**,/api/admin/users/**
 
         - id: bm-announcement-service
           uri: ${ANNOUNCEMENT_SERVICE_URL:http://bm-announcement-service:8084}
           predicates:
-            - Path=/api/manager/announcements/**,/api/tenant/announcements/**
+            - Path=/api/manager/announcements/**,/api/tenant/announcements/**,/api/admin/announcements/**
 
         - id: bm-building-service
           uri: ${BUILDING_SERVICE_URL:http://bm-building-service:8083}
@@ -26,7 +26,7 @@ spring:
         - id: bm-share-and-help-service
           uri: ${SHARE_AND_HELP_SERVICE_URL:http://bm-share-and-help-service:8085}
           predicates:
-            - Path=/api/manager/share-and-help/**,/api/tenant/share-and-help/**
+            - Path=/api/manager/share-and-help/**,/api/tenant/share-and-help/**,/api/admin/share-and-help/**
 
         - id: bm-file-service
           uri: ${FILE_SERVICE_URL:http://bm-file-service:8086}
@@ -36,7 +36,7 @@ spring:
         - id: bm-chat-service
           uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
           predicates:
-            - Path=/api/tenant/chat/**,/api/manager/chat/**
+            - Path=/api/tenant/chat/**,/api/admin/chat/**,/ws/chat/**
 
         - id: bm-notification-service
           uri: ${NOTIFICATION_SERVICE_URL:http://bm-notification-service:8088}

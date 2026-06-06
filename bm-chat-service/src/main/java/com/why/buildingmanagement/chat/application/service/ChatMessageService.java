@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
 public class ChatMessageService implements SendChatMessageUseCase,
                 GetBuildingChatUseCase,
                 DeleteChatMessageUseCase,
-                ReactToChatMessageUseCase {
+                ReactToChatMessageUseCase,
+                AdminGetChatMessagesUseCase,
+                AdminDeleteChatMessageUseCase{
 
     private final SaveChatMessagePort saveChatMessagePort;
     private final LoadChatMessagePort loadChatMessagePort;
@@ -302,5 +304,40 @@ public class ChatMessageService implements SendChatMessageUseCase,
                         currentUserId);
 
         chatWebSocketPublisher.publishReactionUpdated(result);
+    }
+
+    @Override
+    public void deleteMessageByAdmin(final UUID messageId) {
+
+        final ChatMessage message = loadChatMessagePort.findById(messageId)
+                        .orElseThrow(() -> new ChatMessageNotFoundException(messageId));
+
+        message.delete();
+
+        final ChatMessage savedMessage = saveChatMessagePort.save(message);
+
+        final ChatMessageResult result = toMessageResult(
+                        savedMessage,
+                        null);
+
+        chatWebSocketPublisher.publishMessageDeleted(result);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ChatMessageResult> getAllMessages() {
+
+        final List<ChatMessage> messages = loadChatMessagePort.findAllOrderByCreatedAtDesc();
+
+        final List<UUID> messageIds = messages.stream()
+                        .map(ChatMessage::getId)
+                        .toList();
+
+        final List<ChatReaction> reactions = loadChatReactionPort.findByMessageIdIn(messageIds);
+
+        return messages.stream().map(message -> toMessageResult(
+                                        message,
+                                        reactions,
+                                        null)).toList();
     }
 }

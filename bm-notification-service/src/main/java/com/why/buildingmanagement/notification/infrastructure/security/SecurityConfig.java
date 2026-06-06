@@ -8,8 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import static com.why.buildingmanagement.notification.infrastructure.security.SecurityConstants.MANAGER;
-import static com.why.buildingmanagement.notification.infrastructure.security.SecurityConstants.TENANT;
+import static com.why.buildingmanagement.notification.infrastructure.security.SecurityConstants.*;
 
 @Configuration
 public class SecurityConfig {
@@ -29,12 +28,12 @@ public class SecurityConfig {
                                                         "/api/notifications/**",
                                                         "/notifications",
                                                         "/notifications/**")
-                                        .hasAnyRole(TENANT, MANAGER)
+                                        .hasAnyRole(TENANT, MANAGER, ADMIN)
 
                                         .requestMatchers(HttpMethod.PATCH,
                                                         "/api/notifications/**",
                                                         "/notifications/**")
-                                        .hasAnyRole(TENANT, MANAGER)
+                                        .hasAnyRole(TENANT, MANAGER, ADMIN)
 
                                         .anyRequest().authenticated())
                         .build();

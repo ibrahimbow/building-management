@@ -15,8 +15,7 @@ import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
-public class ChatMessagePersistenceAdapter implements SaveChatMessagePort,
-        LoadChatMessagePort {
+public class ChatMessagePersistenceAdapter implements SaveChatMessagePort, LoadChatMessagePort {
 
     private final ChatMessageRepository chatMessageRepository;
     private final ChatPersistenceMapper chatPersistenceMapper;
@@ -35,15 +34,24 @@ public class ChatMessagePersistenceAdapter implements SaveChatMessagePort,
     public Optional<ChatMessage> findById(final UUID messageId) {
 
         return chatMessageRepository.findById(messageId)
-                .map(chatPersistenceMapper::toDomain);
+                        .map(chatPersistenceMapper::toDomain);
     }
 
     @Override
     public List<ChatMessage> findByBuildingIdOrderByCreatedAtAsc(final UUID buildingId) {
 
         return chatMessageRepository.findByBuildingIdOrderByCreatedAtAsc(buildingId)
-                .stream()
-                .map(chatPersistenceMapper::toDomain)
-                .toList();
+                        .stream()
+                        .map(chatPersistenceMapper::toDomain)
+                        .toList();
+    }
+
+    @Override
+    public List<ChatMessage> findAllOrderByCreatedAtDesc() {
+
+        return chatMessageRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
+                        .stream()
+                        .map(chatPersistenceMapper::toDomain)
+                        .toList();
     }
 }

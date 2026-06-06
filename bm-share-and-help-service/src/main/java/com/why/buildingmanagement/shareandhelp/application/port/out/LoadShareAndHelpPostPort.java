@@ -13,4 +13,6 @@ public interface LoadShareAndHelpPostPort {
     Optional<ShareAndHelpPost> loadById(final UUID postId);
 
     Optional<ShareAndHelpPost> loadByIdAndCreatedByUserId(final UUID postId, final Long createdByUserId);
+
+    List<ShareAndHelpPost> loadAll();
 }

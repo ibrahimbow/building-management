@@ -14,6 +14,7 @@ import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +40,10 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
                         .loadByUsernameOrEmail(command.usernameOrEmail())
                         .orElseThrow(InvalidCredentialsException::new);
 
+        if (!buildingUser.isEnabled()) {
+            throw new InvalidCredentialsException();
+        }
+
         if (!passwordEncoder.matches(command.password(), buildingUser.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
@@ -53,6 +58,12 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     @Override
     public Long register(final RegisterBuildingUserCommand command) {
 
+        final BuildingUserRole role = BuildingUserRole.valueOf(command.role().toUpperCase());
+
+        if (role == BuildingUserRole.ADMIN) {
+            throw new AccessDeniedException("ADMIN role cannot be assigned during registration.");
+        }
+
         if (loadBuildingUserPort.existsByUsername(command.username())) {
             throw new DuplicateUsernameException(command.username());
         }
@@ -62,8 +73,6 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         }
 
         final String hash = passwordEncoder.encode(command.password());
-
-        final BuildingUserRole role = BuildingUserRole.valueOf(command.role().toUpperCase());
 
         final BuildingUser newBuildingUser = BuildingUser.createNew(
                         command.username(),
@@ -129,6 +138,10 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         final BuildingUser buildingUser = loadBuildingUserPort
                         .loadById(refreshToken.getUserId())
                         .orElseThrow(InvalidCredentialsException::new);
+
+        if (!buildingUser.isEnabled()) {
+            throw new InvalidCredentialsException();
+        }
 
         final String accessToken = tokenProviderPort.generateToken(buildingUser);
 

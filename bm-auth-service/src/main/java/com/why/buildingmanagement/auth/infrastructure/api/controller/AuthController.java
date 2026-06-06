@@ -3,6 +3,7 @@ package com.why.buildingmanagement.auth.infrastructure.api.controller;
 import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.result.BuildingUserProfileResult;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
+import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.request.*;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.BuildingUserProfileResponse;
@@ -15,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 

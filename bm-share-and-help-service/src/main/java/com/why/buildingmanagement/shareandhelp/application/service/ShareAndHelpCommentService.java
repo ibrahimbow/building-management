@@ -1,10 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.application.service;
 
 import com.why.buildingmanagement.shareandhelp.application.mapper.ShareAndHelpResultMapper;
-import com.why.buildingmanagement.shareandhelp.application.port.in.AddCommentCommand;
-import com.why.buildingmanagement.shareandhelp.application.port.in.AddCommentUseCase;
-import com.why.buildingmanagement.shareandhelp.application.port.in.DeleteCommentCommand;
-import com.why.buildingmanagement.shareandhelp.application.port.in.DeleteCommentUseCase;
+import com.why.buildingmanagement.shareandhelp.application.port.in.*;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
@@ -18,10 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteCommentUseCase {
+public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteCommentUseCase, AdminDeleteCommentUseCase {
 
     private final LoadShareAndHelpPostPort loadShareAndHelpPostPort;
     private final SaveShareAndHelpPostPort saveShareAndHelpPostPort;
@@ -74,6 +73,17 @@ public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteComm
                         .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(command.commentId()));
 
         comment.delete();
+
+        saveShareAndHelpPostPort.save(post);
+    }
+
+    @Override
+    public void deleteCommentByAdmin(final UUID postId, final UUID commentId) {
+
+        final ShareAndHelpPost post = loadShareAndHelpPostPort.loadById(postId)
+                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(postId));
+
+        post.deleteComment(commentId);
 
         saveShareAndHelpPostPort.save(post);
     }

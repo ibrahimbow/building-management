@@ -1,5 +1,6 @@
 package com.why.buildingmanagement.shareandhelp.domain.model;
 
+import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostDeletedException;
 import lombok.Getter;
 
@@ -148,6 +149,19 @@ public final class ShareAndHelpPost {
 
     public List<ShareAndHelpComment> getComments() {
         return Collections.unmodifiableList(comments);
+    }
+
+    public void deleteComment(final UUID commentId) {
+        ensureNotDeleted();
+
+        final ShareAndHelpComment comment = comments.stream()
+                        .filter(currentComment -> currentComment.getId().equals(commentId))
+                        .findFirst()
+                        .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(commentId));
+
+        comment.delete();
+
+        this.updatedAt = Instant.now();
     }
 
     private void ensureNotDeleted() {

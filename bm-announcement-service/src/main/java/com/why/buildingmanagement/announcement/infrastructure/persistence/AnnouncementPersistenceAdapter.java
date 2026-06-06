@@ -49,4 +49,12 @@ public class AnnouncementPersistenceAdapter implements AnnouncementRepositoryPor
         return repository.findByIdAndCreatedByManagerId(announcementId, managerId)
                 .map(mapper::toDomain);
     }
+
+    @Override
+    public List<Announcement> findAll() {
+        return repository.findAllByOrderByCreatedAtDesc()
+                        .stream()
+                        .map(mapper::toDomain)
+                        .toList();
+    }
 }
