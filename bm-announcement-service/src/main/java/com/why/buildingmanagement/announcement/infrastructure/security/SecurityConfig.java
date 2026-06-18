@@ -17,21 +17,20 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
-        return http
-                        .csrf(AbstractHttpConfigurer::disable)
-                        .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                        .authorizeHttpRequests(auth -> auth
-                                        .requestMatchers(HttpMethod.GET, "/api/admin/announcements").hasRole(ADMIN)
-                                        .requestMatchers(HttpMethod.DELETE, "/api/admin/announcements/**").hasRole(ADMIN)
+        return http.csrf(AbstractHttpConfigurer::disable)
+                   .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                   .authorizeHttpRequests(auth -> auth
+                                   .requestMatchers(HttpMethod.GET, "/api/admin/announcements").hasRole(ADMIN)
+                                   .requestMatchers(HttpMethod.DELETE, "/api/admin/announcements/**").hasRole(ADMIN)
 
-                                        .requestMatchers(HttpMethod.POST, "/api/manager/announcements").hasRole(MANAGER)
-                                        .requestMatchers(HttpMethod.GET, "/api/manager/announcements").hasRole(MANAGER)
-                                        .requestMatchers(HttpMethod.PUT, "/api/manager/announcements/**").hasRole(MANAGER)
-                                        .requestMatchers(HttpMethod.DELETE, "/api/manager/announcements/**").hasRole(MANAGER)
+                                   .requestMatchers(HttpMethod.POST, "/api/manager/announcements").hasRole(MANAGER)
+                                   .requestMatchers(HttpMethod.GET, "/api/manager/announcements").hasRole(MANAGER)
+                                   .requestMatchers(HttpMethod.PUT, "/api/manager/announcements/**").hasRole(MANAGER)
+                                   .requestMatchers(HttpMethod.DELETE, "/api/manager/announcements/**").hasRole(MANAGER)
 
-                                        .requestMatchers(HttpMethod.GET, "/api/tenant/announcements").hasRole(TENANT)
+                                   .requestMatchers(HttpMethod.GET, "/api/tenant/announcements").hasRole(TENANT)
 
-                                        .anyRequest().authenticated())
-                        .build();
+                                   .anyRequest().authenticated())
+                   .build();
     }
 }

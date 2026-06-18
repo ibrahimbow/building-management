@@ -17,8 +17,7 @@ import java.util.Map;
 public class KafkaProducerConfig {
 
     @Bean
-    public ProducerFactory<String, Object> producerFactory(
-                    final KafkaProperties kafkaProperties) {
+    public ProducerFactory<String, Object> producerFactory(final KafkaProperties kafkaProperties) {
 
         final Map<String, Object> config = new HashMap<>(kafkaProperties.buildProducerProperties());
 
@@ -29,8 +28,7 @@ public class KafkaProducerConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, Object> kafkaTemplate(
-                    final ProducerFactory<String, Object> producerFactory) {
+    public KafkaTemplate<String, Object> kafkaTemplate(final ProducerFactory<String, Object> producerFactory) {
 
         return new KafkaTemplate<>(producerFactory);
     }

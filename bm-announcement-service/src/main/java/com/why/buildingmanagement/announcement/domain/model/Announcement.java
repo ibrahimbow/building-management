@@ -1,8 +1,10 @@
 package com.why.buildingmanagement.announcement.domain.model;
 
+import com.why.buildingmanagement.announcement.domain.validation.AnnouncementValidator;
 import lombok.Getter;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 
 @Getter
@@ -51,20 +53,28 @@ public class Announcement {
                                          final String message,
                                          final AnnouncementCategory category,
                                          final String imageUrl) {
+
+        AnnouncementValidator.validateBuildingId(buildingId);
+        AnnouncementValidator.validateManagerId(managerId);
+        AnnouncementValidator.validateCreatedBy(createdBy);
+        AnnouncementValidator.validateTitle(title);
+        AnnouncementValidator.validateMessage(message);
+        AnnouncementValidator.validateCategory(category);
+        AnnouncementValidator.validateImageUrl(imageUrl);
+
         final Instant now = Instant.now();
 
-        return new Announcement(
-                null,
-                buildingId,
-                managerId,
-                createdBy,
-                title,
-                message,
-                category,
-                resolveIcon(category),
-                imageUrl,
-                now,
-                null);
+        return new Announcement(null,
+                                buildingId,
+                                managerId,
+                                createdBy,
+                                title,
+                                message,
+                                category,
+                                resolveIcon(category),
+                                imageUrl,
+                                now,
+                                null);
     }
 
     public static Announcement restore(final UUID id,
@@ -78,41 +88,45 @@ public class Announcement {
                                        final String imageUrl,
                                        final Instant createdAt,
                                        final Instant updatedAt) {
-        return new Announcement(
-                id,
-                buildingId,
-                createdByManagerId,
-                createdBy,
-                title,
-                message,
-                category,
-                icon,
-                imageUrl,
-                createdAt,
-                updatedAt);
+        return new Announcement(id,
+                                buildingId,
+                                createdByManagerId,
+                                createdBy,
+                                title,
+                                message,
+                                category,
+                                icon,
+                                imageUrl,
+                                createdAt,
+                                updatedAt);
     }
 
     public void update(final String title,
                        final String message,
                        final AnnouncementCategory category,
                        final String imageUrl) {
-        final Instant now = Instant.now();
+
+        AnnouncementValidator.validateTitle(title);
+        AnnouncementValidator.validateMessage(message);
+        AnnouncementValidator.validateCategory(category);
+        AnnouncementValidator.validateImageUrl(imageUrl);
 
         this.title = title;
         this.message = message;
         this.category = category;
         this.icon = resolveIcon(category);
         this.imageUrl = imageUrl;
-        this.updatedAt = now;
+        this.updatedAt = Instant.now();
     }
 
     public boolean belongsToBuilding(final UUID buildingId) {
-        return this.buildingId.equals(buildingId);
+        return Objects.equals(this.buildingId, buildingId);
     }
 
     public boolean createdByManager(final Long managerId) {
-        return this.createdByManagerId.equals(managerId);
+        return Objects.equals(this.createdByManagerId, managerId);
     }
+
 
     private static String resolveIcon(final AnnouncementCategory category) {
         if (category == null) {

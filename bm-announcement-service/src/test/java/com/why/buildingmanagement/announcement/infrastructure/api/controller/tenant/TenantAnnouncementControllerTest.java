@@ -26,7 +26,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TenantAnnouncementController.class)
 class TenantAnnouncementControllerTest {
@@ -52,7 +53,7 @@ class TenantAnnouncementControllerTest {
         buildingId = UUID.randomUUID();
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentTenant());
+                        .thenReturn(currentTenant());
     }
 
     @Test
@@ -62,24 +63,24 @@ class TenantAnnouncementControllerTest {
         final AnnouncementResponse response = announcementResponse();
 
         when(getTenantAnnouncementsUseCase.getTenantAnnouncements(any(GetTenantAnnouncementsQuery.class)))
-                .thenReturn(List.of(result));
+                        .thenReturn(List.of(result));
 
         when(mapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(get("/api/tenant/announcements"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(announcementId.toString()))
-                .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$[0].title").value("Water maintenance"))
-                .andExpect(jsonPath("$[0].message").value("Water will be off tomorrow"))
-                .andExpect(jsonPath("$[0].category").value("MAINTENANCE"))
-                .andExpect(jsonPath("$[0].icon").value("build"))
-                .andExpect(jsonPath("$[0].imageUrl").value("https://example.com/image.jpg"))
-                .andExpect(jsonPath("$[0].createdBy").value("Ibrahim"));
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$[0].id").value(announcementId.toString()))
+               .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$[0].title").value("Water maintenance"))
+               .andExpect(jsonPath("$[0].message").value("Water will be off tomorrow"))
+               .andExpect(jsonPath("$[0].category").value("MAINTENANCE"))
+               .andExpect(jsonPath("$[0].icon").value("build"))
+               .andExpect(jsonPath("$[0].imageUrl").value("https://example.com/image.jpg"))
+               .andExpect(jsonPath("$[0].createdBy").value("Ibrahim"));
 
         final ArgumentCaptor<GetTenantAnnouncementsQuery> captor =
-                ArgumentCaptor.forClass(GetTenantAnnouncementsQuery.class);
+                        ArgumentCaptor.forClass(GetTenantAnnouncementsQuery.class);
 
         verify(getTenantAnnouncementsUseCase).getTenantAnnouncements(captor.capture());
 
@@ -87,40 +88,37 @@ class TenantAnnouncementControllerTest {
     }
 
     private CurrentUser currentTenant() {
-        return new CurrentUser(
-                        2L,
-                        "ibrahim@example.com",
-                        "TENANT",
-                        "Ibrahim",
-                        null);
+        return new CurrentUser(2L,
+                               "ibrahim@example.com",
+                               "TENANT",
+                               "Ibrahim",
+                               null);
     }
 
     private AnnouncementResult announcementResult() {
-        return new AnnouncementResult(
-                announcementId,
-                buildingId,
-                1L,
-                "Ibrahim",
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "build",
-                "https://example.com/image.jpg",
-                Instant.parse("2026-05-09T10:00:00Z"),
-                null);
+        return new AnnouncementResult(announcementId,
+                                      buildingId,
+                                      1L,
+                                      "Ibrahim",
+                                      "Water maintenance",
+                                      "Water will be off tomorrow",
+                                      AnnouncementCategory.MAINTENANCE,
+                                      "build",
+                                      "https://example.com/image.jpg",
+                                      Instant.parse("2026-05-09T10:00:00Z"),
+                                      null);
     }
 
     private AnnouncementResponse announcementResponse() {
-        return new AnnouncementResponse(
-                announcementId.toString(),
-                buildingId.toString(),
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "build",
-                "https://example.com/image.jpg",
-                "Ibrahim",
-                Instant.parse("2026-05-09T10:00:00Z"),
-                null);
+        return new AnnouncementResponse(announcementId.toString(),
+                                        buildingId.toString(),
+                                        "Water maintenance",
+                                        "Water will be off tomorrow",
+                                        AnnouncementCategory.MAINTENANCE,
+                                        "build",
+                                        "https://example.com/image.jpg",
+                                        "Ibrahim",
+                                        Instant.parse("2026-05-09T10:00:00Z"),
+                                        null);
     }
 }

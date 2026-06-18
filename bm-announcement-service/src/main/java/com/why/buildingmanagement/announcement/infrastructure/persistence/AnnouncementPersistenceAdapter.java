@@ -25,18 +25,15 @@ public class AnnouncementPersistenceAdapter implements AnnouncementRepositoryPor
 
     @Override
     public Optional<Announcement> findById(final UUID id) {
-        return repository.findById(id)
-                .map(mapper::toDomain);
+        return repository.findById(id).map(mapper::toDomain);
     }
 
     @Override
     public List<Announcement> findByBuildingId(final UUID buildingId) {
-        return repository.findByBuildingIdOrderByCreatedAtDesc(
-                        buildingId,
-                        PageRequest.of(0, 20))
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
+        return repository.findByBuildingIdOrderByCreatedAtDesc(buildingId, PageRequest.of(0, 20))
+                         .stream()
+                         .map(mapper::toDomain)
+                         .toList();
     }
 
     @Override
@@ -47,14 +44,14 @@ public class AnnouncementPersistenceAdapter implements AnnouncementRepositoryPor
     @Override
     public Optional<Announcement> findByIdAndManagerId(final UUID announcementId, final Long managerId) {
         return repository.findByIdAndCreatedByManagerId(announcementId, managerId)
-                .map(mapper::toDomain);
+                         .map(mapper::toDomain);
     }
 
     @Override
     public List<Announcement> findAll() {
         return repository.findAllByOrderByCreatedAtDesc()
-                        .stream()
-                        .map(mapper::toDomain)
-                        .toList();
+                         .stream()
+                         .map(mapper::toDomain)
+                         .toList();
     }
 }

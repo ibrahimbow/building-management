@@ -8,16 +8,15 @@ import org.mapstruct.Mapper;
 public interface AnnouncementApiMapper {
 
     default AnnouncementResponse toResponse(final AnnouncementResult result) {
-        return new AnnouncementResponse(
-                result.id().toString(),
-                result.buildingId().toString(),
-                result.title(),
-                result.message(),
-                result.category(),
-                result.icon(),
-                result.imageUrl(),
-                result.createdBy(),
-                result.createdAt(),
-                result.updatedAt());
+        return new AnnouncementResponse(result.id().toString(),
+                                        result.buildingId().toString(),
+                                        result.title(),
+                                        result.message(),
+                                        result.category(),
+                                        result.icon(),
+                                        result.imageUrl(),
+                                        result.createdBy(),
+                                        result.createdAt(),
+                                        result.updatedAt());
     }
 }

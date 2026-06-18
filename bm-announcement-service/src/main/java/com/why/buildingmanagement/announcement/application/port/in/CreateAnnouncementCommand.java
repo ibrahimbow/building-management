@@ -26,6 +26,5 @@ public record CreateAnnouncementCommand(
         AnnouncementCategory category,
 
         @Size(max = 500, message = "image url must not exceed 500 characters")
-        String imageUrl
-) {
+        String imageUrl) {
 }

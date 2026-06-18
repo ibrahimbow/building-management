@@ -31,11 +31,9 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AnnouncementServiceApplication.class)
 @AutoConfigureMockMvc
@@ -45,10 +43,10 @@ class AnnouncementLifecycleIntegrationTest {
 
     @Container
     static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
-                    .withDatabaseName("building_test_db")
-                    .withUsername("test")
-                    .withPassword("test");
+                    new PostgreSQLContainer("postgres:16")
+                                    .withDatabaseName("building_test_db")
+                                    .withUsername("test")
+                                    .withPassword("test");
 
     @DynamicPropertySource
     static void configure(final DynamicPropertyRegistry registry) {
@@ -85,106 +83,103 @@ class AnnouncementLifecycleIntegrationTest {
         buildingId = UUID.randomUUID();
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentManager());
+                        .thenReturn(currentManager());
 
         when(buildingAccessPort.getManagerBuildingId(1L))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(buildingAccessPort.getTenantActiveBuildingId(2L))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
     }
 
     @Test
     @WithMockUser(roles = "MANAGER")
     void announcementLifecycle_shouldCreateViewUpdateDeleteAnnouncement() throws Exception {
         final CreateAnnouncementRequest createRequest = new CreateAnnouncementRequest(
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "https://example.com/water.jpg"
+                        "Water maintenance",
+                        "Water will be off tomorrow",
+                        AnnouncementCategory.MAINTENANCE,
+                        "https://example.com/water.jpg"
         );
 
         final String response = mockMvc.perform(post("/api/manager/announcements")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createRequest)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$.title").value("Water maintenance"))
-                .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
-                .andExpect(jsonPath("$.category").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.icon").value("build"))
-                .andExpect(jsonPath("$.imageUrl").value("https://example.com/water.jpg"))
-                .andExpect(jsonPath("$.createdBy").value("Ibrahim"))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
+                                                                .with(csrf())
+                                                                .contentType(MediaType.APPLICATION_JSON)
+                                                                .content(objectMapper.writeValueAsString(createRequest)))
+                                       .andExpect(status().isCreated())
+                                       .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
+                                       .andExpect(jsonPath("$.title").value("Water maintenance"))
+                                       .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
+                                       .andExpect(jsonPath("$.category").value("MAINTENANCE"))
+                                       .andExpect(jsonPath("$.icon").value("build"))
+                                       .andExpect(jsonPath("$.imageUrl").value("https://example.com/water.jpg"))
+                                       .andExpect(jsonPath("$.createdBy").value("Ibrahim"))
+                                       .andReturn()
+                                       .getResponse()
+                                       .getContentAsString();
 
-        final String announcementId = objectMapper
-                .readTree(response)
-                .get("id")
-                .asText();
+        final String announcementId = objectMapper.readTree(response)
+                                                  .get("id")
+                                                  .asText();
 
         mockMvc.perform(get("/api/manager/announcements"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(announcementId))
-                .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$[0].title").value("Water maintenance"));
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$[0].id").value(announcementId))
+               .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$[0].title").value("Water maintenance"));
 
         final UpdateAnnouncementRequest updateRequest = new UpdateAnnouncementRequest(
-                "Updated emergency notice",
-                "Please keep the emergency exit clear",
-                AnnouncementCategory.EMERGENCY,
-                null
+                        "Updated emergency notice",
+                        "Please keep the emergency exit clear",
+                        AnnouncementCategory.EMERGENCY,
+                        null
         );
 
         mockMvc.perform(put("/api/manager/announcements/{id}", announcementId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.title").value("Updated emergency notice"))
-                .andExpect(jsonPath("$.message").value("Please keep the emergency exit clear"))
-                .andExpect(jsonPath("$.category").value("EMERGENCY"))
-                .andExpect(jsonPath("$.icon").value("warning"))
-                .andExpect(jsonPath("$.imageUrl").doesNotExist());
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(updateRequest)))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.title").value("Updated emergency notice"))
+               .andExpect(jsonPath("$.message").value("Please keep the emergency exit clear"))
+               .andExpect(jsonPath("$.category").value("EMERGENCY"))
+               .andExpect(jsonPath("$.icon").value("warning"))
+               .andExpect(jsonPath("$.imageUrl").doesNotExist());
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentTenant());
+                        .thenReturn(currentTenant());
 
         mockMvc.perform(get("/api/tenant/announcements")
-                        .with(user("tenant").roles("TENANT")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(announcementId))
-                .andExpect(jsonPath("$[0].title").value("Updated emergency notice"));
+                                        .with(user("tenant").roles("TENANT")))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$[0].id").value(announcementId))
+               .andExpect(jsonPath("$[0].title").value("Updated emergency notice"));
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentManager());
+                        .thenReturn(currentManager());
 
         mockMvc.perform(delete("/api/manager/announcements/{id}", announcementId)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+                                        .with(csrf()))
+               .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/manager/announcements"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isEmpty());
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$").isEmpty());
     }
 
     private CurrentUser currentManager() {
-        return new CurrentUser(
-                        1L,
-                        "ibrahim@example.com",
-                        "MANAGER",
-                        "Ibrahim",
-                        null);
+        return new CurrentUser(1L,
+                               "ibrahim@example.com",
+                               "MANAGER",
+                               "Ibrahim",
+                               null);
     }
 
     private CurrentUser currentTenant() {
-        return new CurrentUser(
-                        2L,
-                        "tenant@example.com",
-                        "TENANT",
-                "Ibrahimbow",
-                null);
+        return new CurrentUser(2L,
+                               "tenant@example.com",
+                               "TENANT",
+                               "Ibrahimbow",
+                               null);
     }
 }

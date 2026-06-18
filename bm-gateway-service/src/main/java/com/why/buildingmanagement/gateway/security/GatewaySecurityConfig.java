@@ -11,6 +11,7 @@ import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.NimbusReactiveJwtDecoder;
 import org.springframework.security.oauth2.jwt.ReactiveJwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.BearerTokenAuthenticationToken;
 import org.springframework.security.web.server.SecurityWebFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsWebFilter;
@@ -38,9 +39,8 @@ public class GatewaySecurityConfig {
         final CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOriginPatterns(List.of(
-                        "http://localhost",
-                        "http://localhost:4200",
-                        "http://localhost:8080",
+                        "http://localhost:*",
+                        "http://127.0.0.1:*",
                         "http://167.233.48.218",
 
                         "http://joritna.com",
@@ -94,16 +94,11 @@ public class GatewaySecurityConfig {
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .jwt(Customizer.withDefaults())
                         .bearerTokenConverter(exchange -> {
-                            // Only extract token if Authorization header is present
                             String auth = exchange.getRequest().getHeaders().getFirst("Authorization");
                             if (auth == null || !auth.startsWith("Bearer ")) {
-                                return Mono.empty(); // no token = anonymous, let authz rules decide
+                                return Mono.empty();
                             }
-                            return Mono.just(
-                                    new org.springframework.security.oauth2.server.resource.BearerTokenAuthenticationToken(
-                                            auth.substring(7)
-                                    )
-                            );
+                            return Mono.just(new BearerTokenAuthenticationToken(auth.substring(7)));
                         })
                 )
                 .build();

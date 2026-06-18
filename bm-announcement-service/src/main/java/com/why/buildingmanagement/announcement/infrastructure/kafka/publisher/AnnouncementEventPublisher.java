@@ -14,14 +14,12 @@ public class AnnouncementEventPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
-    public void publishAnnouncementCreated(
-                    final AnnouncementCreatedEvent event) {
+    public void publishAnnouncementCreated(final AnnouncementCreatedEvent event) {
 
         log.info("Publishing announcement created event: {}", event.announcementId());
 
-        kafkaTemplate.send(
-                        KafkaTopics.ANNOUNCEMENT_CREATED_V1,
-                        event.buildingId().toString(),
-                        event);
+        kafkaTemplate.send(KafkaTopics.ANNOUNCEMENT_CREATED_V1,
+                           event.buildingId().toString(),
+                           event);
     }
 }

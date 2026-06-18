@@ -29,12 +29,11 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
         final String avatarUrl = request.getHeader("X-User-Avatar-Url");
 
         if (userId != null && email != null && role != null && displayName != null) {
-            final CurrentUser currentUser = new CurrentUser(
-                            Long.valueOf(userId),
-                            email,
-                            role,
-                            displayName,
-                            avatarUrl);
+            final CurrentUser currentUser = new CurrentUser(Long.valueOf(userId),
+                                                            email,
+                                                            role,
+                                                            displayName,
+                                                            avatarUrl);
 
             final UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(

@@ -22,17 +22,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Testcontainers
 @Import({
-        AnnouncementPersistenceAdapter.class,
-        AnnouncementMapperImpl.class
+                AnnouncementPersistenceAdapter.class,
+                AnnouncementMapperImpl.class
 })
 class AnnouncementPersistenceAdapterTest {
 
     @Container
     static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
-                    .withDatabaseName("building_test_db")
-                    .withUsername("test")
-                    .withPassword("test");
+                    new PostgreSQLContainer("postgres:16")
+                                    .withDatabaseName("building_test_db")
+                                    .withUsername("test")
+                                    .withPassword("test");
 
     @DynamicPropertySource
     static void configure(final DynamicPropertyRegistry registry) {
@@ -102,14 +102,13 @@ class AnnouncementPersistenceAdapterTest {
 
         final UUID otherBuildingId = UUID.randomUUID();
 
-        final Announcement otherAnnouncement = Announcement.createNew(
-                otherBuildingId,
-                1L,
-                "Ibrahim",
-                "Other building announcement",
-                "Other message",
-                AnnouncementCategory.REMINDER,
-                null);
+        final Announcement otherAnnouncement = Announcement.createNew(otherBuildingId,
+                                                                      1L,
+                                                                      "Ibrahim",
+                                                                      "Other building announcement",
+                                                                      "Other message",
+                                                                      AnnouncementCategory.REMINDER,
+                                                                      null);
 
         adapter.save(otherAnnouncement);
 
@@ -132,13 +131,12 @@ class AnnouncementPersistenceAdapterTest {
     }
 
     private Announcement createAnnouncement() {
-        return Announcement.createNew(
-                buildingId,
-                1L,
-                "Ibrahim",
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "https://example.com/water.jpg");
+        return Announcement.createNew(buildingId,
+                                      1L,
+                                      "Ibrahim",
+                                      "Water maintenance",
+                                      "Water will be off tomorrow",
+                                      AnnouncementCategory.MAINTENANCE,
+                                      "https://example.com/water.jpg");
     }
 }

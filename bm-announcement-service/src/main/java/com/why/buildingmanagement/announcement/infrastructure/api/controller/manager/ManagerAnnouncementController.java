@@ -33,22 +33,20 @@ public class ManagerAnnouncementController {
 
     @PostMapping
     public ResponseEntity<AnnouncementResponse> createAnnouncement(
-            @Valid @RequestBody final CreateAnnouncementRequest request) {
+                    @Valid @RequestBody final CreateAnnouncementRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final AnnouncementResult result = createAnnouncementUseCase.createAnnouncement(
-                new CreateAnnouncementCommand(
-                        currentUser.userId(),
-                        currentUser.displayName(),
-                        request.title(),
-                        request.message(),
-                        request.category(),
-                        request.imageUrl()));
+                        new CreateAnnouncementCommand(currentUser.userId(),
+                                                      currentUser.displayName(),
+                                                      request.title(),
+                                                      request.message(),
+                                                      request.category(),
+                                                      request.imageUrl()));
 
-        return ResponseEntity
-                .created(URI.create("/api/manager/announcements/" + result.id()))
-                .body(mapper.toResponse(result));
+        return ResponseEntity.created(URI.create("/api/manager/announcements/" + result.id()))
+                             .body(mapper.toResponse(result));
     }
 
     @GetMapping
@@ -57,11 +55,10 @@ public class ManagerAnnouncementController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final List<AnnouncementResponse> announcements = getManagerAnnouncementsUseCase
-                .getManagerAnnouncements(
-                        new GetManagerAnnouncementsQuery(currentUser.userId()))
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+                        .getManagerAnnouncements(new GetManagerAnnouncementsQuery(currentUser.userId()))
+                        .stream()
+                        .map(mapper::toResponse)
+                        .toList();
 
         return ResponseEntity.ok(announcements);
     }
@@ -73,27 +70,23 @@ public class ManagerAnnouncementController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final AnnouncementResult result = updateAnnouncementUseCase.updateAnnouncement(
-                new UpdateAnnouncementCommand(
-                        announcementId,
-                        currentUser.userId(),
-                        request.title(),
-                        request.message(),
-                        request.category(),
-                        request.imageUrl()));
+                        new UpdateAnnouncementCommand(announcementId,
+                                                      currentUser.userId(),
+                                                      request.title(),
+                                                      request.message(),
+                                                      request.category(),
+                                                      request.imageUrl()));
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AnnouncementResponse> getAnnouncementById(
-            @PathVariable("id") final UUID announcementId) {
+    public ResponseEntity<AnnouncementResponse> getAnnouncementById(@PathVariable("id") final UUID announcementId) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final AnnouncementResult result = getManagerAnnouncementByIdUseCase.getManagerAnnouncementById(
-                new GetManagerAnnouncementByIdQuery(
-                        announcementId,
-                        currentUser.userId()));
+                        new GetManagerAnnouncementByIdQuery(announcementId, currentUser.userId()));
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
@@ -105,9 +98,7 @@ public class ManagerAnnouncementController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         deleteAnnouncementUseCase.deleteAnnouncement(
-                new DeleteAnnouncementCommand(
-                        announcementId,
-                        currentUser.userId()));
+                        new DeleteAnnouncementCommand(announcementId, currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }

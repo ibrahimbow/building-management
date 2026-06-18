@@ -27,11 +27,10 @@ public class TenantAnnouncementController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final List<AnnouncementResponse> announcements = getTenantAnnouncementsUseCase
-                .getTenantAnnouncements(
-                        new GetTenantAnnouncementsQuery(currentUser.userId()))
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+                        .getTenantAnnouncements(new GetTenantAnnouncementsQuery(currentUser.userId()))
+                        .stream()
+                        .map(mapper::toResponse)
+                        .toList();
 
         return ResponseEntity.ok(announcements);
     }

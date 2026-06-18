@@ -22,8 +22,7 @@ public class CurrentUserService {
 
     public CurrentUser getCurrentUser() {
 
-        return new CurrentUser(
-                        Long.valueOf(requiredHeader(USER_ID_HEADER)),
+        return new CurrentUser(Long.valueOf(requiredHeader(USER_ID_HEADER)),
                         requiredHeader(USER_EMAIL_HEADER),
                         requiredHeader(USER_ROLE_HEADER),
                         requiredHeader(USER_DISPLAY_NAME_HEADER),

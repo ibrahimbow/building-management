@@ -23,11 +23,10 @@ public class AdminAnnouncementController {
     @GetMapping
     public ResponseEntity<List<AnnouncementResponse>> getAllAnnouncements() {
 
-        final List<AnnouncementResponse> response = adminGetAnnouncementsUseCase
-                        .getAllAnnouncements()
-                        .stream()
-                        .map(announcementApiMapper::toResponse)
-                        .toList();
+        final List<AnnouncementResponse> response = adminGetAnnouncementsUseCase.getAllAnnouncements()
+                                                                                .stream()
+                                                                                .map(announcementApiMapper::toResponse)
+                                                                                .toList();
 
         return ResponseEntity.ok(response);
     }

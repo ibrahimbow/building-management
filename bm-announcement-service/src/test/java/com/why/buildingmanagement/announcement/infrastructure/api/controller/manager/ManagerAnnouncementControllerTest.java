@@ -71,44 +71,43 @@ class ManagerAnnouncementControllerTest {
         buildingId = UUID.randomUUID();
 
         when(currentUserService.getCurrentUser())
-                .thenReturn(currentManager());
+                        .thenReturn(currentManager());
     }
 
     @Test
     @WithMockUser(roles = "MANAGER")
     void createAnnouncement_shouldCreateAnnouncementForCurrentManager() throws Exception {
-        final CreateAnnouncementRequest request = new CreateAnnouncementRequest(
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "https://example.com/image.jpg");
+        final CreateAnnouncementRequest request = new CreateAnnouncementRequest("Water maintenance",
+                                                                                "Water will be off tomorrow",
+                                                                                AnnouncementCategory.MAINTENANCE,
+                                                                                "https://example.com/image.jpg");
 
         final AnnouncementResult result = announcementResult();
         final AnnouncementResponse response = announcementResponse();
 
         when(createAnnouncementUseCase.createAnnouncement(any(CreateAnnouncementCommand.class)))
-                .thenReturn(result);
+                        .thenReturn(result);
 
         when(mapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(post("/api/manager/announcements")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", "/api/manager/announcements/" + announcementId))
-                .andExpect(jsonPath("$.id").value(announcementId.toString()))
-                .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$.title").value("Water maintenance"))
-                .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
-                .andExpect(jsonPath("$.category").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.icon").value("build"))
-                .andExpect(jsonPath("$.imageUrl").value("https://example.com/image.jpg"))
-                .andExpect(jsonPath("$.createdBy").value("Ibrahim"));
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+               .andExpect(status().isCreated())
+               .andExpect(header().string("Location", "/api/manager/announcements/" + announcementId))
+               .andExpect(jsonPath("$.id").value(announcementId.toString()))
+               .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$.title").value("Water maintenance"))
+               .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
+               .andExpect(jsonPath("$.category").value("MAINTENANCE"))
+               .andExpect(jsonPath("$.icon").value("build"))
+               .andExpect(jsonPath("$.imageUrl").value("https://example.com/image.jpg"))
+               .andExpect(jsonPath("$.createdBy").value("Ibrahim"));
 
         final ArgumentCaptor<CreateAnnouncementCommand> captor =
-                ArgumentCaptor.forClass(CreateAnnouncementCommand.class);
+                        ArgumentCaptor.forClass(CreateAnnouncementCommand.class);
 
         verify(createAnnouncementUseCase).createAnnouncement(captor.capture());
 
@@ -127,22 +126,22 @@ class ManagerAnnouncementControllerTest {
         final AnnouncementResponse response = announcementResponse();
 
         when(getManagerAnnouncementsUseCase.getManagerAnnouncements(any(GetManagerAnnouncementsQuery.class)))
-                .thenReturn(List.of(result));
+                        .thenReturn(List.of(result));
 
         when(mapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(get("/api/manager/announcements"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(announcementId.toString()))
-                .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$[0].title").value("Water maintenance"))
-                .andExpect(jsonPath("$[0].message").value("Water will be off tomorrow"))
-                .andExpect(jsonPath("$[0].category").value("MAINTENANCE"))
-                .andExpect(jsonPath("$[0].createdBy").value("Ibrahim"));
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$[0].id").value(announcementId.toString()))
+               .andExpect(jsonPath("$[0].buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$[0].title").value("Water maintenance"))
+               .andExpect(jsonPath("$[0].message").value("Water will be off tomorrow"))
+               .andExpect(jsonPath("$[0].category").value("MAINTENANCE"))
+               .andExpect(jsonPath("$[0].createdBy").value("Ibrahim"));
 
         final ArgumentCaptor<GetManagerAnnouncementsQuery> captor =
-                ArgumentCaptor.forClass(GetManagerAnnouncementsQuery.class);
+                        ArgumentCaptor.forClass(GetManagerAnnouncementsQuery.class);
 
         verify(getManagerAnnouncementsUseCase).getManagerAnnouncements(captor.capture());
 
@@ -152,58 +151,55 @@ class ManagerAnnouncementControllerTest {
     @Test
     @WithMockUser(roles = "MANAGER")
     void updateAnnouncement_shouldUpdateAnnouncementForCurrentManager() throws Exception {
-        final UpdateAnnouncementRequest request = new UpdateAnnouncementRequest(
-                "Updated title",
-                "Updated message",
-                AnnouncementCategory.EMERGENCY,
-                null);
+        final UpdateAnnouncementRequest request = new UpdateAnnouncementRequest("Updated title",
+                                                                                "Updated message",
+                                                                                AnnouncementCategory.EMERGENCY,
+                                                                                null);
 
-        final AnnouncementResult result = new AnnouncementResult(
-                announcementId,
-                buildingId,
-                1L,
-                "Ibrahim",
-                "Updated title",
-                "Updated message",
-                AnnouncementCategory.EMERGENCY,
-                "warning",
-                null,
-                Instant.parse("2026-05-09T10:00:00Z"),
-                Instant.parse("2026-05-09T11:00:00Z"));
+        final AnnouncementResult result = new AnnouncementResult(announcementId,
+                                                                 buildingId,
+                                                                 1L,
+                                                                 "Ibrahim",
+                                                                 "Updated title",
+                                                                 "Updated message",
+                                                                 AnnouncementCategory.EMERGENCY,
+                                                                 "warning",
+                                                                 null,
+                                                                 Instant.parse("2026-05-09T10:00:00Z"),
+                                                                 Instant.parse("2026-05-09T11:00:00Z"));
 
-        final AnnouncementResponse response = new AnnouncementResponse(
-                announcementId.toString(),
-                buildingId.toString(),
-                "Updated title",
-                "Updated message",
-                AnnouncementCategory.EMERGENCY,
-                "warning",
-                null,
-                "Ibrahim",
-                Instant.parse("2026-05-09T10:00:00Z"),
-                Instant.parse("2026-05-09T11:00:00Z"));
+        final AnnouncementResponse response = new AnnouncementResponse(announcementId.toString(),
+                                                                       buildingId.toString(),
+                                                                       "Updated title",
+                                                                       "Updated message",
+                                                                       AnnouncementCategory.EMERGENCY,
+                                                                       "warning",
+                                                                       null,
+                                                                       "Ibrahim",
+                                                                       Instant.parse("2026-05-09T10:00:00Z"),
+                                                                       Instant.parse("2026-05-09T11:00:00Z"));
 
         when(updateAnnouncementUseCase.updateAnnouncement(any(UpdateAnnouncementCommand.class)))
-                .thenReturn(result);
+                        .thenReturn(result);
 
         when(mapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(put("/api/manager/announcements/{id}", announcementId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(announcementId.toString()))
-                .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$.title").value("Updated title"))
-                .andExpect(jsonPath("$.message").value("Updated message"))
-                .andExpect(jsonPath("$.category").value("EMERGENCY"))
-                .andExpect(jsonPath("$.icon").value("warning"))
-                .andExpect(jsonPath("$.imageUrl").doesNotExist());
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.id").value(announcementId.toString()))
+               .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$.title").value("Updated title"))
+               .andExpect(jsonPath("$.message").value("Updated message"))
+               .andExpect(jsonPath("$.category").value("EMERGENCY"))
+               .andExpect(jsonPath("$.icon").value("warning"))
+               .andExpect(jsonPath("$.imageUrl").doesNotExist());
 
         final ArgumentCaptor<UpdateAnnouncementCommand> captor =
-                ArgumentCaptor.forClass(UpdateAnnouncementCommand.class);
+                        ArgumentCaptor.forClass(UpdateAnnouncementCommand.class);
 
         verify(updateAnnouncementUseCase).updateAnnouncement(captor.capture());
 
@@ -219,11 +215,11 @@ class ManagerAnnouncementControllerTest {
     @WithMockUser(roles = "MANAGER")
     void deleteAnnouncement_shouldDeleteAnnouncementForCurrentManager() throws Exception {
         mockMvc.perform(delete("/api/manager/announcements/{id}", announcementId)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+                                        .with(csrf()))
+               .andExpect(status().isNoContent());
 
         final ArgumentCaptor<DeleteAnnouncementCommand> captor =
-                ArgumentCaptor.forClass(DeleteAnnouncementCommand.class);
+                        ArgumentCaptor.forClass(DeleteAnnouncementCommand.class);
 
         verify(deleteAnnouncementUseCase).deleteAnnouncement(captor.capture());
 
@@ -238,65 +234,62 @@ class ManagerAnnouncementControllerTest {
         final AnnouncementResponse response = announcementResponse();
 
         when(getManagerAnnouncementByIdUseCase.getManagerAnnouncementById(any(GetManagerAnnouncementByIdQuery.class)))
-                .thenReturn(result);
+                        .thenReturn(result);
 
         when(mapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(get("/api/manager/announcements/{id}", announcementId))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(announcementId.toString()))
-                .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
-                .andExpect(jsonPath("$.title").value("Water maintenance"))
-                .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
-                .andExpect(jsonPath("$.category").value("MAINTENANCE"))
-                .andExpect(jsonPath("$.createdBy").value("Ibrahim"));
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.id").value(announcementId.toString()))
+               .andExpect(jsonPath("$.buildingId").value(buildingId.toString()))
+               .andExpect(jsonPath("$.title").value("Water maintenance"))
+               .andExpect(jsonPath("$.message").value("Water will be off tomorrow"))
+               .andExpect(jsonPath("$.category").value("MAINTENANCE"))
+               .andExpect(jsonPath("$.createdBy").value("Ibrahim"));
 
         final ArgumentCaptor<GetManagerAnnouncementByIdQuery> captor =
-                ArgumentCaptor.forClass(GetManagerAnnouncementByIdQuery.class);
+                        ArgumentCaptor.forClass(GetManagerAnnouncementByIdQuery.class);
 
         verify(getManagerAnnouncementByIdUseCase)
-                .getManagerAnnouncementById(captor.capture());
+                        .getManagerAnnouncementById(captor.capture());
 
         assertThat(captor.getValue().announcementId()).isEqualTo(announcementId);
         assertThat(captor.getValue().managerId()).isEqualTo(1L);
     }
 
     private CurrentUser currentManager() {
-        return new CurrentUser(
-                1L,
-                "ibrahim@example.com",
-                "MANAGER",
-                "Ibrahim",
-                null);
+        return new CurrentUser(1L,
+                               "ibrahim@example.com",
+                               "MANAGER",
+                               "Ibrahim",
+                               null);
     }
 
     private AnnouncementResult announcementResult() {
-        return new AnnouncementResult(
-                announcementId,
-                buildingId,
-                1L,
-                "Ibrahim",
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "build",
-                "https://example.com/image.jpg",
-                Instant.parse("2026-05-09T10:00:00Z"),
-                null);
+        return new AnnouncementResult(announcementId,
+                                      buildingId,
+                                      1L,
+                                      "Ibrahim",
+                                      "Water maintenance",
+                                      "Water will be off tomorrow",
+                                      AnnouncementCategory.MAINTENANCE,
+                                      "build",
+                                      "https://example.com/image.jpg",
+                                      Instant.parse("2026-05-09T10:00:00Z"),
+                                      null);
     }
 
     private AnnouncementResponse announcementResponse() {
-        return new AnnouncementResponse(
-                announcementId.toString(),
-                buildingId.toString(),
-                "Water maintenance",
-                "Water will be off tomorrow",
-                AnnouncementCategory.MAINTENANCE,
-                "build",
-                "https://example.com/image.jpg",
-                "Ibrahim",
-                Instant.parse("2026-05-09T10:00:00Z"),
-                null);
+        return new AnnouncementResponse(announcementId.toString(),
+                                        buildingId.toString(),
+                                        "Water maintenance",
+                                        "Water will be off tomorrow",
+                                        AnnouncementCategory.MAINTENANCE,
+                                        "build",
+                                        "https://example.com/image.jpg",
+                                        "Ibrahim",
+                                        Instant.parse("2026-05-09T10:00:00Z"),
+                                        null);
     }
 }
