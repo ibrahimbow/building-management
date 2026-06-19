@@ -18,12 +18,10 @@ public class InternalTenantBuildingController {
     @GetMapping("/{tenantUserId}/building")
     public TenantBuildingResponse getActiveBuilding(@PathVariable("tenantUserId") final Long tenantUserId) {
 
-        final var membership = buildingMembershipRepository
-                .findByTenantUserIdAndLeftAtIsNull(tenantUserId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Tenant has no active building."));
+        final var membership = buildingMembershipRepository.findByTenantUserIdAndLeftAtIsNull(tenantUserId)
+                                                           .orElseThrow(() -> new IllegalStateException(
+                                                                           "Tenant has no active building."));
 
-        return new TenantBuildingResponse(
-                membership.getBuildingId());
+        return new TenantBuildingResponse(membership.getBuildingId());
     }
 }

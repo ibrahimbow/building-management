@@ -1,11 +1,10 @@
 package com.why.buildingmanagement.building.application.service;
 
+import com.why.buildingmanagement.building.application.assembler.BuildingInfoAssembler;
 import com.why.buildingmanagement.building.application.port.in.*;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
-import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
-import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
 import com.why.buildingmanagement.building.application.result.TenantInfoResult;
 import com.why.buildingmanagement.building.domain.exception.BuildingNotFoundException;
 import com.why.buildingmanagement.building.domain.exception.TenantNotAssignedToBuildingException;
@@ -21,31 +20,31 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class ManagerBuildingService implements
-        GetMyBuildingsUseCase,
-        GetMyBuildingByIdUseCase,
-        UpdateMyBuildingUseCase,
-        DeleteMyBuildingUseCase,
-        GetBuildingTenantsUseCase,
-        RemoveTenantFromBuildingUseCase {
+public class ManagerBuildingService implements GetMyBuildingsUseCase,
+                                               GetMyBuildingByIdUseCase,
+                                               UpdateMyBuildingUseCase,
+                                               DeleteMyBuildingUseCase,
+                                               GetBuildingTenantsUseCase,
+                                               RemoveTenantFromBuildingUseCase {
 
     private final BuildingRepositoryPort buildingRepositoryPort;
     private final BuildingMembershipRepositoryPort membershipRepositoryPort;
-    private final LoadManagerInfoPort loadManagerInfoPort;
+    private final BuildingInfoAssembler buildingInfoAssembler;
+
 
     @Override
     public List<BuildingInfoResult> getMyBuildings(final Long managerId) {
         return buildingRepositoryPort.findByManagerId(managerId)
-                .stream()
-                .map(this::toResult)
-                .toList();
+                                     .stream()
+                                     .map(buildingInfoAssembler::toResult)
+                                     .toList();
     }
 
     @Override
     public BuildingInfoResult getMyBuildingById(final UUID buildingId, final Long managerId) {
         final Building building = findOwnedBuildingOrThrow(buildingId, managerId);
 
-        return toResult(building);
+        return buildingInfoAssembler.toResult(building);
     }
 
     @Override
@@ -53,15 +52,14 @@ public class ManagerBuildingService implements
     public BuildingInfoResult updateMyBuilding(final UpdateMyBuildingCommand command) {
         final Building building = findOwnedBuildingOrThrow(command.buildingId(), command.managerId());
 
-        final Building updatedBuilding = building.updateDetails(
-                command.buildingName(),
-                command.address(),
-                command.totalApartments(),
-                command.emergencyPhone());
+        final Building updatedBuilding = building.updateDetails(command.buildingName(),
+                                                                command.address(),
+                                                                command.totalApartments(),
+                                                                command.emergencyPhone());
 
         final Building savedBuilding = buildingRepositoryPort.save(updatedBuilding);
 
-        return toResult(savedBuilding);
+        return buildingInfoAssembler.toResult(savedBuilding);
     }
 
     @Override
@@ -74,45 +72,28 @@ public class ManagerBuildingService implements
 
     private Building findOwnedBuildingOrThrow(final UUID buildingId, final Long managerId) {
         return buildingRepositoryPort.findByIdAndManagerId(buildingId, managerId)
-                .orElseThrow(() -> new BuildingNotFoundException(buildingId));
+                                     .orElseThrow(() -> new BuildingNotFoundException(buildingId));
     }
 
-    private BuildingInfoResult toResult(final Building building) {
-
-        final ManagerInfoResult managerInfo =
-                loadManagerInfoPort.loadManagerInfoById(
-                        building.getManagerId());
-
-        return new BuildingInfoResult(
-                building.getId() == null ? null : building.getId().toString(),
-                building.getBuildingName(),
-                building.getCode(),
-                building.getAddress(),
-                building.getManagerId(),
-                managerInfo.displayName(),
-                building.getTotalApartments(),
-                building.getEmergencyPhone());
-    }
 
     @Override
     public List<TenantInfoResult> getBuildingTenants(final UUID buildingId, final Long managerId) {
 
         final Building building = buildingRepositoryPort.findById(buildingId)
-                .orElseThrow(() -> new BuildingNotFoundException(buildingId));
+                                                        .orElseThrow(() -> new BuildingNotFoundException(buildingId));
 
         if (!building.isManagedBy(managerId)) {
             throw new BuildingNotFoundException(buildingId);
         }
 
         return membershipRepositoryPort.findActiveByBuildingId(buildingId)
-                .stream()
-                .map(membership -> new TenantInfoResult(
-                        membership.getTenantUserId(),
-                        membership.getTenantUsername(),
-                        membership.getTenantEmail(),
-                        membership.getTenantPhoneNumber()
-                ))
-                .toList();
+                                       .stream()
+                                       .map(membership -> new TenantInfoResult(
+                                                       membership.getTenantUserId(),
+                                                       membership.getTenantUsername(),
+                                                       membership.getTenantEmail(),
+                                                       membership.getTenantPhoneNumber()))
+                                       .toList();
     }
 
     @Override
@@ -120,18 +101,19 @@ public class ManagerBuildingService implements
     public void removeTenantFromBuilding(final RemoveTenantFromBuildingCommand command) {
 
         final Building building = buildingRepositoryPort.findById(command.buildingId())
-                .orElseThrow(() -> new BuildingNotFoundException(command.buildingId()));
+                                                        .orElseThrow(() -> new BuildingNotFoundException(command.buildingId()));
 
         if (!building.isManagedBy(command.managerId())) {
             throw new BuildingNotFoundException(command.buildingId());
         }
 
         final BuildingMembership membership = membershipRepositoryPort
-                .findActiveByBuildingIdAndTenantUserId(command.buildingId(), command.tenantUserId())
-                .orElseThrow(() -> new TenantNotAssignedToBuildingException(command.tenantUserId()));
+                        .findActiveByBuildingIdAndTenantUserId(command.buildingId(), command.tenantUserId())
+                        .orElseThrow(() -> new TenantNotAssignedToBuildingException(command.tenantUserId()));
 
-        membership.leave();
+        final BuildingMembership leftMembership = membership.leave();
 
-        membershipRepositoryPort.save(membership);
+        membershipRepositoryPort.save(leftMembership);
     }
+
 }

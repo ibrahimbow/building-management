@@ -22,27 +22,25 @@ public class InternalBuildingAccessController {
     private final GetMyBuildingUseCase getMyBuildingUseCase;
 
     @GetMapping("/managers/{managerId}/building")
-    public ResponseEntity<BuildingAccessResponse> getManagerBuilding(
-            @PathVariable("managerId") final Long managerId) {
+    public ResponseEntity<BuildingAccessResponse> getManagerBuilding(@PathVariable("managerId") final Long managerId) {
 
         return getMyBuildingsUseCase.getMyBuildings(managerId)
-                .stream()
-                .findFirst()
-                .map(building -> new BuildingAccessResponse(
-                        UUID.fromString(building.id()),
-                        building.buildingName()))
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                                    .stream()
+                                    .findFirst()
+                                    .map(building -> new BuildingAccessResponse(
+                                                    UUID.fromString(building.id()),
+                                                    building.buildingName()))
+                                    .map(ResponseEntity::ok)
+                                    .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/tenants/{tenantUserId}/active-building")
-    public BuildingAccessResponse getTenantActiveBuilding(
-            @PathVariable("tenantUserId") final Long tenantUserId) {
+    public BuildingAccessResponse getTenantActiveBuilding(@PathVariable("tenantUserId") final Long tenantUserId) {
 
         final BuildingInfoResult building = getMyBuildingUseCase.getMyBuilding(tenantUserId);
 
         return new BuildingAccessResponse(
-                UUID.fromString(building.id()),
-                building.buildingName());
+                        UUID.fromString(building.id()),
+                        building.buildingName());
     }
 }

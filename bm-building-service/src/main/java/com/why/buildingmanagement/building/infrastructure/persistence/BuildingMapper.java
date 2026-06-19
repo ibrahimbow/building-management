@@ -12,14 +12,13 @@ public interface BuildingMapper {
             return null;
         }
 
-        return new BuildingEntity(
-                building.getId(),
-                building.getBuildingName(),
-                building.getCode(),
-                building.getAddress(),
-                building.getManagerId(),
-                building.getTotalApartments(),
-                building.getEmergencyPhone());
+        return new BuildingEntity(building.getId(),
+                                  building.getBuildingName(),
+                                  building.getCode(),
+                                  building.getAddress(),
+                                  building.getManagerId(),
+                                  building.getTotalApartments(),
+                                  building.getEmergencyPhone());
     }
 
     default Building toDomain(final BuildingEntity entity) {
@@ -27,14 +26,13 @@ public interface BuildingMapper {
             return null;
         }
 
-        return Building.restore(
-                entity.getId(),
-                entity.getBuildingName(),
-                entity.getCode(),
-                entity.getAddress(),
-                entity.getManagerId(),
-                entity.getTotalApartments(),
-                entity.getEmergencyPhone());
+        return Building.restore(entity.getId(),
+                                entity.getBuildingName(),
+                                entity.getCode(),
+                                entity.getAddress(),
+                                entity.getManagerId(),
+                                entity.getTotalApartments(),
+                                entity.getEmergencyPhone());
     }
 
     default BuildingInfoResult toResult(final BuildingEntity entity) {
@@ -42,14 +40,13 @@ public interface BuildingMapper {
             return null;
         }
 
-        return new BuildingInfoResult(
-                entity.getId().toString(),
-                entity.getBuildingName(),
-                entity.getCode(),
-                entity.getAddress(),
-                entity.getManagerId(),
-                null,
-                entity.getTotalApartments(),
-                entity.getEmergencyPhone());
+        return new BuildingInfoResult(entity.getId().toString(),
+                                      entity.getBuildingName(),
+                                      entity.getCode(),
+                                      entity.getAddress(),
+                                      entity.getManagerId(),
+                                      null,
+                                      entity.getTotalApartments(),
+                                      entity.getEmergencyPhone());
     }
 }

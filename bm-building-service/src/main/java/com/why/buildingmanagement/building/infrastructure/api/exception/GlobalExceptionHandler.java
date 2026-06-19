@@ -24,9 +24,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BuildingNotFoundException.class)
     public ProblemDetail handleBuildingNotFound(final BuildingNotFoundException exception,
                                                 final HttpServletRequest request) {
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.NOT_FOUND,
-                exception.getMessage());
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                                                                       exception.getMessage());
 
         enrich(problem, request, "Building not found");
 
@@ -36,9 +35,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TenantAlreadyAssignedToBuildingException.class)
     public ProblemDetail handleTenantAlreadyAssigned(final TenantAlreadyAssignedToBuildingException exception,
                                                      final HttpServletRequest request) {
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.CONFLICT,
-                exception.getMessage());
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                                                                       exception.getMessage());
 
         enrich(problem, request, "Tenant already assigned");
 
@@ -49,11 +47,11 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleValidationException(final MethodArgumentNotValidException exception,
                                                    final HttpServletRequest request) {
         final String message = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .findFirst()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .orElse("Validation failed");
+                                        .getFieldErrors()
+                                        .stream()
+                                        .findFirst()
+                                        .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                                        .orElse("Validation failed");
 
         final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, message);
 
@@ -74,9 +72,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(final AccessDeniedException exception, final HttpServletRequest request) {
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.FORBIDDEN,
-                "You do not have permission to access this resource");
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+                                                                       "You do not have permission to access this resource");
 
         enrich(problem, request, "Access denied");
 
@@ -87,9 +84,8 @@ public class GlobalExceptionHandler {
     public ProblemDetail handleGenericException(final Exception exception, final HttpServletRequest request) {
         log.error("Unexpected error occurred", exception);
 
-        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "An unexpected error occurred");
+        final ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR,
+                                                                       "An unexpected error occurred");
 
         enrich(problem, request, "Internal server error");
 
@@ -97,8 +93,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TenantNotAssignedToBuildingException.class)
-    public ResponseEntity<ProblemDetail> handleTenantNotAssignedToBuilding(
-            final TenantNotAssignedToBuildingException exception) {
+    public ResponseEntity<ProblemDetail> handleTenantNotAssignedToBuilding(final TenantNotAssignedToBuildingException exception) {
 
         final ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
 
@@ -111,8 +106,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ManagerAlreadyHasBuildingException.class)
-    public ResponseEntity<ProblemDetail> handleManagerAlreadyHasBuilding(
-            final ManagerAlreadyHasBuildingException ex) {
+    public ResponseEntity<ProblemDetail> handleManagerAlreadyHasBuilding(final ManagerAlreadyHasBuildingException ex) {
 
         final ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.CONFLICT);
         problemDetail.setTitle("Manager already has a building");

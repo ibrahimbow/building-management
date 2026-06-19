@@ -25,13 +25,13 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     @Override
     public Optional<Building> findByCode(final String code) {
         return buildingRepository.findByCode(code)
-                        .map(buildingMapper::toDomain);
+                                 .map(buildingMapper::toDomain);
     }
 
     @Override
     public Optional<Building> findById(UUID id) {
         return buildingRepository.findById(id)
-                        .map(buildingMapper::toDomain);
+                                 .map(buildingMapper::toDomain);
     }
 
     @Override
@@ -42,14 +42,14 @@ public class BuildingPersistenceAdapter implements BuildingRepositoryPort {
     @Override
     public Optional<Building> findByManagerId(final Long managerId) {
         return buildingRepository.findByManagerId(managerId)
-                        .map(buildingMapper::toDomain);
+                                 .map(buildingMapper::toDomain);
     }
 
     @Override
     public Optional<Building> findByIdAndManagerId(final UUID id, final Long managerId) {
 
         return buildingRepository.findByIdAndManagerId(id, managerId)
-                        .map(buildingMapper::toDomain);
+                                 .map(buildingMapper::toDomain);
     }
 
     @Override

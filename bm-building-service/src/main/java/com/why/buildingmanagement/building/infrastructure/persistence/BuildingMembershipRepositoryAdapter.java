@@ -24,15 +24,15 @@ public class BuildingMembershipRepositoryAdapter implements BuildingMembershipRe
     @Override
     public Optional<BuildingMembership> findActiveByTenantUserId(final Long tenantUserId) {
         return repository.findByTenantUserIdAndLeftAtIsNull(tenantUserId)
-                .map(mapper::toDomain);
+                         .map(mapper::toDomain);
     }
 
     @Override
     public List<BuildingMembership> findActiveByBuildingId(final UUID buildingId) {
         return repository.findByBuildingIdAndLeftAtIsNull(buildingId)
-                .stream()
-                .map(mapper::toDomain)
-                .toList();
+                         .stream()
+                         .map(mapper::toDomain)
+                         .toList();
     }
 
     @Override
@@ -40,6 +40,6 @@ public class BuildingMembershipRepositoryAdapter implements BuildingMembershipRe
                                                                               final Long tenantUserId) {
 
         return repository.findByBuildingIdAndTenantUserIdAndLeftAtIsNull(buildingId, tenantUserId)
-                .map(mapper::toDomain);
+                         .map(mapper::toDomain);
     }
 }

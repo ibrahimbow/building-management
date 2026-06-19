@@ -15,5 +15,4 @@ public interface BuildingRepository extends JpaRepository<BuildingEntity, UUID> 
 
     Optional<BuildingEntity> findByIdAndManagerId(UUID id, Long managerId);
 
-    boolean existsByIdAndManagerId(UUID id, Long managerId);
 }

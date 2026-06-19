@@ -10,14 +10,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "building_memberships",
-        uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_building_membership_building_tenant",
-                        columnNames = {"building_id", "tenant_user_id", "left_at"})
-        }
-)
+@Table(name = "building_memberships")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor

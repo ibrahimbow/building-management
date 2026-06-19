@@ -1,5 +1,7 @@
 package com.why.buildingmanagement.building.infrastructure.security;
 
+import com.why.buildingmanagement.building.infrastructure.security.exception.InvalidUserHeaderException;
+import com.why.buildingmanagement.building.infrastructure.security.exception.MissingUserHeaderException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
@@ -23,13 +25,12 @@ public class CurrentUserService {
 
     public CurrentUser getCurrentUser() {
 
-        return new CurrentUser(
-                        Long.valueOf(requiredHeader(USER_ID_HEADER)),
-                        requiredHeader(USER_EMAIL_HEADER),
-                        requiredHeader(USER_ROLE_HEADER),
-                        requiredHeader(USER_DISPLAY_NAME_HEADER),
-                        optionalHeader(USER_AVATAR_URL_HEADER),
-                        optionalHeader(USER_PHONE_HEADER));
+        return new CurrentUser(requiredUserId(),
+                               requiredHeader(USER_EMAIL_HEADER),
+                               requiredHeader(USER_ROLE_HEADER),
+                               requiredHeader(USER_DISPLAY_NAME_HEADER),
+                               optionalHeader(USER_AVATAR_URL_HEADER),
+                               optionalHeader(USER_PHONE_HEADER));
     }
 
     private String requiredHeader(final String name) {
@@ -37,7 +38,7 @@ public class CurrentUserService {
         final String value = request.getHeader(name);
 
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing required user header: " + name);
+            throw new MissingUserHeaderException("Missing required user header: " + name);
         }
 
         return value;
@@ -46,5 +47,13 @@ public class CurrentUserService {
     private String optionalHeader(final String name) {
 
         return request.getHeader(name);
+    }
+
+    private Long requiredUserId() {
+        try {
+            return Long.valueOf(requiredHeader(USER_ID_HEADER));
+        } catch (final NumberFormatException ex) {
+            throw new InvalidUserHeaderException("Invalid user id header: " + USER_ID_HEADER);
+        }
     }
 }

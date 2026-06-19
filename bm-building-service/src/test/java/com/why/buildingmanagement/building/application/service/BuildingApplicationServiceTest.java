@@ -1,9 +1,11 @@
 package com.why.buildingmanagement.building.application.service;
 
+import com.why.buildingmanagement.building.application.assembler.BuildingInfoAssembler;
 import com.why.buildingmanagement.building.application.port.in.CreateBuildingCommand;
 import com.why.buildingmanagement.building.application.port.in.JoinBuildingCommand;
 import com.why.buildingmanagement.building.application.port.out.BuildingMembershipRepositoryPort;
 import com.why.buildingmanagement.building.application.port.out.BuildingRepositoryPort;
+import com.why.buildingmanagement.building.application.port.out.GenerateBuildingCodePort;
 import com.why.buildingmanagement.building.application.port.out.LoadManagerInfoPort;
 import com.why.buildingmanagement.building.application.result.BuildingInfoResult;
 import com.why.buildingmanagement.building.application.result.ManagerInfoResult;
@@ -14,7 +16,10 @@ import com.why.buildingmanagement.building.domain.model.Building;
 import com.why.buildingmanagement.building.domain.model.BuildingMembership;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -23,165 +28,171 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BuildingApplicationServiceTest {
 
+    @Mock
     private BuildingRepositoryPort buildingRepositoryPort;
-    private BuildingMembershipRepositoryPort membershipRepositoryPort;
-    private BuildingApplicationService buildingApplicationService;
 
+    @Mock
+    private BuildingMembershipRepositoryPort membershipRepositoryPort;
+
+    @Mock
+    private GenerateBuildingCodePort generateBuildingCodePort;
+
+    @Mock
     private LoadManagerInfoPort loadManagerInfoPort;
+
+    private BuildingApplicationService buildingApplicationService;
 
     @BeforeEach
     void setUp() {
-        buildingRepositoryPort = mock(BuildingRepositoryPort.class);
-        membershipRepositoryPort = mock(BuildingMembershipRepositoryPort.class);
-        loadManagerInfoPort = mock(LoadManagerInfoPort.class);
+        final BuildingInfoAssembler buildingInfoAssembler = new BuildingInfoAssembler(loadManagerInfoPort);
 
-        when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
-                .thenAnswer(invocation -> {
-                    final Long managerId = invocation.getArgument(0);
-
-                    return new ManagerInfoResult(
-                            managerId,
-                            "Ibrahim Aref",
-                            "manager@example.com",
-                            null);
-                });
-
-        buildingApplicationService = new BuildingApplicationService(
-                buildingRepositoryPort,
-                membershipRepositoryPort,
-                loadManagerInfoPort);
+        buildingApplicationService = new BuildingApplicationService(buildingRepositoryPort,
+                                                                    membershipRepositoryPort,
+                                                                    generateBuildingCodePort,
+                                                                    buildingInfoAssembler);
     }
 
     @Test
     void createBuilding_shouldThrowException_whenManagerAlreadyHasBuilding() {
-        final CreateBuildingCommand command = new CreateBuildingCommand(
-                "Sky Tower",
-                "Antwerp Belgium",
-                1L,
-                20,
-                "+32470000000");
+        final CreateBuildingCommand command = new CreateBuildingCommand("Sky Tower",
+                                                                        "Antwerp Belgium",
+                                                                        1L,
+                                                                        20,
+                                                                        "+32470000000");
+
+        final Building existingBuilding = existingBuilding();
 
         when(buildingRepositoryPort.findByManagerId(1L))
-                .thenReturn(Optional.of(existingBuilding()));
+                        .thenReturn(Optional.of(existingBuilding));
 
         assertThatThrownBy(() -> buildingApplicationService.createBuilding(command))
-                .isInstanceOf(ManagerAlreadyHasBuildingException.class)
-                .hasMessage("Manager already managed another building: " + existingBuilding().getBuildingName());
+                        .isInstanceOf(ManagerAlreadyHasBuildingException.class)
+                        .hasMessage("Manager already managed another building: " + existingBuilding.getBuildingName());
 
         verify(buildingRepositoryPort, never()).save(any(Building.class));
+        verifyNoInteractions(generateBuildingCodePort);
     }
-
 
     @Test
     void createBuilding_shouldGenerateUniqueCodeAndSaveBuilding() {
-        final CreateBuildingCommand command = new CreateBuildingCommand(
-                "Antwerp Residence",
-                "Berchem, Antwerp",
-                12L,
-                8,
-                "+32000000000");
+        mockManagerInfo();
 
-        when(buildingRepositoryPort.existsByCode(anyString()))
-                .thenReturn(false);
+        final CreateBuildingCommand command = new CreateBuildingCommand("Antwerp Residence",
+                                                                        "Berchem, Antwerp",
+                                                                        12L,
+                                                                        8,
+                                                                        "+32000000000");
+
+        when(buildingRepositoryPort.findByManagerId(12L))
+                        .thenReturn(Optional.empty());
+
+        when(generateBuildingCodePort.generateCode())
+                        .thenReturn("BM-123456");
+
+        when(buildingRepositoryPort.existsByCode("BM-123456"))
+                        .thenReturn(false);
 
         when(buildingRepositoryPort.save(any(Building.class)))
-                .thenAnswer(invocation -> {
-                    final Building building = invocation.getArgument(0);
+                        .thenAnswer(invocation -> {
+                            final Building building = invocation.getArgument(0);
 
-                    return Building.restore(
-                            UUID.randomUUID(),
-                            building.getBuildingName(),
-                            building.getCode(),
-                            building.getAddress(),
-                            building.getManagerId(),
-                            building.getTotalApartments(),
-                            building.getEmergencyPhone());
-                });
+                            return Building.restore(UUID.randomUUID(),
+                                                    building.getBuildingName(),
+                                                    building.getCode(),
+                                                    building.getAddress(),
+                                                    building.getManagerId(),
+                                                    building.getTotalApartments(),
+                                                    building.getEmergencyPhone());
+                        });
 
-        final BuildingInfoResult result =
-                buildingApplicationService.createBuilding(command);
+        final BuildingInfoResult result = buildingApplicationService.createBuilding(command);
 
         assertThat(result.id()).isNotBlank();
         assertThat(result.buildingName()).isEqualTo("Antwerp Residence");
-        assertThat(result.code()).startsWith("BM-");
+        assertThat(result.code()).isEqualTo("BM-123456");
         assertThat(result.address()).isEqualTo("Berchem, Antwerp");
         assertThat(result.managerId()).isEqualTo(12L);
+        assertThat(result.managerName()).isEqualTo("Ibrahim Aref");
         assertThat(result.totalApartments()).isEqualTo(8);
         assertThat(result.emergencyPhone()).isEqualTo("+32000000000");
 
+        verify(generateBuildingCodePort).generateCode();
+        verify(buildingRepositoryPort).existsByCode("BM-123456");
         verify(buildingRepositoryPort).save(any(Building.class));
     }
 
     @Test
     void getBuildingByCode_shouldReturnBuildingInfo_whenBuildingExists() {
-        final Building building = Building.restore(
-                UUID.randomUUID(),
-                "Antwerp Residence",
-                "BM-123456",
-                "Berchem, Antwerp",
-                19L,
-                12,
-                "+32470000000");
+        mockManagerInfo();
+
+        final Building building = Building.restore(UUID.randomUUID(),
+                                                   "Antwerp Residence",
+                                                   "BM-123456",
+                                                   "Berchem, Antwerp",
+                                                   19L,
+                                                   12,
+                                                   "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
-                .thenReturn(Optional.of(building));
+                        .thenReturn(Optional.of(building));
 
-        final BuildingInfoResult result =
-                buildingApplicationService.getBuildingByCode("BM-123456");
+        final BuildingInfoResult result = buildingApplicationService.getBuildingByCode("BM-123456");
 
         assertThat(result.code()).isEqualTo("BM-123456");
         assertThat(result.buildingName()).isEqualTo("Antwerp Residence");
         assertThat(result.managerId()).isEqualTo(19L);
+        assertThat(result.managerName()).isEqualTo("Ibrahim Aref");
     }
 
     @Test
     void getBuildingByCode_shouldThrowException_whenBuildingDoesNotExist() {
         when(buildingRepositoryPort.findByCode("BM-404"))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> buildingApplicationService.getBuildingByCode("BM-404"))
-                .isInstanceOf(BuildingNotFoundException.class)
-                .hasMessageContaining("BM-404");
+                        .isInstanceOf(BuildingNotFoundException.class)
+                        .hasMessageContaining("BM-404");
     }
 
     @Test
     void joinBuilding_shouldCreateMembership_whenTenantHasNoActiveMembership() {
+        mockManagerInfo();
+
         final UUID buildingId = UUID.randomUUID();
 
-        final Building building = Building.restore(
-                buildingId,
-                "Antwerp Residence",
-                "BM-123456",
-                "Berchem, Antwerp",
-                19L,
-                12,
-                "+32470000000");
+        final Building building = Building.restore(buildingId,
+                                                   "Antwerp Residence",
+                                                   "BM-123456",
+                                                   "Berchem, Antwerp",
+                                                   19L,
+                                                   12,
+                                                   "+32470000000");
 
-        final JoinBuildingCommand command = new JoinBuildingCommand(
-                "BM-123456",
-                10L,
-                "tenantUser",
-                "tenant@example.com",
-                "+32470000000");
+        final JoinBuildingCommand command = new JoinBuildingCommand("BM-123456",
+                                                                    10L,
+                                                                    "tenantUser",
+                                                                    "tenant@example.com",
+                                                                    "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
-                .thenReturn(Optional.of(building));
+                        .thenReturn(Optional.of(building));
 
         when(membershipRepositoryPort.findActiveByTenantUserId(10L))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         when(membershipRepositoryPort.save(any(BuildingMembership.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                        .thenAnswer(invocation -> invocation.getArgument(0));
 
         final BuildingInfoResult result =
-                buildingApplicationService.joinBuilding(command);
+                        buildingApplicationService.joinBuilding(command);
 
         assertThat(result.code()).isEqualTo("BM-123456");
 
         final ArgumentCaptor<BuildingMembership> captor =
-                ArgumentCaptor.forClass(BuildingMembership.class);
+                        ArgumentCaptor.forClass(BuildingMembership.class);
 
         verify(membershipRepositoryPort).save(captor.capture());
 
@@ -200,49 +211,56 @@ class BuildingApplicationServiceTest {
     void joinBuilding_shouldThrowException_whenTenantAlreadyHasActiveMembership() {
         final UUID buildingId = UUID.randomUUID();
 
-        final Building building = Building.restore(
-                buildingId,
-                "Antwerp Residence",
-                "BM-123456",
-                "Berchem, Antwerp",
-                19L,
-                12,
-                "+32470000000");
+        final Building building = Building.restore(buildingId,
+                                                   "Antwerp Residence",
+                                                   "BM-123456",
+                                                   "Berchem, Antwerp",
+                                                   19L,
+                                                   12,
+                                                   "+32470000000");
 
-        final JoinBuildingCommand command = new JoinBuildingCommand(
-                "BM-123456",
-                10L,
-                "ibrahim",
-                "tenant@example.com",
-                "+32470000000");
+        final JoinBuildingCommand command = new JoinBuildingCommand("BM-123456",
+                                                                    10L,
+                                                                    "ibrahim",
+                                                                    "tenant@example.com",
+                                                                    "+32470000000");
 
-        final BuildingMembership existingMembership =
-                BuildingMembership.createNew(
-                        buildingId,
-                        10L,
-                        "ibrahim",
-                        "tenant@example.com",
-                        "+32470000000");
+        final BuildingMembership existingMembership = BuildingMembership.createNew(buildingId,
+                                                                                   10L,
+                                                                                   "ibrahim",
+                                                                                   "tenant@example.com",
+                                                                                   "+32470000000");
 
         when(buildingRepositoryPort.findByCode("BM-123456"))
-                .thenReturn(Optional.of(building));
+                        .thenReturn(Optional.of(building));
 
         when(membershipRepositoryPort.findActiveByTenantUserId(10L))
-                .thenReturn(Optional.of(existingMembership));
+                        .thenReturn(Optional.of(existingMembership));
 
         assertThatThrownBy(() -> buildingApplicationService.joinBuilding(command))
-                .isInstanceOf(TenantAlreadyAssignedToBuildingException.class);
+                        .isInstanceOf(TenantAlreadyAssignedToBuildingException.class);
 
-        verify(membershipRepositoryPort, never()).save(any());
+        verify(membershipRepositoryPort, never()).save(any(BuildingMembership.class));
+    }
+
+    private void mockManagerInfo() {
+        when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
+                        .thenAnswer(invocation -> {
+                            final Long managerId = invocation.getArgument(0);
+
+                            return new ManagerInfoResult(managerId,
+                                                         "Ibrahim Aref",
+                                                         "manager@example.com",
+                                                         null);
+                        });
     }
 
     private Building existingBuilding() {
-        return Building.createNew(
-                "Existing Building",
-                "BM-111111",
-                "Antwerp",
-                1L,
-                10,
-                "+320000000");
+        return Building.createNew("Existing Building",
+                                  "BM-111111",
+                                  "Antwerp",
+                                  1L,
+                                  10,
+                                  "+320000000");
     }
 }

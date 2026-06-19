@@ -33,16 +33,14 @@ public class TenantBuildingController {
 
         final var current = currentUserService.getCurrentUser();
         final BuildingInfoResult result = joinBuildingUseCase.joinBuilding(
-                new JoinBuildingCommand(
-                        request.code(),
-                        current.userId(),
-                        current.displayName(),
-                        current.email(),
-                        current.phoneNumber()));
+                        new JoinBuildingCommand(request.code(),
+                                                current.userId(),
+                                                current.displayName(),
+                                                current.email(),
+                                                current.phoneNumber()));
 
-        return ResponseEntity
-                .created(URI.create("/api/tenant/buildings/my-building"))
-                .body(mapper.toResponse(result));
+        return ResponseEntity.created(URI.create("/api/tenant/buildings/my-building"))
+                             .body(mapper.toResponse(result));
     }
 
     @GetMapping("/code/{code}")

@@ -30,9 +30,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -50,8 +48,8 @@ class TenantBuildingLifecycleIntegrationTest {
     private static final String SECOND_BUILDING_CODE = "BM-999111";
 
     @Container
-    static final PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
+
+    static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")
                     .withPassword("test");
@@ -76,6 +74,9 @@ class TenantBuildingLifecycleIntegrationTest {
     private BuildingRepository buildingRepository;
 
     @Autowired
+    private BuildingMembershipRepository buildingMembershipRepository;
+
+    @Autowired
     private BuildingMapper buildingMapper;
 
     @MockitoBean
@@ -88,6 +89,9 @@ class TenantBuildingLifecycleIntegrationTest {
     void setUp() {
         reset(currentUserService, loadManagerInfoPort);
 
+        buildingMembershipRepository.deleteAll();
+        buildingRepository.deleteAll();
+
         when(loadManagerInfoPort.loadManagerInfoById(anyLong()))
                         .thenAnswer(invocation -> {
                             final Long managerId = invocation.getArgument(0);
@@ -99,21 +103,19 @@ class TenantBuildingLifecycleIntegrationTest {
                                             null);
                         });
 
-        buildingRepository.save(buildingMapper.toEntity(Building.createNew(
-                        "Antwerp Residence",
-                        BUILDING_CODE,
-                        "Berchem, Antwerp",
-                        MANAGER_ID,
-                        12,
-                        "+32000000000")));
+        buildingRepository.save(buildingMapper.toEntity(Building.createNew("Antwerp Residence",
+                                                                           BUILDING_CODE,
+                                                                           "Berchem, Antwerp",
+                                                                           MANAGER_ID,
+                                                                           12,
+                                                                           "+32000000000")));
 
-        buildingRepository.save(buildingMapper.toEntity(Building.createNew(
-                        "Brussels Residence",
-                        SECOND_BUILDING_CODE,
-                        "Brussels",
-                        SECOND_MANAGER_ID,
-                        20,
-                        "+32111111111")));
+        buildingRepository.save(buildingMapper.toEntity(Building.createNew("Brussels Residence",
+                                                                           SECOND_BUILDING_CODE,
+                                                                           "Brussels",
+                                                                           SECOND_MANAGER_ID,
+                                                                           20,
+                                                                           "+32111111111")));
     }
 
     @Test
@@ -127,24 +129,24 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(BUILDING_CODE))))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.code").value(BUILDING_CODE));
+               .andExpect(status().isCreated())
+               .andExpect(jsonPath("$.code").value(BUILDING_CODE));
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
                                         .with(user("tenant").roles("TENANT")))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.code").value(BUILDING_CODE))
-                        .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"));
+               .andExpect(status().isOk())
+               .andExpect(jsonPath("$.code").value(BUILDING_CODE))
+               .andExpect(jsonPath("$.buildingName").value("Antwerp Residence"));
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
                                         .with(user("tenant").roles("TENANT"))
                                         .with(csrf()))
-                        .andExpect(status().isNoContent());
+               .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
                                         .with(user("tenant").roles("TENANT")))
-                        .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.status").value(404));
+               .andExpect(status().isNotFound())
+               .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test
@@ -152,22 +154,21 @@ class TenantBuildingLifecycleIntegrationTest {
         when(currentUserService.getCurrentUser())
                         .thenReturn(currentTenant());
 
-        final JoinBuildingRequest request =
-                        new JoinBuildingRequest(BUILDING_CODE);
+        final JoinBuildingRequest request = new JoinBuildingRequest(BUILDING_CODE);
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                                         .with(user("tenant").roles("TENANT"))
                                         .with(csrf())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isCreated());
+               .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                                         .with(user("tenant").roles("TENANT"))
                                         .with(csrf())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isConflict());
+               .andExpect(status().isConflict());
     }
 
     @Test
@@ -181,7 +182,7 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(BUILDING_CODE))))
-                        .andExpect(status().isCreated());
+               .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                                         .with(user("tenant").roles("TENANT"))
@@ -189,7 +190,7 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(SECOND_BUILDING_CODE))))
-                        .andExpect(status().isConflict());
+               .andExpect(status().isConflict());
     }
 
     @Test
@@ -203,12 +204,12 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(BUILDING_CODE))))
-                        .andExpect(status().isCreated());
+               .andExpect(status().isCreated());
 
         mockMvc.perform(post("/api/tenant/buildings/my-building/leave")
                                         .with(user("tenant").roles("TENANT"))
                                         .with(csrf()))
-                        .andExpect(status().isNoContent());
+               .andExpect(status().isNoContent());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                                         .with(user("tenant").roles("TENANT"))
@@ -216,8 +217,8 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(SECOND_BUILDING_CODE))))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
+               .andExpect(status().isCreated())
+               .andExpect(jsonPath("$.code").value(SECOND_BUILDING_CODE));
     }
 
     @Test
@@ -231,48 +232,45 @@ class TenantBuildingLifecycleIntegrationTest {
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(
                                                         new JoinBuildingRequest(BUILDING_CODE))))
-                        .andExpect(status().isCreated());
+               .andExpect(status().isCreated());
 
         when(currentUserService.getCurrentUser())
                         .thenReturn(currentManager());
 
         final UUID buildingId = buildingRepository.findByCode(BUILDING_CODE)
-                        .orElseThrow()
-                        .getId();
+                                                  .orElseThrow()
+                                                  .getId();
 
         mockMvc.perform(delete("/api/manager/buildings/{id}/tenants/{tenantUserId}",
-                                        buildingId,
-                                        TENANT_ID)
+                               buildingId, TENANT_ID)
                                         .with(user("manager").roles("MANAGER"))
                                         .with(csrf()))
-                        .andExpect(status().isNoContent());
+               .andExpect(status().isNoContent());
 
         when(currentUserService.getCurrentUser())
                         .thenReturn(currentTenant());
 
         mockMvc.perform(get("/api/tenant/buildings/my-building")
                                         .with(user("tenant").roles("TENANT")))
-                        .andExpect(status().isNotFound())
-                        .andExpect(jsonPath("$.status").value(404));
+               .andExpect(status().isNotFound())
+               .andExpect(jsonPath("$.status").value(404));
     }
 
     private CurrentUser currentTenant() {
-        return new CurrentUser(
-                        TENANT_ID,
-                        "ibrahim@example.com",
-                        "TENANT",
-                        "Brimoo",
-                        "/images/avatar_me.jpg",
-                        "+32000000000");
+        return new CurrentUser(TENANT_ID,
+                               "ibrahim@example.com",
+                               "TENANT",
+                               "Brimoo",
+                               "/images/avatar_me.jpg",
+                               "+32000000000");
     }
 
     private CurrentUser currentManager() {
-        return new CurrentUser(
-                        MANAGER_ID,
-                        "ibrahim.manager@example.com",
-                        "MANAGER",
-                        "Manager_Brimo",
-                        "/images/avatar_manager.jpg",
-                        "+32000000000");
+        return new CurrentUser(MANAGER_ID,
+                               "ibrahim.manager@example.com",
+                               "MANAGER",
+                               "Manager_Brimo",
+                               "/images/avatar_manager.jpg",
+                               "+32000000000");
     }
 }

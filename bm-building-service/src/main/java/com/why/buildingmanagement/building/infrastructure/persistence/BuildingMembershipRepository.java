@@ -10,8 +10,6 @@ import java.util.UUID;
 
 public interface BuildingMembershipRepository extends JpaRepository<BuildingMembershipEntity, UUID> {
 
-    boolean existsByBuildingIdAndTenantUserIdAndLeftAtIsNull(UUID buildingId, Long tenantUserId);
-
     Optional<BuildingMembershipEntity> findByTenantUserIdAndLeftAtIsNull(Long tenantUserId);
 
     List<BuildingMembershipEntity> findByBuildingIdAndLeftAtIsNull(UUID buildingId);

@@ -42,25 +42,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             final Claims claims = Jwts.parser()
-                    .verifyWith(Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8)))
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
+                                      .verifyWith(Keys.hmacShaKeyFor(jwtProperties.secret().getBytes(StandardCharsets.UTF_8)))
+                                      .build()
+                                      .parseSignedClaims(token)
+                                      .getPayload();
 
             final String userId = String.valueOf(claims.get("userId"));
             final String email = claims.get("email", String.class);
             final String username = claims.getSubject();
             final List<String> roles = extractRoles(claims);
 
-            final List<SimpleGrantedAuthority> authorities = roles.stream()
-                    .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
-                    .map(SimpleGrantedAuthority::new)
-                    .toList();
+            final List<SimpleGrantedAuthority> authorities =
+                            roles.stream()
+                                 .map(role -> role.startsWith("ROLE_") ? role : "ROLE_" + role)
+                                 .map(SimpleGrantedAuthority::new)
+                                 .toList();
 
             final AuthenticatedUser principal = new AuthenticatedUser(userId, email, username, roles);
 
             final UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(principal, null, authorities);
+                            new UsernamePasswordAuthenticationToken(principal, null, authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -78,8 +79,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (rawRoles != null && !rawRoles.isEmpty()) {
             return rawRoles.stream()
-                    .map(Object::toString)
-                    .toList();
+                           .map(Object::toString)
+                           .toList();
         }
 
         final String singleRole = claims.get("role", String.class);

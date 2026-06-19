@@ -16,13 +16,11 @@ public record JoinBuildingCommand(
                 @NotBlank(message = "tenant username required")
                 String tenantUsername,
 
-        @Email(message = "tenant email must be valid")
-        @NotBlank(message = "tenant email required")
-        String tenantEmail,
+                @Email(message = "tenant email must be valid")
+                @NotBlank(message = "tenant email required")
+                String tenantEmail,
 
-        @NotBlank(message = "tenant phone number required")
-        @Pattern(
-                regexp = "^\\+?[0-9]{8,15}$",
-                message = "invalid phone number format")
-        String tenantPhoneNumber) {
+                @NotBlank(message = "tenant phone number required")
+                @Pattern(regexp = "^\\+?[0-9]{8,15}$", message = "invalid phone number format")
+                String tenantPhoneNumber) {
 }

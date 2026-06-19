@@ -41,19 +41,16 @@ public class ManagerBuildingController {
 
         final var current = currentUserService.getCurrentUser();
 
-        final CreateBuildingCommand command = new CreateBuildingCommand(
-                request.buildingName(),
-                request.address(),
-                current.userId(),
-                request.totalApartments(),
-                request.emergencyPhone());
+        final CreateBuildingCommand command = new CreateBuildingCommand(request.buildingName(),
+                                                                        request.address(),
+                                                                        current.userId(),
+                                                                        request.totalApartments(),
+                                                                        request.emergencyPhone());
 
-        final BuildingInfoResult result =
-                createBuildingUseCase.createBuilding(command);
+        final BuildingInfoResult result = createBuildingUseCase.createBuilding(command);
 
-        return ResponseEntity
-                .created(URI.create("/api/manager/buildings/" + result.id()))
-                .body(mapper.toResponse(result));
+        return ResponseEntity.created(URI.create("/api/manager/buildings/" + result.id()))
+                             .body(mapper.toResponse(result));
     }
 
     @GetMapping
@@ -61,12 +58,10 @@ public class ManagerBuildingController {
 
         final var current = currentUserService.getCurrentUser();
 
-        final List<BuildingResponse> response =
-                getMyBuildingsUseCase
-                        .getMyBuildings(current.userId())
-                        .stream()
-                        .map(mapper::toResponse)
-                        .toList();
+        final List<BuildingResponse> response = getMyBuildingsUseCase.getMyBuildings(current.userId())
+                                                                     .stream()
+                                                                     .map(mapper::toResponse)
+                                                                     .toList();
 
         return ResponseEntity.ok(response);
     }
@@ -76,9 +71,7 @@ public class ManagerBuildingController {
 
         final var current = currentUserService.getCurrentUser();
 
-        final BuildingInfoResult result =
-                getMyBuildingByIdUseCase
-                        .getMyBuildingById(id, current.userId());
+        final BuildingInfoResult result = getMyBuildingByIdUseCase.getMyBuildingById(id, current.userId());
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
@@ -89,17 +82,14 @@ public class ManagerBuildingController {
 
         final var current = currentUserService.getCurrentUser();
 
-        final UpdateMyBuildingCommand command =
-                new UpdateMyBuildingCommand(
-                        id,
-                        current.userId(),
-                        request.buildingName(),
-                        request.address(),
-                        request.totalApartments(),
-                        request.emergencyPhone());
+        final UpdateMyBuildingCommand command = new UpdateMyBuildingCommand(id,
+                                                                            current.userId(),
+                                                                            request.buildingName(),
+                                                                            request.address(),
+                                                                            request.totalApartments(),
+                                                                            request.emergencyPhone());
 
-        final BuildingInfoResult result =
-                updateMyBuildingUseCase.updateMyBuilding(command);
+        final BuildingInfoResult result = updateMyBuildingUseCase.updateMyBuilding(command);
 
         return ResponseEntity.ok(mapper.toResponse(result));
     }
@@ -109,8 +99,7 @@ public class ManagerBuildingController {
 
         final var current = currentUserService.getCurrentUser();
 
-        final DeleteMyBuildingCommand command =
-                new DeleteMyBuildingCommand(id, current.userId());
+        final DeleteMyBuildingCommand command = new DeleteMyBuildingCommand(id, current.userId());
 
         deleteMyBuildingUseCase.deleteMyBuilding(command);
 
@@ -122,11 +111,11 @@ public class ManagerBuildingController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        final List<TenantInfoResponse> tenants = getBuildingTenantsUseCase
-                .getBuildingTenants(buildingId, currentUser.userId())
-                .stream()
-                .map(mapper::toResponse)
-                .toList();
+        final List<TenantInfoResponse> tenants =
+                        getBuildingTenantsUseCase.getBuildingTenants(buildingId, currentUser.userId())
+                                                 .stream()
+                                                 .map(mapper::toResponse)
+                                                 .toList();
 
         return ResponseEntity.ok(tenants);
     }
@@ -138,10 +127,7 @@ public class ManagerBuildingController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         removeTenantFromBuildingUseCase.removeTenantFromBuilding(
-                new RemoveTenantFromBuildingCommand(
-                        buildingId,
-                        tenantUserId,
-                        currentUser.userId()));
+                        new RemoveTenantFromBuildingCommand(buildingId, tenantUserId, currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }
