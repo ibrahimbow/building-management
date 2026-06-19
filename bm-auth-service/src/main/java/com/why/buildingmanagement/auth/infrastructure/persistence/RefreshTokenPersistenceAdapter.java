@@ -11,20 +11,22 @@ import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
-public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort, LoadRefreshTokenPort, DeleteRefreshTokenPort {
+public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort,
+                                                       LoadRefreshTokenPort,
+                                                       DeleteRefreshTokenPort {
 
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public Optional<RefreshToken> findByToken(final String token) {
         return refreshTokenRepository.findByToken(token)
-                .map(this::toDomain);
+                                     .map(this::toDomain);
     }
 
     @Override
     public Optional<RefreshToken> findByUserId(final Long userId) {
         return refreshTokenRepository.findByUserId(userId)
-                .map(this::toDomain);
+                                     .map(this::toDomain);
     }
 
     @Override
@@ -38,25 +40,23 @@ public class RefreshTokenPersistenceAdapter implements SaveRefreshTokenPort, Loa
     }
 
     private RefreshToken toDomain(final RefreshTokenEntity entity) {
-        return RefreshToken.builder()
-                .id(entity.getId())
-                .userId(entity.getUserId())
-                .token(entity.getToken())
-                .expiresAt(entity.getExpiresAt())
-                .revoked(entity.isRevoked())
-                .createdAt(entity.getCreatedAt())
-                .build();
+        return RefreshToken.restore(entity.getId(),
+                        entity.getUserId(),
+                        entity.getToken(),
+                        entity.getExpiresAt(),
+                        entity.isRevoked(),
+                        entity.getCreatedAt());
     }
 
     private RefreshTokenEntity toEntity(final RefreshToken token) {
         return RefreshTokenEntity.builder()
-                .id(token.getId())
-                .userId(token.getUserId())
-                .token(token.getToken())
-                .expiresAt(token.getExpiresAt())
-                .revoked(token.isRevoked())
-                .createdAt(token.getCreatedAt())
-                .build();
+                                 .id(token.getId())
+                                 .userId(token.getUserId())
+                                 .token(token.getToken())
+                                 .expiresAt(token.getExpiresAt())
+                                 .revoked(token.isRevoked())
+                                 .createdAt(token.getCreatedAt())
+                                 .build();
     }
 
 

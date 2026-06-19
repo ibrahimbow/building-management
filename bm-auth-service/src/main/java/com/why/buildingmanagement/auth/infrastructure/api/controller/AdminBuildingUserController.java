@@ -20,13 +20,11 @@ public class AdminBuildingUserController {
     @GetMapping
     public ResponseEntity<List<AdminBuildingUserResult>> getAllUsers() {
 
-        return ResponseEntity.ok(
-                        getAllBuildingUsersUseCase.getAllUsers());
+        return ResponseEntity.ok(getAllBuildingUsersUseCase.getAllUsers());
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> disableUser(
-                    @PathVariable final Long userId) {
+    public ResponseEntity<Void> disableUser(@PathVariable("userId") final Long userId) {
 
         disableBuildingUserUseCase.disableUser(userId);
 

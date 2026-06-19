@@ -4,6 +4,5 @@ import com.why.buildingmanagement.auth.application.result.BuildingUserProfileRes
 
 public interface UpdateBuildingUserProfileUseCase {
 
-    BuildingUserProfileResult updateProfile(
-            UpdateBuildingUserProfileCommand command);
+    BuildingUserProfileResult updateProfile(UpdateBuildingUserProfileCommand command);
 }

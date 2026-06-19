@@ -20,8 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class BuildingUserRepositoryTest {
 
     @Container
-    static final PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
+    static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")
                     .withPassword("test");
@@ -78,7 +77,7 @@ class BuildingUserRepositoryTest {
         repository.save(userEntity());
 
         final Optional<BuildingUserEntity> result =
-                repository.findByUsernameOrEmail("ibrahim", "ibrahim");
+                        repository.findByUsernameOrEmail("ibrahim", "ibrahim");
 
         assertTrue(result.isPresent());
         assertEquals("ibrahim", result.get().getUsername());
@@ -89,7 +88,7 @@ class BuildingUserRepositoryTest {
         repository.save(userEntity());
 
         final Optional<BuildingUserEntity> result =
-                repository.findByUsernameOrEmail("ibrahim@test.com", "ibrahim@test.com");
+                        repository.findByUsernameOrEmail("ibrahim@test.com", "ibrahim@test.com");
 
         assertTrue(result.isPresent());
         assertEquals("ibrahim@test.com", result.get().getEmail());
@@ -120,16 +119,15 @@ class BuildingUserRepositoryTest {
     }
 
     private BuildingUserEntity userEntity() {
-        return new BuildingUserEntity(
-                null,
-                "ibrahim",
-                "ibrahim@test.com",
-                "HASHED_PASSWORD",
-                "ibrahimbow",
-                "+3200000000",
-                null,
-                BuildingUserRole.TENANT.name(),
-                true,
-                Instant.now());
+        return new BuildingUserEntity(null,
+                                      "ibrahim",
+                                      "ibrahim@test.com",
+                                      "HASHED_PASSWORD",
+                                      "ibrahimbow",
+                                      "+3200000000",
+                                      null,
+                                      BuildingUserRole.TENANT.name(),
+                                      true,
+                                      Instant.now());
     }
 }

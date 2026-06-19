@@ -10,13 +10,15 @@ import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.infrastructure.security.CurrentBuildingUserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
-public class AdminBuildingUserService implements GetAllBuildingUsersUseCase,
-                DisableBuildingUserUseCase {
+@Transactional(readOnly = true)
+public class AdminBuildingUserService implements GetAllBuildingUsersUseCase, DisableBuildingUserUseCase {
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
@@ -27,43 +29,37 @@ public class AdminBuildingUserService implements GetAllBuildingUsersUseCase,
         currentBuildingUserService.requireAdmin();
 
         return loadBuildingUserPort.loadAll()
-                        .stream()
-                        .map(this::toResult)
-                        .toList();
+                                   .stream()
+                                   .map(this::toResult)
+                                   .toList();
     }
 
     @Override
+    @Transactional
     public void disableUser(final Long userId) {
+        Objects.requireNonNull(userId, "userId must not be null");
+
         currentBuildingUserService.requireAdmin();
 
-        final BuildingUser user = loadBuildingUserPort.loadById(userId)
-                        .orElseThrow(() -> new BuildingUserNotFoundException(userId));
+        final BuildingUser user = loadUserOrThrow(userId);
 
-        final BuildingUser disabledUser = new BuildingUser(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.getPasswordHash(),
-                        user.getDisplayName(),
-                        user.getPhoneNumber(),
-                        user.getAvatarUrl(),
-                        user.getRole(),
-                        user.getCreatedAt(),
-                        false);
+        saveBuildingUserPort.save(user.disable());
+    }
 
-        saveBuildingUserPort.save(disabledUser);
+    private BuildingUser loadUserOrThrow(final Long userId) {
+        return loadBuildingUserPort.loadById(userId)
+                                   .orElseThrow(() -> new BuildingUserNotFoundException(userId));
     }
 
     private AdminBuildingUserResult toResult(final BuildingUser user) {
-        return new AdminBuildingUserResult(
-                        user.getId(),
-                        user.getUsername(),
-                        user.getEmail(),
-                        user.getDisplayName(),
-                        user.getPhoneNumber(),
-                        user.getAvatarUrl(),
-                        user.getRole(),
-                        user.getCreatedAt(),
-                        user.isEnabled());
+        return new AdminBuildingUserResult(user.getId(),
+                                           user.getUsername(),
+                                           user.getEmail(),
+                                           user.getDisplayName(),
+                                           user.getPhoneNumber(),
+                                           user.getAvatarUrl(),
+                                           user.getRole(),
+                                           user.getCreatedAt(),
+                                           user.isEnabled());
     }
 }

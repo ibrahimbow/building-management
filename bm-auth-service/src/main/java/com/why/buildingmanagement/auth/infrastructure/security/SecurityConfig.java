@@ -12,6 +12,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import static com.why.buildingmanagement.auth.infrastructure.security.SecurityConstants.*;
+
 @Configuration
 public class SecurityConfig {
 
@@ -23,27 +25,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/auth/welcome",
-                                "/api/auth/register",
-                                "/api/auth/login",
-                                "/api/auth/refresh",
-                                "/internal/**",
-                                "/actuator/health",
-                                "/actuator/info")
-                        .permitAll()
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/manager/**").hasAnyRole("ADMIN", "MANAGER")
-                        .requestMatchers("/api/tenant/**").hasAnyRole("ADMIN", "MANAGER", "TENANT")
-                        .anyRequest().authenticated())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .build();
+        return http.csrf(AbstractHttpConfigurer::disable)
+                   .sessionManagement(session ->
+                                                      session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                   .authorizeHttpRequests(auth -> auth
+                                   .requestMatchers("/api/auth/register",
+                                                    "/api/auth/login",
+                                                    "/api/auth/refresh",
+                                                    "/internal/**",
+                                                    "/actuator/health",
+                                                    "/actuator/info")
+                                   .permitAll()
+                                   .requestMatchers("/api/admin/**").hasRole(ADMIN)
+                                   .requestMatchers("/api/manager/**").hasAnyRole(ADMIN, MANAGER)
+                                   .requestMatchers("/api/tenant/**").hasAnyRole(ADMIN, MANAGER, TENANT)
+                                   .anyRequest().authenticated())
+                   .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                   .build();
     }
 
     @Bean

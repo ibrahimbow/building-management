@@ -10,16 +10,16 @@ import java.util.UUID;
 @Getter
 public class Announcement {
 
-    private UUID id;
-    private UUID buildingId;
-    private Long createdByManagerId;
-    private String createdBy;
+    private final UUID id;
+    private final UUID buildingId;
+    private final Long createdByManagerId;
+    private final String createdBy;
     private String title;
     private String message;
     private AnnouncementCategory category;
     private String icon;
     private String imageUrl;
-    private Instant createdAt;
+    private final Instant createdAt;
     private Instant updatedAt;
 
     private Announcement(final UUID id,
@@ -33,6 +33,7 @@ public class Announcement {
                          final String imageUrl,
                          final Instant createdAt,
                          final Instant updatedAt) {
+
         this.id = id;
         this.buildingId = buildingId;
         this.createdByManagerId = createdByManagerId;
@@ -54,13 +55,13 @@ public class Announcement {
                                          final AnnouncementCategory category,
                                          final String imageUrl) {
 
-        AnnouncementValidator.validateBuildingId(buildingId);
-        AnnouncementValidator.validateManagerId(managerId);
-        AnnouncementValidator.validateCreatedBy(createdBy);
-        AnnouncementValidator.validateTitle(title);
-        AnnouncementValidator.validateMessage(message);
-        AnnouncementValidator.validateCategory(category);
-        AnnouncementValidator.validateImageUrl(imageUrl);
+        validateNewAnnouncement(buildingId,
+                                managerId,
+                                createdBy,
+                                title,
+                                message,
+                                category,
+                                imageUrl);
 
         final Instant now = Instant.now();
 
@@ -106,10 +107,7 @@ public class Announcement {
                        final AnnouncementCategory category,
                        final String imageUrl) {
 
-        AnnouncementValidator.validateTitle(title);
-        AnnouncementValidator.validateMessage(message);
-        AnnouncementValidator.validateCategory(category);
-        AnnouncementValidator.validateImageUrl(imageUrl);
+        validateEditableFields(title, message, category, imageUrl);
 
         this.title = title;
         this.message = message;
@@ -127,12 +125,30 @@ public class Announcement {
         return Objects.equals(this.createdByManagerId, managerId);
     }
 
+    private static void validateNewAnnouncement(final UUID buildingId,
+                                                final Long managerId,
+                                                final String createdBy,
+                                                final String title,
+                                                final String message,
+                                                final AnnouncementCategory category,
+                                                final String imageUrl) {
+        AnnouncementValidator.validateBuildingId(buildingId);
+        AnnouncementValidator.validateManagerId(managerId);
+        AnnouncementValidator.validateCreatedBy(createdBy);
+        validateEditableFields(title, message, category, imageUrl);
+    }
+
+    private static void validateEditableFields(final String title,
+                                               final String message,
+                                               final AnnouncementCategory category,
+                                               final String imageUrl) {
+        AnnouncementValidator.validateTitle(title);
+        AnnouncementValidator.validateMessage(message);
+        AnnouncementValidator.validateCategory(category);
+        AnnouncementValidator.validateImageUrl(imageUrl);
+    }
 
     private static String resolveIcon(final AnnouncementCategory category) {
-        if (category == null) {
-            return "info";
-        }
-
         return switch (category) {
             case MAINTENANCE -> "build";
             case EMERGENCY -> "warning";

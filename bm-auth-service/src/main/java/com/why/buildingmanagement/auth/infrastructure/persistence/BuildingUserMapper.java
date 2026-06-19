@@ -9,31 +9,29 @@ public interface BuildingUserMapper {
 
     default BuildingUserEntity toEntity(final BuildingUser user) {
 
-        return new BuildingUserEntity(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getPasswordHash(),
-                user.getDisplayName(),
-                user.getPhoneNumber(),
-                user.getAvatarUrl(),
-                user.getRole().name(),
-                user.isEnabled(),
-                user.getCreatedAt());
+        return new BuildingUserEntity(user.getId(),
+                                      user.getUsername(),
+                                      user.getEmail(),
+                                      user.getPasswordHash(),
+                                      user.getDisplayName(),
+                                      user.getPhoneNumber(),
+                                      user.getAvatarUrl(),
+                                      user.getRole().name(),
+                                      user.isEnabled(),
+                                      user.getCreatedAt());
     }
 
     default BuildingUser toDomain(final BuildingUserEntity entity) {
 
-        return new BuildingUser(
-                entity.getId(),
-                entity.getUsername(),
-                entity.getEmail(),
-                entity.getPasswordHash(),
-                entity.getDisplayName(),
-                entity.getPhoneNumber(),
-                entity.getAvatarUrl(),
-                BuildingUserRole.valueOf(entity.getRole()),
-                entity.getCreatedAt(),
-                entity.isEnabled());
+        return BuildingUser.restore(entity.getId(),
+                                    entity.getUsername(),
+                                    entity.getEmail(),
+                                    entity.getPasswordHash(),
+                                    entity.getDisplayName(),
+                                    entity.getPhoneNumber(),
+                                    entity.getAvatarUrl(),
+                                    BuildingUserRole.valueOf(entity.getRole()),
+                                    entity.getCreatedAt(),
+                                    entity.isEnabled());
     }
 }

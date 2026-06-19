@@ -3,7 +3,6 @@ package com.why.buildingmanagement.auth.infrastructure.api.controller;
 import com.why.buildingmanagement.auth.application.port.in.*;
 import com.why.buildingmanagement.auth.application.result.BuildingUserProfileResult;
 import com.why.buildingmanagement.auth.application.result.LoginResult;
-import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.request.*;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.BuildingUserProfileResponse;
@@ -16,7 +15,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -35,57 +33,46 @@ public class AuthController {
     private final CurrentBuildingUserService currentBuildingUserService;
     private final ChangePasswordUseCase changePasswordUseCase;
 
-    @GetMapping("/welcome")
-    public String welcomeToMyFirstHomePage() {
-        return "Welcome to the Homepage";
-    }
-
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponse> register(
-                    @Valid @RequestBody final RegisterRequest request) {
+    public ResponseEntity<RegisterResponse> register(@Valid @RequestBody final RegisterRequest request) {
 
-        final Long id = registerUserUseCase.register(new RegisterBuildingUserCommand(
-                                        request.username(),
-                                        request.email(),
-                                        request.password(),
-                                        request.displayName(),
-                                        request.phoneNumber(),
-                                        request.role().toUpperCase()));
+        final Long id = registerUserUseCase.register(new RegisterBuildingUserCommand(request.username(),
+                                                                                     request.email(),
+                                                                                     request.password(),
+                                                                                     request.displayName(),
+                                                                                     request.phoneNumber(),
+                                                                                     request.role().toUpperCase()));
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(new RegisterResponse(id));
+                             .body(new RegisterResponse(id));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
-                    @Valid @RequestBody final LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody final LoginRequest request) {
 
-        final LoginResult result = loginUserUseCase.login(new LoginBuildingUserCommand(
-                                        request.usernameOrEmail(),
-                                        request.password()));
+        final LoginResult result = loginUserUseCase
+                        .login(new LoginBuildingUserCommand(request.usernameOrEmail(), request.password()));
 
         return ResponseEntity.ok(new AuthResponse(
-                                        result.accessToken(),
-                                        result.refreshToken(),
-                                        "Bearer"));
+                        result.accessToken(),
+                        result.refreshToken(),
+                        "Bearer"));
     }
 
     @GetMapping("/profile")
-    public CurrentBuildingUserResponse me(
-                    @RequestHeader("Authorization") final String authorizationHeader) {
+    public CurrentBuildingUserResponse me(@RequestHeader("Authorization") final String authorizationHeader) {
 
         final String token = extractValidToken(authorizationHeader);
 
-        return new CurrentBuildingUserResponse(
-                        jwtTokenProvider.getUserId(token),
-                        jwtTokenProvider.getUsername(token),
-                        jwtTokenProvider.getEmail(token),
-                        jwtTokenProvider.getDisplayName(token),
-                        jwtTokenProvider.getPhoneNumber(token),
-                        jwtTokenProvider.getAvatarUrl(token),
-                        "EN",
-                        true,
-                        jwtTokenProvider.getRole(token));
+        return new CurrentBuildingUserResponse(jwtTokenProvider.getUserId(token),
+                                               jwtTokenProvider.getUsername(token),
+                                               jwtTokenProvider.getEmail(token),
+                                               jwtTokenProvider.getDisplayName(token),
+                                               jwtTokenProvider.getPhoneNumber(token),
+                                               jwtTokenProvider.getAvatarUrl(token),
+                                               "EN",
+                                               true,
+                                               jwtTokenProvider.getRole(token));
     }
 
     @PutMapping("/profile")
@@ -93,32 +80,27 @@ public class AuthController {
 
         final Long userId = currentBuildingUserService.getCurrentUserId();
 
-        final BuildingUserProfileResult result = updateBuildingUserProfileUseCase.updateProfile(new UpdateBuildingUserProfileCommand(
-                                                        userId,
-                                                        request.displayName(),
-                                                        request.phoneNumber(),
-                                                        request.avatarUrl(),
-                                                        request.preferredLanguage(),
-                                                        request.notificationsEnabled()));
+        final BuildingUserProfileResult result = updateBuildingUserProfileUseCase
+                        .updateProfile(new UpdateBuildingUserProfileCommand(userId,
+                                                                            request.displayName(),
+                                                                            request.phoneNumber(),
+                                                                            request.avatarUrl(),
+                                                                            request.preferredLanguage(),
+                                                                            request.notificationsEnabled()));
 
-        return ResponseEntity.ok(
-                        buildingUserProfileResponseMapper.toResponse(result));
+        return ResponseEntity.ok(buildingUserProfileResponseMapper.toResponse(result));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody final RefreshTokenRequest request) {
 
-        final LoginResult result = refreshAccessTokenUseCase.refresh(
-                        new RefreshAccessTokenCommand(request.refreshToken()));
+        final LoginResult result = refreshAccessTokenUseCase.refresh(new RefreshAccessTokenCommand(request.refreshToken()));
 
-        return ResponseEntity.ok(new AuthResponse(result.accessToken(),
-                        result.refreshToken(),
-                        "Bearer"));
+        return ResponseEntity.ok(new AuthResponse(result.accessToken(), result.refreshToken(), "Bearer"));
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(
-                    @Valid @RequestBody final RefreshTokenRequest request) {
+    public ResponseEntity<Void> logout(@Valid @RequestBody final RefreshTokenRequest request) {
 
         logoutUseCase.logout(new LogoutCommand(request.refreshToken()));
 
@@ -126,16 +108,13 @@ public class AuthController {
     }
 
     @PatchMapping("/change-password")
-    public ResponseEntity<Void> changePassword(
-                    @Valid @RequestBody final ChangePasswordRequest request) {
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody final ChangePasswordRequest request) {
 
         final Long userId = currentBuildingUserService.getCurrentUserId();
 
-        changePasswordUseCase.changePassword(
-                        new ChangePasswordCommand(
-                                        userId,
-                                        request.currentPassword(),
-                                        request.newPassword()));
+        changePasswordUseCase.changePassword(new ChangePasswordCommand(userId,
+                                                                       request.currentPassword(),
+                                                                       request.newPassword()));
 
         return ResponseEntity.noContent().build();
     }
@@ -144,17 +123,13 @@ public class AuthController {
     private String extractValidToken(final String authorizationHeader) {
 
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new ResponseStatusException(
-                            HttpStatus.UNAUTHORIZED,
-                            "Missing or invalid Authorization header");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
         }
 
         final String token = authorizationHeader.substring(7);
 
         if (!jwtTokenProvider.isTokenValid(token)) {
-            throw new ResponseStatusException(
-                            HttpStatus.UNAUTHORIZED,
-                            "Invalid or expired token");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
         }
 
         return token;

@@ -11,8 +11,7 @@ public class CurrentBuildingUserService {
 
     public Long getCurrentUserId() {
 
-        final UsernamePasswordAuthenticationToken authentication =
-                        getAuthentication();
+        final UsernamePasswordAuthenticationToken authentication = getAuthentication();
 
         if (authentication.getDetails() == null) {
             throw new AccessDeniedException("No authenticated user found.");
@@ -26,11 +25,10 @@ public class CurrentBuildingUserService {
     }
 
     public boolean isCurrentUserAdmin() {
-        return getAuthentication()
-                        .getAuthorities()
-                        .stream()
-                        .anyMatch(authority ->
-                                        "ROLE_ADMIN".equals(authority.getAuthority()));
+        return getAuthentication().getAuthorities()
+                                  .stream()
+                                  .anyMatch(authority ->
+                                                            "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 
     public void requireAdmin() {
@@ -41,8 +39,7 @@ public class CurrentBuildingUserService {
 
     private UsernamePasswordAuthenticationToken getAuthentication() {
 
-        final Authentication authentication =
-                        SecurityContextHolder.getContext().getAuthentication();
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (!(authentication instanceof UsernamePasswordAuthenticationToken token)) {
             throw new AccessDeniedException("No authenticated user found.");

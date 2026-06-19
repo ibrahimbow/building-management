@@ -21,16 +21,15 @@ public class InternalUserController {
     public ResponseEntity<InternalUserResponse> getUserById(@PathVariable("userId") final Long userId) {
 
         return buildingUserJpaRepository.findById(userId)
-                .map(this::toResponse)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
+                                        .map(this::toResponse)
+                                        .map(ResponseEntity::ok)
+                                        .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private InternalUserResponse toResponse(final BuildingUserEntity user) {
-        return new InternalUserResponse(
-                user.getId(),
-                user.getDisplayName(),
-                user.getEmail(),
-                null);
+        return new InternalUserResponse(user.getId(),
+                                        user.getDisplayName(),
+                                        user.getEmail(),
+                                        null);
     }
 }

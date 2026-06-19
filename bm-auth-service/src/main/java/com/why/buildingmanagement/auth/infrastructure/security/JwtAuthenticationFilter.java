@@ -27,7 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
                                     @NonNull final HttpServletResponse response,
                                     @NonNull final FilterChain filterChain)
-            throws ServletException, IOException {
+                    throws ServletException, IOException {
 
         final String path = request.getServletPath();
 
@@ -58,10 +58,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final Long userId = jwtTokenProvider.getUserId(token);
 
         final UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(
-                        username,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+                        new UsernamePasswordAuthenticationToken(username,
+                                                                null,
+                                                                List.of(new SimpleGrantedAuthority("ROLE_" + role)));
 
         authentication.setDetails(userId);
 
@@ -73,10 +72,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean isPublicEndpoint(final String path) {
 
         return path.startsWith("/actuator/")
-                || path.equals("/api/auth/welcome")
-                || path.equals("/api/auth/register")
-                || path.equals("/api/auth/login")
-                || path.equals("/api/auth/refresh")
-                || path.equals("/api/auth/logout");
+                        || path.equals("/api/auth/welcome")
+                        || path.equals("/api/auth/register")
+                        || path.equals("/api/auth/login")
+                        || path.equals("/api/auth/refresh")
+                        || path.equals("/api/auth/logout");
     }
 }

@@ -3,6 +3,7 @@ package com.why.buildingmanagement.auth.infrastructure.security;
 import com.why.buildingmanagement.auth.application.port.out.TokenProviderPort;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,9 +20,8 @@ public class JwtTokenProvider implements TokenProviderPort {
     private final SecretKey secretKey;
     private final long expirationMinutes;
 
-    public JwtTokenProvider(
-            @Value("${security.jwt.secret}") final String secret,
-            @Value("${security.jwt.expiration-minutes}") final long expirationMinutes) {
+    public JwtTokenProvider(@Value("${security.jwt.secret}") final String secret,
+                            @Value("${security.jwt.expiration-minutes}") final long expirationMinutes) {
         if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < 32) {
             throw new IllegalArgumentException("JWT secret must be at least 32 bytes for HS256");
         }
@@ -34,25 +34,24 @@ public class JwtTokenProvider implements TokenProviderPort {
         final Instant now = Instant.now();
         final Instant expiresAt = now.plusSeconds(expirationMinutes * 60);
 
-        return Jwts.builder()
-                .subject(buildingUser.getUsername())
-                .claim("userId", buildingUser.getId())
-                .claim("email", buildingUser.getEmail())
-                .claim("displayName", buildingUser.getDisplayName())
-                .claim("phoneNumber", buildingUser.getPhoneNumber())
-                .claim("avatarUrl", buildingUser.getAvatarUrl())
-                .claim("role", buildingUser.getRole().name())
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiresAt))
-                .signWith(secretKey, Jwts.SIG.HS256)
-                .compact();
+        return Jwts.builder().subject(buildingUser.getUsername())
+                   .claim("userId", buildingUser.getId())
+                   .claim("email", buildingUser.getEmail())
+                   .claim("displayName", buildingUser.getDisplayName())
+                   .claim("phoneNumber", buildingUser.getPhoneNumber())
+                   .claim("avatarUrl", buildingUser.getAvatarUrl())
+                   .claim("role", buildingUser.getRole().name())
+                   .issuedAt(Date.from(now))
+                   .expiration(Date.from(expiresAt))
+                   .signWith(secretKey, Jwts.SIG.HS256)
+                   .compact();
     }
 
     public boolean isTokenValid(final String token) {
         try {
             parseClaims(token);
             return true;
-        } catch (final Exception ex) {
+        } catch (final JwtException | IllegalArgumentException ex) {
             return false;
         }
     }
@@ -79,10 +78,10 @@ public class JwtTokenProvider implements TokenProviderPort {
 
     private Claims parseClaims(final String token) {
         return Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                   .verifyWith(secretKey)
+                   .build()
+                   .parseSignedClaims(token)
+                   .getPayload();
     }
 
     public String getPhoneNumber(final String token) {

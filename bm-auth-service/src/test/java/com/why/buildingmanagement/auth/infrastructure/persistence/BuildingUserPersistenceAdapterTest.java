@@ -1,7 +1,6 @@
 package com.why.buildingmanagement.auth.infrastructure.persistence;
 
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
-import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -10,136 +9,166 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static com.why.buildingmanagement.auth.domain.model.BuildingUserRole.TENANT;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@Import({
-        BuildingUserPersistenceAdapter.class,
-        BuildingUserMapperImpl.class
-})
+@Import({BuildingUserPersistenceAdapter.class, BuildingUserMapperImpl.class})
 class BuildingUserPersistenceAdapterTest {
+
+    private static final String USERNAME = "ibrahim";
+    private static final String EMAIL = "ibrahim@test.com";
+    private static final String PASSWORD_HASH = "HASHED_PASSWORD";
+    private static final String DISPLAY_NAME = "ibrahimbow";
+    private static final String PHONE_NUMBER = "+3200000000";
+    private static final String AVATAR_URL = "/api/files/PROFILE_AVATAR/avatar.png";
+    private static final Instant CREATED_AT = Instant.parse("2026-06-18T12:00:00Z");
 
     @Autowired
     private BuildingUserPersistenceAdapter adapter;
 
     @Test
     void save_shouldPersistBuildingUser() {
+        final BuildingUser user = BuildingUser.restore(null,
+                                                       USERNAME,
+                                                       EMAIL,
+                                                       PASSWORD_HASH,
+                                                       DISPLAY_NAME,
+                                                       PHONE_NUMBER,
+                                                       AVATAR_URL,
+                                                       TENANT,
+                                                       CREATED_AT,
+                                                       true);
 
-        final BuildingUser user = new BuildingUser(
-                null,
-                "ibrahim",
-                "ibrahim@test.com",
-                "HASHED_PASSWORD",
-                "ibrahimbow",
-                "+3200000000",
-                "/api/files/PROFILE_AVATAR/avatar.png",
-                BuildingUserRole.TENANT,
-                Instant.now(),
-                true);
+        final BuildingUser saved = adapter.save(user);
 
-        final BuildingUser saved =
-                adapter.save(user);
-
-        assertNotNull(saved.getId());
-        assertEquals("ibrahim", saved.getUsername());
-        assertEquals("ibrahim@test.com", saved.getEmail());
-        assertEquals("ibrahimbow", saved.getDisplayName());
-        assertEquals("+3200000000", saved.getPhoneNumber());
-        assertEquals("/api/files/PROFILE_AVATAR/avatar.png", saved.getAvatarUrl());
-        assertEquals(BuildingUserRole.TENANT, saved.getRole());
-        assertTrue(saved.isEnabled());
+        assertThat(saved.getId()).isNotNull();
+        assertThat(saved.getUsername()).isEqualTo(USERNAME);
+        assertThat(saved.getEmail()).isEqualTo(EMAIL);
+        assertThat(saved.getPasswordHash()).isEqualTo(PASSWORD_HASH);
+        assertThat(saved.getDisplayName()).isEqualTo(DISPLAY_NAME);
+        assertThat(saved.getPhoneNumber()).isEqualTo(PHONE_NUMBER);
+        assertThat(saved.getAvatarUrl()).isEqualTo(AVATAR_URL);
+        assertThat(saved.getRole()).isEqualTo(TENANT);
+        assertThat(saved.getCreatedAt()).isEqualTo(CREATED_AT);
+        assertThat(saved.isEnabled()).isTrue();
     }
 
     @Test
-    void loadById_shouldReturnBuildingUser() {
-
-        final BuildingUser saved =
-                adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+    void loadById_shouldReturnBuildingUser_whenUserExists() {
+        final BuildingUser saved = adapter.save(newUser(USERNAME,
+                                                        EMAIL,
+                                                        DISPLAY_NAME));
 
         final BuildingUser found = adapter.loadById(saved.getId())
-                .orElseThrow();
+                                          .orElseThrow();
 
-        assertEquals(saved.getId(), found.getId());
-        assertEquals("ibrahim", found.getUsername());
+        assertThat(found.getId()).isEqualTo(saved.getId());
+        assertThat(found.getUsername()).isEqualTo(USERNAME);
+        assertThat(found.getEmail()).isEqualTo(EMAIL);
+    }
+
+    @Test
+    void loadById_shouldReturnEmpty_whenUserDoesNotExist() {
+        assertThat(adapter.loadById(999L)).isEmpty();
     }
 
     @Test
     void loadByUsername_shouldReturnBuildingUser_whenUsernameExists() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        final BuildingUser found = adapter.loadByUsername(USERNAME)
+                                          .orElseThrow();
 
-        final BuildingUser found = adapter.loadByUsername("ibrahim")
-                .orElseThrow();
+        assertThat(found.getUsername()).isEqualTo(USERNAME);
+        assertThat(found.getEmail()).isEqualTo(EMAIL);
+    }
 
-        assertEquals("ibrahim", found.getUsername());
-        assertEquals("ibrahim@test.com", found.getEmail());
+    @Test
+    void loadByUsername_shouldReturnEmpty_whenUsernameDoesNotExist() {
+        assertThat(adapter.loadByUsername("unknown")).isEmpty();
     }
 
     @Test
     void loadByEmail_shouldReturnBuildingUser_whenEmailExists() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        final BuildingUser found = adapter.loadByEmail(EMAIL)
+                                          .orElseThrow();
 
-        final BuildingUser found = adapter.loadByEmail("ibrahim@test.com")
-                .orElseThrow();
+        assertThat(found.getEmail()).isEqualTo(EMAIL);
+        assertThat(found.getUsername()).isEqualTo(USERNAME);
+    }
 
-        assertEquals("ibrahim@test.com", found.getEmail());
-        assertEquals("ibrahim", found.getUsername());
+    @Test
+    void loadByEmail_shouldReturnEmpty_whenEmailDoesNotExist() {
+        assertThat(adapter.loadByEmail("unknown@test.com")).isEmpty();
     }
 
     @Test
     void loadByUsernameOrEmail_shouldReturnUser_whenUsernameMatches() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        final BuildingUser found = adapter.loadByUsernameOrEmail(USERNAME)
+                                          .orElseThrow();
 
-        final BuildingUser found = adapter.loadByUsernameOrEmail("ibrahim")
-                .orElseThrow();
-
-        assertEquals("ibrahim@test.com", found.getEmail());
+        assertThat(found.getUsername()).isEqualTo(USERNAME);
+        assertThat(found.getEmail()).isEqualTo(EMAIL);
     }
 
     @Test
     void loadByUsernameOrEmail_shouldReturnUser_whenEmailMatches() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        final BuildingUser found = adapter.loadByUsernameOrEmail(EMAIL)
+                                          .orElseThrow();
 
-        final BuildingUser found = adapter.loadByUsernameOrEmail("ibrahim@test.com")
-                .orElseThrow();
+        assertThat(found.getUsername()).isEqualTo(USERNAME);
+        assertThat(found.getEmail()).isEqualTo(EMAIL);
+    }
 
-        assertEquals("ibrahim", found.getUsername());
+    @Test
+    void loadByUsernameOrEmail_shouldReturnEmpty_whenNoMatchExists() {
+        assertThat(adapter.loadByUsernameOrEmail("unknown")).isEmpty();
     }
 
     @Test
     void existsByUsername_shouldReturnTrue_whenUsernameExists() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        assertThat(adapter.existsByUsername(USERNAME)).isTrue();
+    }
 
-        assertTrue(adapter.existsByUsername("ibrahim"));
+    @Test
+    void existsByUsername_shouldReturnFalse_whenUsernameDoesNotExist() {
+        assertThat(adapter.existsByUsername("unknown")).isFalse();
     }
 
     @Test
     void existsByEmail_shouldReturnTrue_whenEmailExists() {
+        adapter.save(newUser(USERNAME, EMAIL, DISPLAY_NAME));
 
-        adapter.save(newUser("ibrahim", "ibrahim@test.com", "ibrahimbow"));
+        assertThat(adapter.existsByEmail(EMAIL)).isTrue();
+    }
 
-        assertTrue(adapter.existsByEmail("ibrahim@test.com"));
+    @Test
+    void existsByEmail_shouldReturnFalse_whenEmailDoesNotExist() {
+        assertThat(adapter.existsByEmail("unknown@test.com")).isFalse();
     }
 
     private BuildingUser newUser(final String username,
                                  final String email,
                                  final String displayName) {
-
-        return new BuildingUser(
-                null,
-                username,
-                email,
-                "HASHED_PASSWORD",
-                displayName,
-                "+3200000000",
-                null,
-                BuildingUserRole.TENANT,
-                Instant.now(),
-                true);
+        return BuildingUser.restore(null,
+                                    username,
+                                    email,
+                                    PASSWORD_HASH,
+                                    displayName,
+                                    PHONE_NUMBER,
+                                    null,
+                                    TENANT,
+                                    CREATED_AT,
+                                    true);
     }
 }

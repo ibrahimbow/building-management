@@ -19,30 +19,29 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
     @Override
     public Optional<BuildingUser> loadByUsernameOrEmail(final String usernameOrEmail) {
 
-        return buildingUserRepository
-                        .findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
-                        .map(buildingUserMapper::toDomain);
+        return buildingUserRepository.findByUsernameOrEmail(usernameOrEmail, usernameOrEmail)
+                                     .map(buildingUserMapper::toDomain);
     }
 
     @Override
     public Optional<BuildingUser> loadById(final Long id) {
 
         return buildingUserRepository.findById(id)
-                        .map(buildingUserMapper::toDomain);
+                                     .map(buildingUserMapper::toDomain);
     }
 
     @Override
     public Optional<BuildingUser> loadByUsername(final String username) {
 
         return buildingUserRepository.findByUsername(username)
-                        .map(buildingUserMapper::toDomain);
+                                     .map(buildingUserMapper::toDomain);
     }
 
     @Override
     public Optional<BuildingUser> loadByEmail(final String email) {
 
         return buildingUserRepository.findByEmail(email)
-                        .map(buildingUserMapper::toDomain);
+                                     .map(buildingUserMapper::toDomain);
     }
 
     @Override
@@ -61,16 +60,15 @@ public class BuildingUserPersistenceAdapter implements LoadBuildingUserPort, Sav
     public List<BuildingUser> loadAll() {
 
         return buildingUserRepository.findAll()
-                        .stream()
-                        .map(buildingUserMapper::toDomain)
-                        .toList();
+                                     .stream()
+                                     .map(buildingUserMapper::toDomain)
+                                     .toList();
     }
 
     @Override
     public BuildingUser save(final BuildingUser buildingUser) {
 
-        final BuildingUserEntity savedEntity = buildingUserRepository.save(
-                        buildingUserMapper.toEntity(buildingUser));
+        final BuildingUserEntity savedEntity = buildingUserRepository.save(buildingUserMapper.toEntity(buildingUser));
 
         return buildingUserMapper.toDomain(savedEntity);
     }

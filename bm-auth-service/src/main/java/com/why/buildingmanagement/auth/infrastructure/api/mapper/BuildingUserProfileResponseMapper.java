@@ -8,17 +8,16 @@ import org.mapstruct.Mapper;
 public interface BuildingUserProfileResponseMapper {
 
     default BuildingUserProfileResponse toResponse(
-            final BuildingUserProfileResult result) {
+                    final BuildingUserProfileResult result) {
 
-        return new BuildingUserProfileResponse(
-                result.id(),
-                result.username(),
-                result.email(),
-                result.displayName(),
-                result.phoneNumber(),
-                result.avatarUrl(),
-                result.preferredLanguage(),
-                result.notificationsEnabled(),
-                result.role());
+        return new BuildingUserProfileResponse(result.id(),
+                                               result.username(),
+                                               result.email(),
+                                               result.displayName(),
+                                               result.phoneNumber(),
+                                               result.avatarUrl(),
+                                               result.preferredLanguage(),
+                                               result.notificationsEnabled(),
+                                               result.role());
     }
 }
