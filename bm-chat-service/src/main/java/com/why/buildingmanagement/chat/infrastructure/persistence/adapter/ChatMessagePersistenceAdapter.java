@@ -24,7 +24,6 @@ public class ChatMessagePersistenceAdapter implements SaveChatMessagePort, LoadC
     public ChatMessage save(final ChatMessage message) {
 
         final ChatMessageEntity entity = chatPersistenceMapper.toEntity(message);
-
         final ChatMessageEntity savedEntity = chatMessageRepository.save(entity);
 
         return chatPersistenceMapper.toDomain(savedEntity);
@@ -34,24 +33,24 @@ public class ChatMessagePersistenceAdapter implements SaveChatMessagePort, LoadC
     public Optional<ChatMessage> findById(final UUID messageId) {
 
         return chatMessageRepository.findById(messageId)
-                        .map(chatPersistenceMapper::toDomain);
+                                    .map(chatPersistenceMapper::toDomain);
     }
 
     @Override
     public List<ChatMessage> findByBuildingIdOrderByCreatedAtAsc(final UUID buildingId) {
 
         return chatMessageRepository.findByBuildingIdOrderByCreatedAtAsc(buildingId)
-                        .stream()
-                        .map(chatPersistenceMapper::toDomain)
-                        .toList();
+                                    .stream()
+                                    .map(chatPersistenceMapper::toDomain)
+                                    .toList();
     }
 
     @Override
     public List<ChatMessage> findAllOrderByCreatedAtDesc() {
 
         return chatMessageRepository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
-                        .stream()
-                        .map(chatPersistenceMapper::toDomain)
-                        .toList();
+                                    .stream()
+                                    .map(chatPersistenceMapper::toDomain)
+                                    .toList();
     }
 }

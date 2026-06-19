@@ -19,8 +19,7 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull final HttpServletRequest request,
                                     @NotNull final HttpServletResponse response,
-                                    @NonNull final FilterChain filterChain)
-                    throws ServletException, IOException {
+                                    @NonNull final FilterChain filterChain) throws ServletException, IOException {
 
         final String userId = request.getHeader("X-User-Id");
         final String email = request.getHeader("X-User-Email");
@@ -29,18 +28,16 @@ public class HeaderAuthenticationFilter extends OncePerRequestFilter {
         final String avatarUrl = request.getHeader("X-User-Avatar-Url");
 
         if (userId != null && email != null && role != null && displayName != null) {
-            final CurrentUser currentUser = new CurrentUser(
-                            Long.valueOf(userId),
-                            email,
-                            role,
-                            displayName,
-                            avatarUrl);
+            final CurrentUser currentUser = new CurrentUser(Long.valueOf(userId),
+                                                            email,
+                                                            role,
+                                                            displayName,
+                                                            avatarUrl);
 
             final UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                            currentUser,
-                                            null,
-                                            List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())));
+                            new UsernamePasswordAuthenticationToken(currentUser,
+                                                                    null,
+                                                                    List.of(new SimpleGrantedAuthority("ROLE_" + role.toUpperCase())));
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }

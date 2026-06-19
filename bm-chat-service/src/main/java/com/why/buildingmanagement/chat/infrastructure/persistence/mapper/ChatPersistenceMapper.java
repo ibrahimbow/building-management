@@ -7,6 +7,8 @@ import com.why.buildingmanagement.chat.infrastructure.persistence.entity.ChatRea
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface ChatPersistenceMapper {
 
@@ -16,32 +18,37 @@ public interface ChatPersistenceMapper {
     default ChatMessage toDomain(final ChatMessageEntity entity) {
 
         return ChatMessage.restore(
-                entity.getId(),
-                entity.getBuildingId(),
-                entity.getSenderUserId(),
-                entity.getSenderDisplayName(),
-                entity.getSenderAvatarUrl(),
-                entity.getContent(),
-                entity.getImageUrl(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt(),
-                entity.getDeletedAt(),
-                entity.getReactions()
-                        .stream()
-                        .map(this::toDomain)
-                        .toList());
+                        entity.getId(),
+                        entity.getBuildingId(),
+                        entity.getSenderUserId(),
+                        entity.getSenderDisplayName(),
+                        entity.getSenderAvatarUrl(),
+                        entity.getContent(),
+                        entity.getImageUrl(),
+                        entity.getCreatedAt(),
+                        entity.getUpdatedAt(),
+                        entity.getDeletedAt(),
+                        List.of());
     }
 
-    @Mapping(target = "message", ignore = true)
-    ChatReactionEntity toEntity(final ChatReaction reaction);
+    default ChatReactionEntity toEntity(final ChatReaction reaction,
+                                        final ChatMessageEntity message) {
+
+        return new ChatReactionEntity(
+                        reaction.getId(),
+                        message,
+                        reaction.getUserId(),
+                        reaction.getEmoji(),
+                        reaction.getCreatedAt());
+    }
 
     default ChatReaction toDomain(final ChatReactionEntity entity) {
 
         return ChatReaction.restore(
-                entity.getId(),
-                entity.getMessage().getId(),
-                entity.getUserId(),
-                entity.getEmoji(),
-                entity.getCreatedAt());
+                        entity.getId(),
+                        entity.getMessage().getId(),
+                        entity.getUserId(),
+                        entity.getEmoji(),
+                        entity.getCreatedAt());
     }
 }

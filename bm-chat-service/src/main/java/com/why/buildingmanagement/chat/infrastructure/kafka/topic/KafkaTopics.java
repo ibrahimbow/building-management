@@ -6,4 +6,5 @@ import lombok.experimental.UtilityClass;
 public class KafkaTopics {
 
     public static final String CHAT_MESSAGE_CREATED_V1 = "chat.message.created.v1";
+
 }

@@ -1,11 +1,6 @@
 package com.why.buildingmanagement.chat.infrastructure.api.controller;
 
-import com.why.buildingmanagement.chat.application.port.in.DeleteChatMessageUseCase;
-import com.why.buildingmanagement.chat.application.port.in.GetBuildingChatUseCase;
-import com.why.buildingmanagement.chat.application.port.in.ReactToChatMessageCommand;
-import com.why.buildingmanagement.chat.application.port.in.ReactToChatMessageUseCase;
-import com.why.buildingmanagement.chat.application.port.in.SendChatMessageCommand;
-import com.why.buildingmanagement.chat.application.port.in.SendChatMessageUseCase;
+import com.why.buildingmanagement.chat.application.port.in.*;
 import com.why.buildingmanagement.chat.application.result.ChatReactionResult;
 import com.why.buildingmanagement.chat.infrastructure.api.dto.request.ReactToChatMessageRequest;
 import com.why.buildingmanagement.chat.infrastructure.api.dto.request.SendChatMessageRequest;
@@ -42,33 +37,28 @@ public class TenantChatController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        final List<ChatMessageResponse> response = getBuildingChatUseCase
-                .getMessagesForCurrentTenantBuilding(currentUser.userId())
-                .stream()
-                .map(chatApiMapper::toResponse)
-                .toList();
+        final List<ChatMessageResponse> response = getBuildingChatUseCase.getMessagesForCurrentTenantBuilding(currentUser.userId())
+                                                                         .stream()
+                                                                         .map(chatApiMapper::toResponse)
+                                                                         .toList();
 
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/messages")
-    public ResponseEntity<ChatMessageResponse> sendMessage(
-            @Valid @RequestBody final SendChatMessageRequest request) {
+    public ResponseEntity<ChatMessageResponse> sendMessage(@Valid @RequestBody final SendChatMessageRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        final SendChatMessageCommand command = new SendChatMessageCommand(
-                currentUser.userId(),
-                currentUser.displayName(),
-                currentUser.avatarUrl(),
-                request.content(),
-                request.imageUrl());
+        final SendChatMessageCommand command = new SendChatMessageCommand(currentUser.userId(),
+                                                                          currentUser.displayName(),
+                                                                          currentUser.avatarUrl(),
+                                                                          request.content(),
+                                                                          request.imageUrl());
 
-        final ChatMessageResponse response = chatApiMapper.toResponse(
-                sendChatMessageUseCase.send(command));
+        final ChatMessageResponse response = chatApiMapper.toResponse(sendChatMessageUseCase.send(command));
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @DeleteMapping("/messages/{messageId}")
@@ -76,50 +66,40 @@ public class TenantChatController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        deleteChatMessageUseCase.delete(
-                messageId,
-                currentUser.userId());
+        deleteChatMessageUseCase.delete(messageId, currentUser.userId());
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/messages/{messageId}/reactions")
-    public ResponseEntity<ChatReactionResponse> reactToMessage(
-            @PathVariable("messageId") final UUID messageId,
-            @Valid @RequestBody final ReactToChatMessageRequest request) {
+    public ResponseEntity<ChatReactionResponse> reactToMessage(@PathVariable("messageId") final UUID messageId,
+                                                               @Valid @RequestBody final ReactToChatMessageRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        final ReactToChatMessageCommand command = new ReactToChatMessageCommand(
-                messageId,
-                currentUser.userId(),
-                request.emoji());
+        final ReactToChatMessageCommand command = new ReactToChatMessageCommand(messageId,
+                                                                                currentUser.userId(),
+                                                                                request.emoji());
 
         final ChatReactionResult result = reactToChatMessageUseCase.react(command);
 
         if (result == null) {
-            return ResponseEntity.noContent()
-                    .build();
+            return ResponseEntity.noContent().build();
         }
 
         return ResponseEntity.ok(chatApiMapper.toResponse(result));
     }
 
     @DeleteMapping("/messages/{messageId}/reactions")
-    public ResponseEntity<Void> removeReaction(
-            @PathVariable("messageId") final UUID messageId,
-            @Valid @RequestBody final ReactToChatMessageRequest request) {
+    public ResponseEntity<Void> removeReaction(@PathVariable("messageId") final UUID messageId,
+                                               @Valid @RequestBody final ReactToChatMessageRequest request) {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        reactToChatMessageUseCase.removeReaction(
-                new ReactToChatMessageCommand(
-                        messageId,
-                        currentUser.userId(),
-                        request.emoji()));
+        reactToChatMessageUseCase.removeReaction(new ReactToChatMessageCommand(messageId,
+                                                                               currentUser.userId(),
+                                                                               request.emoji()));
 
-        return ResponseEntity.noContent()
-                .build();
+        return ResponseEntity.noContent().build();
     }
 }

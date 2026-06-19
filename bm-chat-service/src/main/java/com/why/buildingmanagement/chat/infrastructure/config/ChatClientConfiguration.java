@@ -9,7 +9,6 @@ public class ChatClientConfiguration {
 
     @Bean
     public RestClient.Builder restClientBuilder() {
-
         return RestClient.builder();
     }
 }

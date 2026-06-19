@@ -22,20 +22,17 @@ public class ChatWebSocketPublisher {
     public void publishReactionUpdated(final ChatMessageResult message) {
 
         publishEvent(
-                ChatWebSocketEventType.REACTION_UPDATED,
-                message);
+                        ChatWebSocketEventType.REACTION_UPDATED,
+                        message);
     }
 
     private void publishEvent(final ChatWebSocketEventType type,
                               final ChatMessageResult message) {
 
-        final ChatWebSocketEvent event = new ChatWebSocketEvent(
-                type,
-                message.buildingId(),
-                message);
+        final ChatWebSocketEvent event = new ChatWebSocketEvent(type,
+                                                                message.buildingId(),
+                                                                message);
 
-        messagingTemplate.convertAndSend(
-                "/topic/buildings/" + message.buildingId() + "/chat/messages",
-                event);
+        messagingTemplate.convertAndSend("/topic/buildings/" + message.buildingId() + "/chat/messages", event);
     }
 }

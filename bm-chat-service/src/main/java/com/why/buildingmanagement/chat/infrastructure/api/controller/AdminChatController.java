@@ -23,11 +23,10 @@ public class AdminChatController {
     @GetMapping
     public ResponseEntity<List<ChatMessageResponse>> getAllMessages() {
 
-        final var response = adminGetChatMessagesUseCase
-                        .getAllMessages()
-                        .stream()
-                        .map(chatApiMapper::toResponse)
-                        .toList();
+        final var response = adminGetChatMessagesUseCase.getAllMessages()
+                                                        .stream()
+                                                        .map(chatApiMapper::toResponse)
+                                                        .toList();
 
         return ResponseEntity.ok(response);
     }

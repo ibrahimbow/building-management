@@ -13,11 +13,9 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ChatExceptionHandler {
 
     @ExceptionHandler(ChatMessageNotFoundException.class)
-    public ProblemDetail handleChatMessageNotFoundException(
-            final ChatMessageNotFoundException exception) {
+    public ProblemDetail handleChatMessageNotFoundException(final ChatMessageNotFoundException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.NOT_FOUND,
                         exception.getMessage());
 
@@ -27,11 +25,9 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(ChatMessageAccessDeniedException.class)
-    public ProblemDetail handleChatMessageAccessDeniedException(
-            final ChatMessageAccessDeniedException exception) {
+    public ProblemDetail handleChatMessageAccessDeniedException(final ChatMessageAccessDeniedException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.FORBIDDEN,
                         exception.getMessage());
 
@@ -41,11 +37,9 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(EmptyChatMessageException.class)
-    public ProblemDetail handleEmptyChatMessageException(
-            final EmptyChatMessageException exception) {
+    public ProblemDetail handleEmptyChatMessageException(final EmptyChatMessageException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST,
                         exception.getMessage());
 
@@ -55,11 +49,9 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(ChatMessageImageLimitExceededException.class)
-    public ProblemDetail handleChatMessageImageLimitExceededException(
-            final ChatMessageImageLimitExceededException exception) {
+    public ProblemDetail handleChatMessageImageLimitExceededException(final ChatMessageImageLimitExceededException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST,
                         exception.getMessage());
 
@@ -69,18 +61,15 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleMethodArgumentNotValidException(
-            final MethodArgumentNotValidException exception) {
+    public ProblemDetail handleMethodArgumentNotValidException(final MethodArgumentNotValidException exception) {
 
-        final String message = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .findFirst()
-                .map(DefaultMessageSourceResolvable::getDefaultMessage)
-                .orElse("Validation failed");
+        final String message = exception.getBindingResult().getFieldErrors()
+                                        .stream()
+                                        .findFirst()
+                                        .map(DefaultMessageSourceResolvable::getDefaultMessage)
+                                        .orElse("Validation failed");
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST,
                         message);
 
@@ -90,11 +79,9 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ProblemDetail handleConstraintViolationException(
-            final ConstraintViolationException exception) {
+    public ProblemDetail handleConstraintViolationException(final ConstraintViolationException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.BAD_REQUEST,
                         exception.getMessage());
 
@@ -104,11 +91,9 @@ public class ChatExceptionHandler {
     }
 
     @ExceptionHandler(ManagerBuildingNotFoundException.class)
-    public ProblemDetail handleManagerBuildingNotFoundException(
-            final ManagerBuildingNotFoundException exception) {
+    public ProblemDetail handleManagerBuildingNotFoundException(final ManagerBuildingNotFoundException exception) {
 
-        final ProblemDetail problemDetail = ProblemDetail
-                .forStatusAndDetail(
+        final ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
                         HttpStatus.NOT_FOUND,
                         exception.getMessage());
 

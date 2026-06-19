@@ -13,17 +13,15 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
 
-        return http
-                .csrf(AbstractHttpConfigurer::disable)
-                        .addFilterBefore(new HeaderAuthenticationFilter(),
-                                        UsernamePasswordAuthenticationFilter.class)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/actuator/health",
-                                "/actuator/info",
-                                "/ws/**")
-                        .permitAll()
-                        .anyRequest().permitAll())
-                .build();
+        return http.csrf(AbstractHttpConfigurer::disable)
+                   .addFilterBefore(new HeaderAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                   .authorizeHttpRequests(auth -> auth
+                                   .requestMatchers(
+                                                   "/actuator/health",
+                                                   "/actuator/info",
+                                                   "/ws/**")
+                                   .permitAll()
+                                   .anyRequest().permitAll())
+                   .build();
     }
 }

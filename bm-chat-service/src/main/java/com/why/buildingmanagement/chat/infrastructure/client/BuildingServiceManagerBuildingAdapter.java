@@ -22,13 +22,13 @@ public class BuildingServiceManagerBuildingAdapter implements LoadManagerBuildin
     public UUID loadBuildingIdByManagerUserId(final Long managerUserId) {
 
         final ManagerBuildingResponse response = restClientBuilder.build()
-                        .get()
-                        .uri(buildingServiceUrl
-                                        + "/internal/managers/"
-                                        + managerUserId
-                                        + "/building")
-                        .retrieve()
-                        .body(ManagerBuildingResponse.class);
+                                                                  .get()
+                                                                  .uri(buildingServiceUrl
+                                                                                       + "/internal/managers/"
+                                                                                       + managerUserId
+                                                                                       + "/building")
+                                                                  .retrieve()
+                                                                  .body(ManagerBuildingResponse.class);
 
         if (response == null) {
             throw new ManagerBuildingNotFoundException(managerUserId);

@@ -1,6 +1,5 @@
 package com.why.buildingmanagement.chat.infrastructure.kafka.publisher;
 
-import com.why.buildingmanagement.chat.domain.model.ChatMessage;
 import com.why.buildingmanagement.chat.infrastructure.kafka.event.ChatMessageCreatedEvent;
 import com.why.buildingmanagement.chat.infrastructure.kafka.topic.KafkaTopics;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +14,8 @@ public class ChatEventPublisher {
 
     public void publishMessageCreated(final ChatMessageCreatedEvent event) {
 
-        kafkaTemplate.send(
-                        KafkaTopics.CHAT_MESSAGE_CREATED_V1,
-                        event.buildingId().toString(),
-                        event);
+        kafkaTemplate.send(KafkaTopics.CHAT_MESSAGE_CREATED_V1,
+                           event.buildingId().toString(),
+                           event);
     }
 }

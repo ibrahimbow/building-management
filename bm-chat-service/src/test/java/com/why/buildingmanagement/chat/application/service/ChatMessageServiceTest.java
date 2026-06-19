@@ -90,10 +90,9 @@ class ChatMessageServiceTest {
         assertThat(event.senderUserId()).isEqualTo(TENANT_USER_ID);
         assertThat(event.senderDisplayName()).isEqualTo("Tenant User");
         assertThat(event.content()).isEqualTo("Hello chat");
-        assertThat(event.imageUrl()).isBlank();
+        assertThat(event.imageUrl()).isNull();
 
-        final ArgumentCaptor<ChatMessage> messageCaptor =
-                        ArgumentCaptor.forClass(ChatMessage.class);
+        final ArgumentCaptor<ChatMessage> messageCaptor = ArgumentCaptor.forClass(ChatMessage.class);
 
         verify(saveChatMessagePort).save(messageCaptor.capture());
 
@@ -102,9 +101,9 @@ class ChatMessageServiceTest {
         assertThat(savedMessage.getBuildingId()).isEqualTo(BUILDING_ID);
         assertThat(savedMessage.getSenderUserId()).isEqualTo(TENANT_USER_ID);
         assertThat(savedMessage.getSenderDisplayName()).isEqualTo("Tenant User");
-        assertThat(savedMessage.getSenderAvatarUrl()).isEqualTo("");
+        assertThat(savedMessage.getSenderAvatarUrl()).isNull();
         assertThat(savedMessage.getContent()).isEqualTo("Hello chat");
-        assertThat(savedMessage.getImageUrl()).isEqualTo("");
+        assertThat(savedMessage.getImageUrl()).isNull();
         assertThat(savedMessage.isDeleted()).isFalse();
     }
 
