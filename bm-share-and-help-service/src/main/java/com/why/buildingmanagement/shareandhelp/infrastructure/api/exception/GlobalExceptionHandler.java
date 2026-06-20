@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ShareAndHelpPostNotFoundException.class)
-    public ProblemDetail handleShareAndHelpPostNotFoundException(
-            final ShareAndHelpPostNotFoundException exception) {
+    public ProblemDetail handleShareAndHelpPostNotFoundException(final ShareAndHelpPostNotFoundException exception) {
 
         final ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
 
@@ -26,8 +25,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ShareAndHelpCommentNotFoundException.class)
-    public ProblemDetail handleShareAndHelpCommentNotFoundException(
-            final ShareAndHelpCommentNotFoundException exception) {
+    public ProblemDetail handleShareAndHelpCommentNotFoundException(final ShareAndHelpCommentNotFoundException exception) {
 
         final ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
 
@@ -38,8 +36,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({
-            ShareAndHelpPostDeletedException.class,
-            ShareAndHelpCommentAlreadyDeletedException.class
+                    ShareAndHelpPostDeletedException.class,
+                    ShareAndHelpCommentAlreadyDeletedException.class
     })
     public ProblemDetail handleConflictExceptions(final RuntimeException exception) {
 
@@ -52,15 +50,14 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(
-            final MethodArgumentNotValidException exception) {
+    public ProblemDetail handleValidationException(final MethodArgumentNotValidException exception) {
 
         final String errorMessage = exception.getBindingResult()
-                .getFieldErrors()
-                .stream()
-                .findFirst()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .orElse("Validation failed.");
+                                             .getFieldErrors()
+                                             .stream()
+                                             .findFirst()
+                                             .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                                             .orElse("Validation failed.");
 
         final ProblemDetail problemDetail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
 

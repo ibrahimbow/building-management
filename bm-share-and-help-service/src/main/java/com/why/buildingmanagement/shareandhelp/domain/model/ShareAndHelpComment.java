@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.domain.model;
 
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentAlreadyDeletedException;
+import com.why.buildingmanagement.shareandhelp.domain.validation.ShareAndHelpCommentValidator;
 import lombok.Getter;
 
 import java.time.Instant;
@@ -31,15 +32,14 @@ public final class ShareAndHelpComment {
                                 final String comment,
                                 final Instant createdAt,
                                 final Instant deletedAt) {
-        this.id = Objects.requireNonNull(id);
-        this.postId = Objects.requireNonNull(postId);
-        this.createdByUserId = Objects.requireNonNull(createdByUserId);
 
-        this.createdByDisplayName = createdByDisplayName;
-        this.createdByAvatarUrl = createdByAvatarUrl;
-        this.comment = comment;
-
-        this.createdAt = Objects.requireNonNull(createdAt);
+        this.id = ShareAndHelpCommentValidator.validateId(id);
+        this.postId = ShareAndHelpCommentValidator.validatePostId(postId);
+        this.createdByUserId = ShareAndHelpCommentValidator.validateCreatedByUserId(createdByUserId);
+        this.createdByDisplayName = ShareAndHelpCommentValidator.validateDisplayName(createdByDisplayName);
+        this.createdByAvatarUrl = ShareAndHelpCommentValidator.validateAvatarUrl(createdByAvatarUrl);
+        this.comment = ShareAndHelpCommentValidator.validateComment(comment);
+        this.createdAt = ShareAndHelpCommentValidator.validateCreatedAt(createdAt);
         this.deletedAt = deletedAt;
     }
 
@@ -49,13 +49,13 @@ public final class ShareAndHelpComment {
                                                 final String createdByAvatarUrl,
                                                 final String comment) {
         return new ShareAndHelpComment(UUID.randomUUID(),
-                postId,
-                createdByUserId,
-                createdByDisplayName,
-                createdByAvatarUrl,
-                comment,
-                Instant.now(),
-                null);
+                                       postId,
+                                       createdByUserId,
+                                       createdByDisplayName,
+                                       createdByAvatarUrl,
+                                       comment,
+                                       Instant.now(),
+                                       null);
     }
 
     public static ShareAndHelpComment restore(final UUID id,
@@ -67,13 +67,13 @@ public final class ShareAndHelpComment {
                                               final Instant createdAt,
                                               final Instant deletedAt) {
         return new ShareAndHelpComment(id,
-                postId,
-                createdByUserId,
-                createdByDisplayName,
-                createdByAvatarUrl,
-                comment,
-                createdAt,
-                deletedAt);
+                                       postId,
+                                       createdByUserId,
+                                       createdByDisplayName,
+                                       createdByAvatarUrl,
+                                       comment,
+                                       createdAt,
+                                       deletedAt);
     }
 
     public void delete() {

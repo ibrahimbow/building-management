@@ -3,6 +3,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.api.controller;
 import com.why.buildingmanagement.shareandhelp.application.port.in.*;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.shareandhelp.domain.model.UserRole;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.CreateShareAndHelpPostRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.UpdateShareAndHelpPostRequest;
@@ -42,17 +43,15 @@ public class ShareAndHelpController {
         final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
         final var result = createShareAndHelpPostUseCase.create(
-                        new CreateShareAndHelpPostCommand(
-                                        buildingId,
-                                        currentUser.userId(),
-                                        currentUser.displayName(),
-                                        currentUser.avatarUrl(),
-                                        request.title(),
-                                        request.description(),
-                                        request.imageUrl()));
+                        new CreateShareAndHelpPostCommand(buildingId,
+                                                          currentUser.userId(),
+                                                          currentUser.displayName(),
+                                                          currentUser.avatarUrl(),
+                                                          request.title(),
+                                                          request.description(),
+                                                          request.imageUrl()));
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(shareAndHelpApiMapper.toResponse(result));
+        return ResponseEntity.status(HttpStatus.CREATED).body(shareAndHelpApiMapper.toResponse(result));
     }
 
     @GetMapping
@@ -61,11 +60,10 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
         final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
 
-        final List<ShareAndHelpPostResponse> response = getShareAndHelpPostsUseCase
-                        .getByBuildingId(buildingId)
-                        .stream()
-                        .map(shareAndHelpApiMapper::toResponse)
-                        .toList();
+        final List<ShareAndHelpPostResponse> response = getShareAndHelpPostsUseCase.getByBuildingId(buildingId)
+                                                                                   .stream()
+                                                                                   .map(shareAndHelpApiMapper::toResponse)
+                                                                                   .toList();
 
         return ResponseEntity.ok(response);
     }
@@ -77,12 +75,11 @@ public class ShareAndHelpController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         final var result = updateShareAndHelpPostUseCase.update(
-                        new UpdateShareAndHelpPostCommand(
-                                        postId,
-                                        currentUser.userId(),
-                                        request.title(),
-                                        request.description(),
-                                        request.imageUrl()));
+                        new UpdateShareAndHelpPostCommand(postId,
+                                                          currentUser.userId(),
+                                                          request.title(),
+                                                          request.description(),
+                                                          request.imageUrl()));
 
         return ResponseEntity.ok(shareAndHelpApiMapper.toResponse(result));
     }
@@ -92,8 +89,7 @@ public class ShareAndHelpController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        deleteShareAndHelpPostUseCase.delete(
-                        new DeleteShareAndHelpPostCommand(postId, currentUser.userId()));
+        deleteShareAndHelpPostUseCase.delete(new DeleteShareAndHelpPostCommand(postId, currentUser.userId()));
 
         return ResponseEntity.noContent().build();
     }
@@ -104,16 +100,13 @@ public class ShareAndHelpController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        final var result = addCommentUseCase.addComment(
-                        new AddCommentCommand(
-                                        postId,
-                                        currentUser.userId(),
-                                        currentUser.displayName(),
-                                        currentUser.avatarUrl(),
-                                        request.comment()));
+        final var result = addCommentUseCase.addComment(new AddCommentCommand(postId,
+                                                                              currentUser.userId(),
+                                                                              currentUser.displayName(),
+                                                                              currentUser.avatarUrl(),
+                                                                              request.comment()));
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(shareAndHelpApiMapper.toResponse(result));
+        return ResponseEntity.status(HttpStatus.CREATED).body(shareAndHelpApiMapper.toResponse(result));
     }
 
     @DeleteMapping("/{postId}/comments/{commentId}")
@@ -134,15 +127,12 @@ public class ShareAndHelpController {
 
     private UUID resolveBuildingIdForCurrentUser(final CurrentUser currentUser) {
 
-        final String role = currentUser.role().toUpperCase();
+        final UserRole role = UserRole.from(currentUser.role());
 
-        if ("MANAGER".equals(role) || "ADMIN".equals(role)) {
-
-            return loadManagerBuildingPort.loadManagedBuildingIdByManagerUserId(
-                            currentUser.userId());
+        if (role.usesManagedBuilding()) {
+            return loadManagerBuildingPort.loadManagedBuildingIdByManagerUserId(currentUser.userId());
         }
 
-        return loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(
-                        currentUser.userId());
+        return loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(currentUser.userId());
     }
 }

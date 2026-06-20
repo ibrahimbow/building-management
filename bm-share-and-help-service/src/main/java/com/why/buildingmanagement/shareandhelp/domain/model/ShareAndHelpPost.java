@@ -2,14 +2,11 @@ package com.why.buildingmanagement.shareandhelp.domain.model;
 
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostDeletedException;
+import com.why.buildingmanagement.shareandhelp.domain.validation.ShareAndHelpPostValidator;
 import lombok.Getter;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
 public final class ShareAndHelpPost {
@@ -44,25 +41,20 @@ public final class ShareAndHelpPost {
                              final Instant updatedAt,
                              final Instant deletedAt,
                              final List<ShareAndHelpComment> comments) {
-        this.id = Objects.requireNonNull(id);
-        this.buildingId = Objects.requireNonNull(buildingId);
-
-        this.createdByUserId = Objects.requireNonNull(createdByUserId);
-        this.createdByDisplayName = createdByDisplayName;
-        this.createdByAvatarUrl = createdByAvatarUrl;
-
-        this.title = title;
-        this.description = description;
-        this.imageUrl = imageUrl;
-
-        this.createdAt = Objects.requireNonNull(createdAt);
-
-        this.updatedAt = updatedAt;
+        this.id = ShareAndHelpPostValidator.validateId(id);
+        this.buildingId = ShareAndHelpPostValidator.validateBuildingId(buildingId);
+        this.createdByUserId = ShareAndHelpPostValidator.validateCreatedByUserId(createdByUserId);
+        this.createdByDisplayName = ShareAndHelpPostValidator.validateDisplayName(createdByDisplayName);
+        this.createdByAvatarUrl = ShareAndHelpPostValidator.validateAvatarUrl(createdByAvatarUrl);
+        this.title = ShareAndHelpPostValidator.validateTitle(title);
+        this.description = ShareAndHelpPostValidator.validateDescription(description);
+        this.imageUrl = ShareAndHelpPostValidator.validateImageUrl(imageUrl);
+        this.createdAt = ShareAndHelpPostValidator.validateCreatedAt(createdAt);
+        this.updatedAt = ShareAndHelpPostValidator.validateUpdatedAt(updatedAt);
         this.deletedAt = deletedAt;
-
         this.comments = new ArrayList<>(comments == null
-                ? List.of()
-                : comments);
+                                                        ? List.of()
+                                                        : comments);
     }
 
     public static ShareAndHelpPost createNew(final UUID buildingId,
@@ -75,17 +67,17 @@ public final class ShareAndHelpPost {
         final Instant now = Instant.now();
 
         return new ShareAndHelpPost(UUID.randomUUID(),
-                buildingId,
-                createdByUserId,
-                createdByDisplayName,
-                createdByAvatarUrl,
-                title,
-                description,
-                imageUrl,
-                now,
-                now,
-                null,
-                List.of());
+                                    buildingId,
+                                    createdByUserId,
+                                    createdByDisplayName,
+                                    createdByAvatarUrl,
+                                    title,
+                                    description,
+                                    imageUrl,
+                                    now,
+                                    now,
+                                    null,
+                                    List.of());
     }
 
     public static ShareAndHelpPost restore(final UUID id,
@@ -101,27 +93,28 @@ public final class ShareAndHelpPost {
                                            final Instant deletedAt,
                                            final List<ShareAndHelpComment> comments) {
         return new ShareAndHelpPost(id,
-                buildingId,
-                createdByUserId,
-                createdByDisplayName,
-                createdByAvatarUrl,
-                title,
-                description,
-                imageUrl,
-                createdAt,
-                updatedAt,
-                deletedAt,
-                comments);
+                                    buildingId,
+                                    createdByUserId,
+                                    createdByDisplayName,
+                                    createdByAvatarUrl,
+                                    title,
+                                    description,
+                                    imageUrl,
+                                    createdAt,
+                                    updatedAt,
+                                    deletedAt,
+                                    comments);
     }
 
     public void update(final String title,
                        final String description,
                        final String imageUrl) {
+
         ensureNotDeleted();
 
-        this.title = title;
-        this.description = description;
-        this.imageUrl = imageUrl;
+        this.title = ShareAndHelpPostValidator.validateTitle(title);
+        this.description = ShareAndHelpPostValidator.validateDescription(description);
+        this.imageUrl = ShareAndHelpPostValidator.validateImageUrl(imageUrl);
         this.updatedAt = Instant.now();
     }
 
@@ -155,9 +148,9 @@ public final class ShareAndHelpPost {
         ensureNotDeleted();
 
         final ShareAndHelpComment comment = comments.stream()
-                        .filter(currentComment -> currentComment.getId().equals(commentId))
-                        .findFirst()
-                        .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(commentId));
+                                                    .filter(currentComment -> currentComment.getId().equals(commentId))
+                                                    .findFirst()
+                                                    .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(commentId));
 
         comment.delete();
 

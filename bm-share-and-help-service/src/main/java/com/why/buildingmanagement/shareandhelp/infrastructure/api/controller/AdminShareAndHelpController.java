@@ -26,11 +26,10 @@ public class AdminShareAndHelpController {
     @GetMapping
     public ResponseEntity<List<ShareAndHelpPostResponse>> getAllPostsForAdmin() {
 
-        final List<ShareAndHelpPostResponse> response = adminGetShareAndHelpPostsUseCase
-                        .getAllPostsForAdmin()
-                        .stream()
-                        .map(shareAndHelpApiMapper::toResponse)
-                        .toList();
+        final List<ShareAndHelpPostResponse> response = adminGetShareAndHelpPostsUseCase.getAllPostsForAdmin()
+                                                                                        .stream()
+                                                                                        .map(shareAndHelpApiMapper::toResponse)
+                                                                                        .toList();
 
         return ResponseEntity.ok(response);
     }
@@ -47,9 +46,7 @@ public class AdminShareAndHelpController {
     public ResponseEntity<Void> deleteCommentByAdmin(@PathVariable("postId") final UUID postId,
                                                      @PathVariable("commentId") final UUID commentId) {
 
-        adminDeleteCommentUseCase.deleteCommentByAdmin(
-                        postId,
-                        commentId);
+        adminDeleteCommentUseCase.deleteCommentByAdmin(postId, commentId);
 
         return ResponseEntity.noContent().build();
     }

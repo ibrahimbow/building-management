@@ -31,16 +31,16 @@ public class ShareAndHelpPersistenceAdapter implements SaveShareAndHelpPostPort,
     public List<ShareAndHelpPost> loadByBuildingId(final UUID buildingId) {
 
         return repository.findAllByBuildingIdAndDeletedAtIsNullOrderByCreatedAtDesc(buildingId)
-                        .stream()
-                        .map(mapper::toDomain)
-                        .toList();
+                         .stream()
+                         .map(mapper::toDomain)
+                         .toList();
     }
 
     @Override
     public Optional<ShareAndHelpPost> loadById(final UUID postId) {
 
         return repository.findByIdAndDeletedAtIsNull(postId)
-                        .map(mapper::toDomain);
+                         .map(mapper::toDomain);
     }
 
     @Override
@@ -48,15 +48,15 @@ public class ShareAndHelpPersistenceAdapter implements SaveShareAndHelpPostPort,
                                                                  final Long createdByUserId) {
 
         return repository.findByIdAndCreatedByUserIdAndDeletedAtIsNull(postId, createdByUserId)
-                        .map(mapper::toDomain);
+                         .map(mapper::toDomain);
     }
 
     @Override
     public List<ShareAndHelpPost> loadAll() {
 
         return repository.findAllByDeletedAtIsNullOrderByCreatedAtDesc()
-                        .stream()
-                        .map(mapper::toDomain)
-                        .toList();
+                         .stream()
+                         .map(mapper::toDomain)
+                         .toList();
     }
 }

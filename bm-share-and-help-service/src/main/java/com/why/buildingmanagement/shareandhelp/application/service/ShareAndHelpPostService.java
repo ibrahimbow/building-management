@@ -19,13 +19,12 @@ import java.util.UUID;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class ShareAndHelpPostService implements
-                CreateShareAndHelpPostUseCase,
-                GetShareAndHelpPostsUseCase,
-                UpdateShareAndHelpPostUseCase,
-                DeleteShareAndHelpPostUseCase,
-                AdminDeleteShareAndHelpPostUseCase,
-                AdminGetShareAndHelpPostsUseCase {
+public class ShareAndHelpPostService implements CreateShareAndHelpPostUseCase,
+                                                GetShareAndHelpPostsUseCase,
+                                                UpdateShareAndHelpPostUseCase,
+                                                DeleteShareAndHelpPostUseCase,
+                                                AdminDeleteShareAndHelpPostUseCase,
+                                                AdminGetShareAndHelpPostsUseCase {
 
     private final LoadShareAndHelpPostPort loadShareAndHelpPostPort;
     private final SaveShareAndHelpPostPort saveShareAndHelpPostPort;
@@ -35,25 +34,22 @@ public class ShareAndHelpPostService implements
     @Override
     public ShareAndHelpPostResult create(final CreateShareAndHelpPostCommand command) {
 
-        final ShareAndHelpPost post = ShareAndHelpPost.createNew(
-                        command.buildingId(),
-                        command.createdByUserId(),
-                        command.createdByDisplayName(),
-                        command.createdByAvatarUrl(),
-                        command.title(),
-                        command.description(),
-                        command.imageUrl());
+        final ShareAndHelpPost post = ShareAndHelpPost.createNew(command.buildingId(),
+                                                                 command.createdByUserId(),
+                                                                 command.createdByDisplayName(),
+                                                                 command.createdByAvatarUrl(),
+                                                                 command.title(),
+                                                                 command.description(),
+                                                                 command.imageUrl());
 
         final ShareAndHelpPost savedPost = saveShareAndHelpPostPort.save(post);
 
-        shareAndHelpEventPublisher.publishPostCreated(
-                        new ShareAndHelpPostCreatedEvent(
-                                        savedPost.getId(),
-                                        savedPost.getBuildingId(),
-                                        savedPost.getCreatedByUserId(),
-                                        savedPost.getTitle(),
-                                        savedPost.getCreatedByDisplayName(),
-                                        savedPost.getCreatedAt()));
+        shareAndHelpEventPublisher.publishPostCreated(new ShareAndHelpPostCreatedEvent(savedPost.getId(),
+                                                                                       savedPost.getBuildingId(),
+                                                                                       savedPost.getCreatedByUserId(),
+                                                                                       savedPost.getTitle(),
+                                                                                       savedPost.getCreatedByDisplayName(),
+                                                                                       savedPost.getCreatedAt()));
 
         return shareAndHelpResultMapper.toResult(savedPost);
     }
@@ -63,22 +59,20 @@ public class ShareAndHelpPostService implements
     public List<ShareAndHelpPostResult> getByBuildingId(final UUID buildingId) {
 
         return loadShareAndHelpPostPort.loadByBuildingId(buildingId)
-                        .stream()
-                        .map(shareAndHelpResultMapper::toResult)
-                        .toList();
+                                       .stream()
+                                       .map(shareAndHelpResultMapper::toResult)
+                                       .toList();
     }
 
     @Override
     public ShareAndHelpPostResult update(final UpdateShareAndHelpPostCommand command) {
 
-        final ShareAndHelpPost post = loadShareAndHelpPostPort
-                        .loadByIdAndCreatedByUserId(command.postId(), command.userId())
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
+        final ShareAndHelpPost post = loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(command.postId(), command.userId())
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
 
-        post.update(
-                        command.title(),
-                        command.description(),
-                        command.imageUrl());
+        post.update(command.title(),
+                    command.description(),
+                    command.imageUrl());
 
         final ShareAndHelpPost savedPost = saveShareAndHelpPostPort.save(post);
 
@@ -88,9 +82,8 @@ public class ShareAndHelpPostService implements
     @Override
     public void delete(final DeleteShareAndHelpPostCommand command) {
 
-        final ShareAndHelpPost post = loadShareAndHelpPostPort
-                        .loadByIdAndCreatedByUserId(command.postId(), command.userId())
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
+        final ShareAndHelpPost post = loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(command.postId(), command.userId())
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
 
         post.delete();
 
@@ -100,9 +93,8 @@ public class ShareAndHelpPostService implements
     @Override
     public void deletePostByAdmin(final UUID postId) {
 
-        final ShareAndHelpPost post = loadShareAndHelpPostPort
-                        .loadById(postId)
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(postId));
+        final ShareAndHelpPost post = loadShareAndHelpPostPort.loadById(postId)
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(postId));
 
         post.delete();
 
@@ -113,8 +105,8 @@ public class ShareAndHelpPostService implements
     public List<ShareAndHelpPostResult> getAllPostsForAdmin() {
 
         return loadShareAndHelpPostPort.loadAll()
-                        .stream()
-                        .map(shareAndHelpResultMapper::toResult)
-                        .toList();
+                                       .stream()
+                                       .map(shareAndHelpResultMapper::toResult)
+                                       .toList();
     }
 }

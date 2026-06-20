@@ -1,5 +1,8 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.security;
 
+import com.why.buildingmanagement.shareandhelp.infrastructure.security.exception.InvalidUserHeaderException;
+import com.why.buildingmanagement.shareandhelp.infrastructure.security.exception.MissingUserHeaderException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.annotation.RequestScope;
 
@@ -13,21 +16,31 @@ public class CurrentUserService {
     private static final String USER_DISPLAY_NAME_HEADER = "X-User-Display-Name";
     private static final String USER_AVATAR_URL_HEADER = "X-User-Avatar-Url";
 
-    private final jakarta.servlet.http.HttpServletRequest request;
+    private final HttpServletRequest request;
 
-    public CurrentUserService(final jakarta.servlet.http.HttpServletRequest request) {
+    public CurrentUserService(final HttpServletRequest request) {
 
         this.request = request;
     }
 
     public CurrentUser getCurrentUser() {
 
-        return new CurrentUser(
-                        Long.valueOf(requiredHeader(USER_ID_HEADER)),
-                        requiredHeader(USER_EMAIL_HEADER),
-                        requiredHeader(USER_ROLE_HEADER),
-                        requiredHeader(USER_DISPLAY_NAME_HEADER),
-                        optionalHeader(USER_AVATAR_URL_HEADER));
+        return new CurrentUser(requiredLongHeader(USER_ID_HEADER),
+                               requiredHeader(USER_EMAIL_HEADER),
+                               requiredHeader(USER_ROLE_HEADER),
+                               requiredHeader(USER_DISPLAY_NAME_HEADER),
+                               optionalHeader(USER_AVATAR_URL_HEADER));
+    }
+
+    private Long requiredLongHeader(final String name) {
+
+        final String value = requiredHeader(name);
+
+        try {
+            return Long.valueOf(value);
+        } catch (final NumberFormatException ex) {
+            throw new InvalidUserHeaderException(name, value);
+        }
     }
 
     private String requiredHeader(final String name) {
@@ -35,14 +48,13 @@ public class CurrentUserService {
         final String value = request.getHeader(name);
 
         if (value == null || value.isBlank()) {
-            throw new IllegalStateException("Missing required user header: " + name);
+            throw new MissingUserHeaderException(name);
         }
 
         return value;
     }
 
     private String optionalHeader(final String name) {
-
         return request.getHeader(name);
     }
 }

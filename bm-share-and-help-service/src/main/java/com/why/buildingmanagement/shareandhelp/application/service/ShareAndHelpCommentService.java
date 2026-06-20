@@ -32,29 +32,26 @@ public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteComm
     public ShareAndHelpPostResult addComment(final AddCommentCommand command) {
 
         final ShareAndHelpPost post = loadShareAndHelpPostPort.loadById(command.postId())
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
 
-        final ShareAndHelpComment comment = ShareAndHelpComment.createNew(
-                        command.postId(),
-                        command.createdByUserId(),
-                        command.createdByDisplayName(),
-                        command.createdByAvatarUrl(),
-                        command.comment());
+        final ShareAndHelpComment comment = ShareAndHelpComment.createNew(command.postId(),
+                                                                          command.createdByUserId(),
+                                                                          command.createdByDisplayName(),
+                                                                          command.createdByAvatarUrl(),
+                                                                          command.comment());
 
         post.addComment(comment);
 
         final ShareAndHelpPost savedPost = saveShareAndHelpPostPort.save(post);
 
-        shareAndHelpEventPublisher.publishCommentCreated(
-                        new ShareAndHelpCommentCreatedEvent(
-                                        comment.getId(),
-                                        savedPost.getId(),
-                                        savedPost.getBuildingId(),
-                                        savedPost.getCreatedByUserId(),
-                                        command.createdByUserId(),
-                                        savedPost.getTitle(),
-                                        command.createdByDisplayName(),
-                                        comment.getCreatedAt()));
+        shareAndHelpEventPublisher.publishCommentCreated(new ShareAndHelpCommentCreatedEvent(comment.getId(),
+                                                                                             savedPost.getId(),
+                                                                                             savedPost.getBuildingId(),
+                                                                                             savedPost.getCreatedByUserId(),
+                                                                                             command.createdByUserId(),
+                                                                                             savedPost.getTitle(),
+                                                                                             command.createdByDisplayName(),
+                                                                                             comment.getCreatedAt()));
 
         return shareAndHelpResultMapper.toResult(savedPost);
     }
@@ -63,14 +60,14 @@ public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteComm
     public void deleteComment(final DeleteCommentCommand command) {
 
         final ShareAndHelpPost post = loadShareAndHelpPostPort.loadById(command.postId())
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
 
         final ShareAndHelpComment comment = post.getComments()
-                        .stream()
-                        .filter(existingComment -> existingComment.getId().equals(command.commentId()))
-                        .filter(existingComment -> existingComment.isOwnedBy(command.userId()))
-                        .findFirst()
-                        .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(command.commentId()));
+                                                .stream()
+                                                .filter(existingComment -> existingComment.getId().equals(command.commentId()))
+                                                .filter(existingComment -> existingComment.isOwnedBy(command.userId()))
+                                                .findFirst()
+                                                .orElseThrow(() -> new ShareAndHelpCommentNotFoundException(command.commentId()));
 
         comment.delete();
 
@@ -81,7 +78,7 @@ public class ShareAndHelpCommentService implements AddCommentUseCase, DeleteComm
     public void deleteCommentByAdmin(final UUID postId, final UUID commentId) {
 
         final ShareAndHelpPost post = loadShareAndHelpPostPort.loadById(postId)
-                        .orElseThrow(() -> new ShareAndHelpPostNotFoundException(postId));
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(postId));
 
         post.deleteComment(commentId);
 
