@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.notification.infrastructure.client;
 
 import com.why.buildingmanagement.notification.application.port.out.LoadBuildingManagerUserPort;
+import com.why.buildingmanagement.notification.infrastructure.exception.BuildingManagerNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,17 +22,16 @@ public class BuildingServiceBuildingManagerAdapter implements LoadBuildingManage
     public Long loadManagerUserIdByBuildingId(final UUID buildingId) {
 
         final BuildingManagerResponse response = restClientBuilder.build()
-                        .get()
-                        .uri(buildingServiceUrl
-                                        + "/internal/buildings/"
-                                        + buildingId
-                                        + "/manager")
-                        .retrieve()
-                        .body(BuildingManagerResponse.class);
+                                                                  .get()
+                                                                  .uri(buildingServiceUrl
+                                                                                       + "/internal/buildings/"
+                                                                                       + buildingId
+                                                                                       + "/manager")
+                                                                  .retrieve()
+                                                                  .body(BuildingManagerResponse.class);
 
         if (response == null) {
-            throw new IllegalStateException(
-                            "Building has no manager: " + buildingId);
+            throw new BuildingManagerNotFoundException(buildingId);
         }
 
         return response.managerUserId();

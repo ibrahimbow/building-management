@@ -20,8 +20,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AnnouncementEventListener {
 
-    private static final String ANNOUNCEMENT_CREATED_TOPIC =
-                    KafkaTopics.ANNOUNCEMENT_CREATED_V1;
+    private static final String ANNOUNCEMENT_CREATED_TOPIC = KafkaTopics.ANNOUNCEMENT_CREATED_V1;
 
     private final CreateNotificationUseCase createNotificationUseCase;
     private final LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
@@ -34,37 +33,35 @@ public class AnnouncementEventListener {
     public void handleAnnouncementCreated(final AnnouncementCreatedEvent event) {
 
         log.info("Received announcement created event: announcementId={}, buildingId={}, title={}",
-                        event.announcementId(),
-                        event.buildingId(),
-                        event.title());
+                 event.announcementId(),
+                 event.buildingId(),
+                 event.title());
 
-        final Set<Long> recipientUserIds = new LinkedHashSet<>(
-                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
+        final Set<Long> recipientUserIds = new LinkedHashSet<>(loadBuildingTenantUsersPort
+                                                                               .loadTenantUserIds(event.buildingId()));
 
-        final Long managerUserId =
-                        loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
+        final Long managerUserId = loadBuildingManagerUserPort
+                        .loadManagerUserIdByBuildingId(event.buildingId());
 
         recipientUserIds.remove(managerUserId);
 
         if (recipientUserIds.isEmpty()) {
 
             log.info("No announcement recipients found for buildingId={}",
-                            event.buildingId());
+                     event.buildingId());
 
             return;
         }
 
-        recipientUserIds.forEach(userId ->
-                        createNotificationUseCase.createNotification(
-                                        new CreateNotificationCommand(
-                                                        userId,
-                                                        event.buildingId(),
-                                                        NotificationType.ANNOUNCEMENT,
-                                                        event.title(),
-                                                        event.title())));
+        recipientUserIds.forEach(userId -> createNotificationUseCase.createNotification(
+                        new CreateNotificationCommand(userId,
+                                                      event.buildingId(),
+                                                      NotificationType.ANNOUNCEMENT,
+                                                      event.title(),
+                                                      event.title())));
 
         log.info("Created {} announcement notifications for buildingId={}",
-                        recipientUserIds.size(),
-                        event.buildingId());
+                 recipientUserIds.size(),
+                 event.buildingId());
     }
 }

@@ -23,21 +23,21 @@ public class BuildingTenantClientAdapter implements LoadBuildingTenantUsersPort 
     public List<Long> loadTenantUserIds(final UUID buildingId) {
 
         final List<BuildingTenantResponse> response = restClientBuilder.build()
-                        .get()
-                        .uri(buildingServiceUrl
-                                        + "/internal/buildings/"
-                                        + buildingId
-                                        + "/active-tenants")
-                        .retrieve()
-                        .body(new ParameterizedTypeReference<>() {
-                        });
+                                                                       .get()
+                                                                       .uri(buildingServiceUrl
+                                                                                            + "/internal/buildings/"
+                                                                                            + buildingId
+                                                                                            + "/active-tenants")
+                                                                       .retrieve()
+                                                                       .body(new ParameterizedTypeReference<>() {
+                                                                       });
 
         if (response == null) {
             return List.of();
         }
 
         return response.stream()
-                        .map(BuildingTenantResponse::userId)
-                        .toList();
+                       .map(BuildingTenantResponse::userId)
+                       .toList();
     }
 }

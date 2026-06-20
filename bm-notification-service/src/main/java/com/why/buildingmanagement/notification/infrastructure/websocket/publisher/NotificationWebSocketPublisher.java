@@ -13,16 +13,14 @@ public class NotificationWebSocketPublisher {
 
     public void publishNotification(final NotificationResult notification) {
 
-        messagingTemplate.convertAndSend(
-                        "/topic/users/" + notification.userId() + "/notifications",
-                        notification);
+        messagingTemplate.convertAndSend("/topic/users/" + notification.userId() + "/notifications",
+                                         notification);
     }
 
     public void publishAnnouncementToBuilding(final NotificationResult notification) {
 
-        messagingTemplate.convertAndSend(
-                        "/topic/buildings/" + notification.buildingId() + "/announcements",
-                        notification);
+        messagingTemplate.convertAndSend("/topic/buildings/" + notification.buildingId() + "/announcements",
+                                         notification);
     }
 
 }

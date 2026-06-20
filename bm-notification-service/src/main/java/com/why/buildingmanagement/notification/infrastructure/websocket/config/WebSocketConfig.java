@@ -22,7 +22,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void registerStompEndpoints(final StompEndpointRegistry registry) {
 
         registry.addEndpoint("/ws/notifications")
-                        .setAllowedOriginPatterns("*")
-                        .withSockJS();
+                .setAllowedOriginPatterns("*")
+                .withSockJS();
     }
 }

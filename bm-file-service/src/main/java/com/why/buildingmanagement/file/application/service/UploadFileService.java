@@ -14,10 +14,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UploadFileService implements UploadFileUseCase {
 
-    private static final List<String> ALLOWED_CONTENT_TYPES = List.of(
-            "image/jpeg",
-            "image/png",
-            "image/webp");
+    private static final List<String> ALLOWED_CONTENT_TYPES = List.of("image/jpeg",
+                                                                      "image/png",
+                                                                      "image/webp");
 
     private final StoreFilePort storeFilePort;
 
@@ -37,8 +36,7 @@ public class UploadFileService implements UploadFileUseCase {
 
         final String contentType = command.file().getContentType();
 
-        if (contentType == null ||
-                !ALLOWED_CONTENT_TYPES.contains(contentType)) {
+        if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType)) {
 
             throw new InvalidFileException("Only JPG, PNG and WEBP images are allowed.");
         }

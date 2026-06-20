@@ -17,11 +17,10 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
-public class NotificationApplicationService implements
-                CreateNotificationUseCase,
-                GetMyNotificationsUseCase,
-                GetUnreadNotificationCountUseCase,
-                MarkNotificationAsReadUseCase {
+public class NotificationApplicationService implements CreateNotificationUseCase,
+                                                       GetMyNotificationsUseCase,
+                                                       GetUnreadNotificationCountUseCase,
+                                                       MarkNotificationAsReadUseCase {
 
     private final NotificationRepositoryPort notificationRepositoryPort;
     private final NotificationWebSocketPublisher notificationWebSocketPublisher;
@@ -30,12 +29,11 @@ public class NotificationApplicationService implements
     @Transactional
     public NotificationResult createNotification(final CreateNotificationCommand command) {
 
-        final Notification notification = Notification.createNew(
-                        command.userId(),
-                        command.buildingId(),
-                        command.type(),
-                        command.title(),
-                        command.message());
+        final Notification notification = Notification.createNew(command.userId(),
+                                                                 command.buildingId(),
+                                                                 command.type(),
+                                                                 command.title(),
+                                                                 command.message());
 
         final NotificationResult result = toResult(notificationRepositoryPort.save(notification));
 
@@ -49,9 +47,9 @@ public class NotificationApplicationService implements
     public List<NotificationResult> getMyNotifications(final GetMyNotificationsCommand command) {
 
         return notificationRepositoryPort.findByUserIdOrderByCreatedAtDesc(command.userId())
-                        .stream()
-                        .map(this::toResult)
-                        .toList();
+                                         .stream()
+                                         .map(this::toResult)
+                                         .toList();
     }
 
     @Override
@@ -64,14 +62,12 @@ public class NotificationApplicationService implements
     @Transactional
     public NotificationResult markNotificationAsRead(final MarkNotificationAsReadCommand command) {
 
-        final Notification notification = notificationRepositoryPort
-                        .findById(command.notificationId())
-                        .orElseThrow(() -> new NotificationNotFoundException(command.notificationId()));
+        final Notification notification = notificationRepositoryPort.findById(command.notificationId())
+                                                                    .orElseThrow(() -> new NotificationNotFoundException(command.notificationId()));
 
         notification.markAsRead();
 
-        final NotificationResult result =
-                        toResult(notificationRepositoryPort.save(notification));
+        final NotificationResult result = toResult(notificationRepositoryPort.save(notification));
 
         notificationWebSocketPublisher.publishNotification(result);
 
@@ -80,15 +76,14 @@ public class NotificationApplicationService implements
 
     private NotificationResult toResult(final Notification notification) {
 
-        return new NotificationResult(
-                        notification.getId(),
-                        notification.getUserId(),
-                        notification.getBuildingId(),
-                        notification.getType(),
-                        notification.getTitle(),
-                        notification.getMessage(),
-                        notification.isRead(),
-                        notification.getCreatedAt(),
-                        notification.getReadAt());
+        return new NotificationResult(notification.getId(),
+                                      notification.getUserId(),
+                                      notification.getBuildingId(),
+                                      notification.getType(),
+                                      notification.getTitle(),
+                                      notification.getMessage(),
+                                      notification.isRead(),
+                                      notification.getCreatedAt(),
+                                      notification.getReadAt());
     }
 }

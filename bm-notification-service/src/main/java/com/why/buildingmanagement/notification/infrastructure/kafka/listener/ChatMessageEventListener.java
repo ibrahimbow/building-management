@@ -20,8 +20,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ChatMessageEventListener {
 
-    private static final String CHAT_MESSAGE_CREATED_TOPIC =
-                    KafkaTopics.CHAT_MESSAGE_CREATED_V1;
+    private static final String CHAT_MESSAGE_CREATED_TOPIC = KafkaTopics.CHAT_MESSAGE_CREATED_V1;
 
     private final CreateNotificationUseCase createNotificationUseCase;
     private final LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
@@ -34,15 +33,13 @@ public class ChatMessageEventListener {
     public void handleChatMessageCreated(final ChatMessageCreatedEvent event) {
 
         log.info("Received chat message created event: messageId={}, buildingId={}, senderUserId={}",
-                        event.messageId(),
-                        event.buildingId(),
-                        event.senderUserId());
+                 event.messageId(),
+                 event.buildingId(),
+                 event.senderUserId());
 
-        final Set<Long> recipientUserIds = new LinkedHashSet<>(
-                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
+        final Set<Long> recipientUserIds = new LinkedHashSet<>(loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
 
-        final Long managerUserId =
-                        loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
+        final Long managerUserId = loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
 
         recipientUserIds.add(managerUserId);
         recipientUserIds.remove(event.senderUserId());
@@ -50,23 +47,21 @@ public class ChatMessageEventListener {
         if (recipientUserIds.isEmpty()) {
 
             log.info("No chat notification recipients found for buildingId={}, senderUserId={}",
-                            event.buildingId(),
-                            event.senderUserId());
+                     event.buildingId(),
+                     event.senderUserId());
 
             return;
         }
 
-        recipientUserIds.forEach(userId ->
-                        createNotificationUseCase.createNotification(
-                                        new CreateNotificationCommand(
-                                                        userId,
-                                                        event.buildingId(),
-                                                        NotificationType.CHAT,
-                                                        "New chat message",
-                                                        event.senderDisplayName() + " sent a new message")));
+        recipientUserIds.forEach(userId -> createNotificationUseCase.createNotification(
+                        new CreateNotificationCommand(userId,
+                                                      event.buildingId(),
+                                                      NotificationType.CHAT,
+                                                      "New chat message",
+                                                      event.senderDisplayName() + " sent a new message")));
 
         log.info("Created {} chat notifications for buildingId={}",
-                        recipientUserIds.size(),
-                        event.buildingId());
+                 recipientUserIds.size(),
+                 event.buildingId());
     }
 }

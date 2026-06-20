@@ -4,6 +4,5 @@ public record UploadedFileResult(
         String fileName,
         String url,
         String contentType,
-        long size
-) {
+        long size) {
 }

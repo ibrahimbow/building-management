@@ -1,11 +1,6 @@
 package com.why.buildingmanagement.notification.infrastructure.api.controller;
 
-import com.why.buildingmanagement.notification.application.port.in.GetMyNotificationsCommand;
-import com.why.buildingmanagement.notification.application.port.in.GetMyNotificationsUseCase;
-import com.why.buildingmanagement.notification.application.port.in.GetUnreadNotificationCountCommand;
-import com.why.buildingmanagement.notification.application.port.in.GetUnreadNotificationCountUseCase;
-import com.why.buildingmanagement.notification.application.port.in.MarkNotificationAsReadCommand;
-import com.why.buildingmanagement.notification.application.port.in.MarkNotificationAsReadUseCase;
+import com.why.buildingmanagement.notification.application.port.in.*;
 import com.why.buildingmanagement.notification.application.result.NotificationResult;
 import com.why.buildingmanagement.notification.infrastructure.security.CurrentUser;
 import com.why.buildingmanagement.notification.infrastructure.security.CurrentUserService;
@@ -30,8 +25,7 @@ public class NotificationController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        return getMyNotificationsUseCase.getMyNotifications(
-                        new GetMyNotificationsCommand(currentUser.id()));
+        return getMyNotificationsUseCase.getMyNotifications(new GetMyNotificationsCommand(currentUser.id()));
     }
 
     @GetMapping("/unread-count")
@@ -40,8 +34,7 @@ public class NotificationController {
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
         return getUnreadNotificationCountUseCase.getUnreadNotificationCount(
-                        new GetUnreadNotificationCountCommand(
-                                        currentUser.id()));
+                        new GetUnreadNotificationCountCommand(currentUser.id()));
     }
 
     @PatchMapping("/{notificationId}/read")
@@ -49,9 +42,7 @@ public class NotificationController {
 
         final CurrentUser currentUser = currentUserService.getCurrentUser();
 
-        return markNotificationAsReadUseCase.markNotificationAsRead(
-                        new MarkNotificationAsReadCommand(
-                                        notificationId,
-                                        currentUser.id()));
+        return markNotificationAsReadUseCase.markNotificationAsRead(new MarkNotificationAsReadCommand(notificationId,
+                                                                                                      currentUser.id()));
     }
 }

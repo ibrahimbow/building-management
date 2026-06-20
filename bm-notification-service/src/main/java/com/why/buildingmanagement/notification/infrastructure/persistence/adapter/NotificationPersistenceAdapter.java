@@ -21,18 +21,17 @@ public class NotificationPersistenceAdapter implements NotificationRepositoryPor
     @Override
     public Notification save(final Notification notification) {
 
-        return notificationPersistenceMapper.toDomain(
-                        notificationRepository.save(notificationPersistenceMapper.toEntity(notification)));
+        return notificationPersistenceMapper
+                        .toDomain(notificationRepository.save(notificationPersistenceMapper.toEntity(notification)));
     }
 
     @Override
     public List<Notification> findByUserIdOrderByCreatedAtDesc(final Long userId) {
 
-        return notificationRepository
-                        .findByUserIdOrderByCreatedAtDesc(userId)
-                        .stream()
-                        .map(notificationPersistenceMapper::toDomain)
-                        .toList();
+        return notificationRepository.findByUserIdOrderByCreatedAtDesc(userId)
+                                     .stream()
+                                     .map(notificationPersistenceMapper::toDomain)
+                                     .toList();
     }
 
     @Override

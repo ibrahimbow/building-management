@@ -17,25 +17,24 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(final HttpSecurity http) throws Exception {
 
         return http.csrf(AbstractHttpConfigurer::disable)
-                        .addFilterBefore(
-                                        new HeaderAuthenticationFilter(),
-                                        UsernamePasswordAuthenticationFilter.class)
-                        .authorizeHttpRequests(auth -> auth
-                                        .requestMatchers("/ws/**").permitAll()
+                   .addFilterBefore(new HeaderAuthenticationFilter(),
+                                    UsernamePasswordAuthenticationFilter.class)
+                   .authorizeHttpRequests(auth -> auth
+                                   .requestMatchers("/ws/**").permitAll()
 
-                                        .requestMatchers(HttpMethod.GET,
-                                                        "/api/notifications",
-                                                        "/api/notifications/**",
-                                                        "/notifications",
-                                                        "/notifications/**")
-                                        .hasAnyRole(TENANT, MANAGER, ADMIN)
+                                   .requestMatchers(HttpMethod.GET,
+                                                    "/api/notifications",
+                                                    "/api/notifications/**",
+                                                    "/notifications",
+                                                    "/notifications/**")
+                                   .hasAnyRole(TENANT, MANAGER, ADMIN)
 
-                                        .requestMatchers(HttpMethod.PATCH,
-                                                        "/api/notifications/**",
-                                                        "/notifications/**")
-                                        .hasAnyRole(TENANT, MANAGER, ADMIN)
+                                   .requestMatchers(HttpMethod.PATCH,
+                                                    "/api/notifications/**",
+                                                    "/notifications/**")
+                                   .hasAnyRole(TENANT, MANAGER, ADMIN)
 
-                                        .anyRequest().authenticated())
-                        .build();
+                                   .anyRequest().authenticated())
+                   .build();
     }
 }

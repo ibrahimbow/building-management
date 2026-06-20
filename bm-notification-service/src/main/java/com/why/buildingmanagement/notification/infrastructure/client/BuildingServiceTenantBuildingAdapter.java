@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.notification.infrastructure.client;
 
 import com.why.buildingmanagement.notification.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.notification.infrastructure.exception.TenantBuildingNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -21,17 +22,16 @@ public class BuildingServiceTenantBuildingAdapter implements LoadTenantBuildingP
     public UUID loadActiveBuildingIdByTenantUserId(final Long tenantUserId) {
 
         final TenantBuildingResponse response = restClientBuilder.build()
-                        .get()
-                        .uri(buildingServiceUrl
-                                        + "/internal/tenants/"
-                                        + tenantUserId
-                                        + "/building")
-                        .retrieve()
-                        .body(TenantBuildingResponse.class);
+                                                                 .get()
+                                                                 .uri(buildingServiceUrl
+                                                                                      + "/internal/tenants/"
+                                                                                      + tenantUserId
+                                                                                      + "/building")
+                                                                 .retrieve()
+                                                                 .body(TenantBuildingResponse.class);
 
         if (response == null) {
-            throw new IllegalStateException(
-                            "Tenant has no active building: " + tenantUserId);
+            throw new TenantBuildingNotFoundException(tenantUserId);
         }
 
         return response.buildingId();

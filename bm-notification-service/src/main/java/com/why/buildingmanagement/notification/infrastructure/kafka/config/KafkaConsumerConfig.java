@@ -22,21 +22,16 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, AnnouncementCreatedEvent> announcementCreatedConsumerFactory(
-                    final KafkaProperties kafkaProperties) {
+    public ConsumerFactory<String, AnnouncementCreatedEvent> announcementCreatedConsumerFactory(final KafkaProperties kafkaProperties) {
 
-        return consumerFactory(
-                        kafkaProperties,
-                        AnnouncementCreatedEvent.class);
+        return consumerFactory(kafkaProperties, AnnouncementCreatedEvent.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, AnnouncementCreatedEvent>
-    announcementCreatedKafkaListenerContainerFactory(
-                    final ConsumerFactory<String, AnnouncementCreatedEvent> announcementCreatedConsumerFactory) {
+    announcementCreatedKafkaListenerContainerFactory(final ConsumerFactory<String, AnnouncementCreatedEvent> announcementCreatedConsumerFactory) {
 
-        final ConcurrentKafkaListenerContainerFactory<String, AnnouncementCreatedEvent> factory =
-                        new ConcurrentKafkaListenerContainerFactory<>();
+        final ConcurrentKafkaListenerContainerFactory<String, AnnouncementCreatedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(announcementCreatedConsumerFactory);
 
@@ -44,18 +39,14 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, ShareAndHelpPostCreatedEvent> shareAndHelpPostCreatedConsumerFactory(
-                    final KafkaProperties kafkaProperties) {
+    public ConsumerFactory<String, ShareAndHelpPostCreatedEvent> shareAndHelpPostCreatedConsumerFactory(final KafkaProperties kafkaProperties) {
 
-        return consumerFactory(
-                        kafkaProperties,
-                        ShareAndHelpPostCreatedEvent.class);
+        return consumerFactory(kafkaProperties, ShareAndHelpPostCreatedEvent.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ShareAndHelpPostCreatedEvent>
-    shareAndHelpPostCreatedKafkaListenerContainerFactory(
-                    final ConsumerFactory<String, ShareAndHelpPostCreatedEvent> shareAndHelpPostCreatedConsumerFactory) {
+    shareAndHelpPostCreatedKafkaListenerContainerFactory(final ConsumerFactory<String, ShareAndHelpPostCreatedEvent> shareAndHelpPostCreatedConsumerFactory) {
 
         final ConcurrentKafkaListenerContainerFactory<String, ShareAndHelpPostCreatedEvent> factory =
                         new ConcurrentKafkaListenerContainerFactory<>();
@@ -66,21 +57,16 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, ShareAndHelpCommentCreatedEvent> shareAndHelpCommentCreatedConsumerFactory(
-                    final KafkaProperties kafkaProperties) {
+    public ConsumerFactory<String, ShareAndHelpCommentCreatedEvent> shareAndHelpCommentCreatedConsumerFactory(final KafkaProperties kafkaProperties) {
 
-        return consumerFactory(
-                        kafkaProperties,
-                        ShareAndHelpCommentCreatedEvent.class);
+        return consumerFactory(kafkaProperties, ShareAndHelpCommentCreatedEvent.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ShareAndHelpCommentCreatedEvent>
-    shareAndHelpCommentCreatedKafkaListenerContainerFactory(
-                    final ConsumerFactory<String, ShareAndHelpCommentCreatedEvent> shareAndHelpCommentCreatedConsumerFactory) {
+    shareAndHelpCommentCreatedKafkaListenerContainerFactory(final ConsumerFactory<String, ShareAndHelpCommentCreatedEvent> shareAndHelpCommentCreatedConsumerFactory) {
 
-        final ConcurrentKafkaListenerContainerFactory<String, ShareAndHelpCommentCreatedEvent> factory =
-                        new ConcurrentKafkaListenerContainerFactory<>();
+        final ConcurrentKafkaListenerContainerFactory<String, ShareAndHelpCommentCreatedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(shareAndHelpCommentCreatedConsumerFactory);
 
@@ -88,41 +74,33 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
-    public ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory(
-                    final KafkaProperties kafkaProperties) {
+    public ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory(final KafkaProperties kafkaProperties) {
 
-        return consumerFactory(
-                        kafkaProperties,
-                        ChatMessageCreatedEvent.class);
+        return consumerFactory(kafkaProperties, ChatMessageCreatedEvent.class);
     }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent>
-    chatMessageCreatedKafkaListenerContainerFactory(
-                    final ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory) {
+    chatMessageCreatedKafkaListenerContainerFactory(final ConsumerFactory<String, ChatMessageCreatedEvent> chatMessageCreatedConsumerFactory) {
 
-        final ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent> factory =
-                        new ConcurrentKafkaListenerContainerFactory<>();
+        final ConcurrentKafkaListenerContainerFactory<String, ChatMessageCreatedEvent> factory = new ConcurrentKafkaListenerContainerFactory<>();
 
         factory.setConsumerFactory(chatMessageCreatedConsumerFactory);
 
         return factory;
     }
 
-    private <T> ConsumerFactory<String, T> consumerFactory(
-                    final KafkaProperties kafkaProperties,
-                    final Class<T> eventType) {
+    private <T> ConsumerFactory<String, T> consumerFactory(final KafkaProperties kafkaProperties,
+                                                           final Class<T> eventType) {
 
-        final Map<String, Object> config =
-                        new HashMap<>(kafkaProperties.buildConsumerProperties());
+        final Map<String, Object> config = new HashMap<>(kafkaProperties.buildConsumerProperties());
 
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ErrorHandlingDeserializer.class);
         config.put(ErrorHandlingDeserializer.KEY_DESERIALIZER_CLASS, StringDeserializer.class);
         config.put(ErrorHandlingDeserializer.VALUE_DESERIALIZER_CLASS, JsonDeserializer.class);
         config.put(JsonDeserializer.VALUE_DEFAULT_TYPE, eventType.getName());
-        config.put(JsonDeserializer.TRUSTED_PACKAGES,
-                        "com.why.buildingmanagement.notification.infrastructure.kafka.event");
+        config.put(JsonDeserializer.TRUSTED_PACKAGES, "com.why.buildingmanagement.notification.infrastructure.kafka.event");
         config.put(JsonDeserializer.USE_TYPE_INFO_HEADERS, false);
 
         return new DefaultKafkaConsumerFactory<>(config);

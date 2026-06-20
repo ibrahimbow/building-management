@@ -27,11 +27,11 @@ import java.util.List;
 public class GatewaySecurityConfig {
 
     private static final String UNAUTHORIZED_BODY = """
-            {
-              "error": "Unauthorized",
-              "message": "Invalid, missing, or expired JWT token"
-            }
-            """;
+                    {
+                      "error": "Unauthorized",
+                      "message": "Invalid, missing, or expired JWT token"
+                    }
+                    """;
 
 
     @Bean
@@ -62,8 +62,7 @@ public class GatewaySecurityConfig {
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
-        final UrlBasedCorsConfigurationSource source =
-                new UrlBasedCorsConfigurationSource();
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 
         source.registerCorsConfiguration("/**", config);
 
@@ -72,36 +71,35 @@ public class GatewaySecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
-        return http
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .authorizeExchange(exchange -> exchange
-                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .pathMatchers("/api/auth/**").permitAll()
-                        .pathMatchers("/ws/**").permitAll()
-                        .pathMatchers(HttpMethod.GET, "/api/files/**").permitAll()
-                        .pathMatchers("/actuator/**").permitAll()
-                        .anyExchange().authenticated())
-                .exceptionHandling(ex -> ex.authenticationEntryPoint((exchange, e) -> {
-                    var response = exchange.getResponse();
-                    response.setStatusCode(HttpStatus.UNAUTHORIZED);
-                    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-                    return response.writeWith(Mono.just(
-                            response.bufferFactory().wrap(UNAUTHORIZED_BODY.getBytes(StandardCharsets.UTF_8))
-                    ));
-                }))
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt(Customizer.withDefaults())
-                        .bearerTokenConverter(exchange -> {
-                            String auth = exchange.getRequest().getHeaders().getFirst("Authorization");
-                            if (auth == null || !auth.startsWith("Bearer ")) {
-                                return Mono.empty();
-                            }
-                            return Mono.just(new BearerTokenAuthenticationToken(auth.substring(7)));
-                        })
-                )
-                .build();
+        return http.csrf(ServerHttpSecurity.CsrfSpec::disable)
+                   .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
+                   .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
+                   .authorizeExchange(exchange -> exchange
+                                   .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                                   .pathMatchers("/api/auth/**").permitAll()
+                                   .pathMatchers("/ws/**").permitAll()
+                                   .pathMatchers(HttpMethod.GET, "/api/files/**").permitAll()
+                                   .pathMatchers("/actuator/**").permitAll()
+                                   .anyExchange().authenticated())
+                   .exceptionHandling(ex -> ex.authenticationEntryPoint((exchange, e) -> {
+                       var response = exchange.getResponse();
+                       response.setStatusCode(HttpStatus.UNAUTHORIZED);
+                       response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+                       return response.writeWith(Mono.just(
+                                       response.bufferFactory().wrap(UNAUTHORIZED_BODY.getBytes(StandardCharsets.UTF_8))
+                       ));
+                   }))
+                   .oauth2ResourceServer(oauth2 -> oauth2
+                                   .jwt(Customizer.withDefaults())
+                                   .bearerTokenConverter(exchange -> {
+                                       String auth = exchange.getRequest().getHeaders().getFirst("Authorization");
+                                       if (auth == null || !auth.startsWith("Bearer ")) {
+                                           return Mono.empty();
+                                       }
+                                       return Mono.just(new BearerTokenAuthenticationToken(auth.substring(7)));
+                                   })
+                   )
+                   .build();
     }
 
     @Bean
@@ -113,12 +111,11 @@ public class GatewaySecurityConfig {
         }
 
         return NimbusReactiveJwtDecoder
-                .withSecretKey(new SecretKeySpec(
-                        secret.getBytes(StandardCharsets.UTF_8),
-                        "HmacSHA256"
-                ))
-                .macAlgorithm(MacAlgorithm.HS256)
-                .build();
+                        .withSecretKey(new SecretKeySpec(
+                                        secret.getBytes(StandardCharsets.UTF_8),
+                                        "HmacSHA256"))
+                        .macAlgorithm(MacAlgorithm.HS256)
+                        .build();
     }
 
 }

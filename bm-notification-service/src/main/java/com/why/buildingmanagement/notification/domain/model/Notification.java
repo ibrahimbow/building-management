@@ -8,14 +8,14 @@ import java.util.UUID;
 @Getter
 public class Notification {
 
-    private UUID id;
-    private Long userId;
-    private UUID buildingId;
-    private NotificationType type;
-    private String title;
-    private String message;
+    private final UUID id;
+    private final Long userId;
+    private final UUID buildingId;
+    private final NotificationType type;
+    private final String title;
+    private final String message;
     private boolean read;
-    private Instant createdAt;
+    private final Instant createdAt;
     private Instant readAt;
 
     private Notification(final UUID id,
@@ -45,16 +45,15 @@ public class Notification {
                                          final String title,
                                          final String message) {
 
-        return new Notification(
-                        null,
-                        userId,
-                        buildingId,
-                        type,
-                        title,
-                        message,
-                        false,
-                        Instant.now(),
-                        null);
+        return new Notification(null,
+                                userId,
+                                buildingId,
+                                type,
+                                title,
+                                message,
+                                false,
+                                Instant.now(),
+                                null);
     }
 
     public static Notification restore(final UUID id,
@@ -67,16 +66,15 @@ public class Notification {
                                        final Instant createdAt,
                                        final Instant readAt) {
 
-        return new Notification(
-                        id,
-                        userId,
-                        buildingId,
-                        type,
-                        title,
-                        message,
-                        read,
-                        createdAt,
-                        readAt);
+        return new Notification(id,
+                                userId,
+                                buildingId,
+                                type,
+                                title,
+                                message,
+                                read,
+                                createdAt,
+                                readAt);
     }
 
     public void markAsRead() {

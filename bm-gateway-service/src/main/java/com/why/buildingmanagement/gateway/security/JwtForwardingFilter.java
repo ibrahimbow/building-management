@@ -14,8 +14,7 @@ import reactor.core.publisher.Mono;
 public class JwtForwardingFilter implements GlobalFilter, Ordered {
 
     @Override
-    public Mono<Void> filter(final ServerWebExchange exchange,
-                             final GatewayFilterChain chain) {
+    public Mono<Void> filter(final ServerWebExchange exchange, final GatewayFilterChain chain) {
 
         return exchange.getPrincipal()
                 .cast(Authentication.class)

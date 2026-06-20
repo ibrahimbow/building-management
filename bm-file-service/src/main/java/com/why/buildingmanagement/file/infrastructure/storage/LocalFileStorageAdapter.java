@@ -2,6 +2,7 @@ package com.why.buildingmanagement.file.infrastructure.storage;
 
 import com.why.buildingmanagement.file.application.port.out.StoreFilePort;
 import com.why.buildingmanagement.file.application.result.UploadedFileResult;
+import com.why.buildingmanagement.file.domain.exception.FileStorageException;
 import com.why.buildingmanagement.file.domain.model.FileType;
 import com.why.buildingmanagement.file.infrastructure.config.FileStorageProperties;
 import org.springframework.stereotype.Component;
@@ -25,34 +26,33 @@ public class LocalFileStorageAdapter implements StoreFilePort {
     @Override
     public UploadedFileResult store(final MultipartFile file, final FileType type) {
         try {
+
             final Path targetDirectory = uploadRoot.resolve(toStorageFolder(type));
             Files.createDirectories(targetDirectory);
 
-            final String originalFileName = file.getOriginalFilename();
-            final String extension = extractExtension(originalFileName);
+            final String extension = extractExtension(file.getOriginalFilename());
             final String storedFileName = UUID.randomUUID() + extension;
 
-            final Path targetFile = targetDirectory.resolve(storedFileName).normalize();
+            final Path targetFile = targetDirectory.resolve(storedFileName)
+                                                   .normalize();
 
             file.transferTo(targetFile);
 
-            final String url = "/api/files/" + type.name() + "/" + storedFileName;
+            return new UploadedFileResult(storedFileName,
+                                          "/api/files/" + type.name() + "/" + storedFileName,
+                                          file.getContentType(),
+                                          file.getSize());
 
-            return new UploadedFileResult(
-                    storedFileName,
-                    url,
-                    file.getContentType(),
-                    file.getSize());
         } catch (final IOException exception) {
-            throw new IllegalStateException("Could not store file.", exception);
+            throw new FileStorageException(exception);
         }
     }
 
     public Path load(final FileType type, final String fileName) {
         return uploadRoot
-                .resolve(toStorageFolder(type))
-                .resolve(fileName)
-                .normalize();
+                        .resolve(toStorageFolder(type))
+                        .resolve(fileName)
+                        .normalize();
     }
 
     private String toStorageFolder(final FileType type) {

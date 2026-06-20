@@ -20,11 +20,8 @@ import java.util.LinkedHashSet;
 @Slf4j
 public class ShareAndHelpEventListener {
 
-    private static final String SHARE_AND_HELP_POST_CREATED_TOPIC =
-                    KafkaTopics.SHARE_AND_HELP_POST_CREATED_V1;
-
-    private static final String SHARE_AND_HELP_COMMENT_CREATED_TOPIC =
-                    KafkaTopics.SHARE_AND_HELP_COMMENT_CREATED_V1;
+    private static final String SHARE_AND_HELP_POST_CREATED_TOPIC = KafkaTopics.SHARE_AND_HELP_POST_CREATED_V1;
+    private static final String SHARE_AND_HELP_COMMENT_CREATED_TOPIC = KafkaTopics.SHARE_AND_HELP_COMMENT_CREATED_V1;
 
     private final LoadBuildingTenantUsersPort loadBuildingTenantUsersPort;
     private final LoadBuildingManagerUserPort loadBuildingManagerUserPort;
@@ -37,38 +34,34 @@ public class ShareAndHelpEventListener {
     public void onShareAndHelpPostCreated(final ShareAndHelpPostCreatedEvent event) {
 
         log.info("Received share and help post created event: postId={}, buildingId={}, title={}",
-                        event.postId(),
-                        event.buildingId(),
-                        event.title());
+                 event.postId(),
+                 event.buildingId(),
+                 event.title());
 
-        final var recipientUserIds = new LinkedHashSet<Long>(
-                        loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
+        final var recipientUserIds = new LinkedHashSet<>(loadBuildingTenantUsersPort.loadTenantUserIds(event.buildingId()));
 
-        final Long managerUserId =
-                        loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
+        final Long managerUserId = loadBuildingManagerUserPort.loadManagerUserIdByBuildingId(event.buildingId());
 
         recipientUserIds.add(managerUserId);
         recipientUserIds.remove(event.createdByUserId());
 
         if (recipientUserIds.isEmpty()) {
             log.info("No share and help post recipients found for buildingId={}, createdByUserId={}",
-                            event.buildingId(),
-                            event.createdByUserId());
+                     event.buildingId(),
+                     event.createdByUserId());
             return;
         }
 
-        recipientUserIds.forEach(userId ->
-                        createNotificationUseCase.createNotification(
-                                        new CreateNotificationCommand(
-                                                        userId,
-                                                        event.buildingId(),
-                                                        NotificationType.SHARE_AND_HELP,
-                                                        "New help & share post",
-                                                        event.title())));
+        recipientUserIds.forEach(userId -> createNotificationUseCase.createNotification(
+                        new CreateNotificationCommand(userId,
+                                                      event.buildingId(),
+                                                      NotificationType.SHARE_AND_HELP,
+                                                      "New help & share post",
+                                                      event.title())));
 
         log.info("Created {} share and help post notifications for buildingId={}",
-                        recipientUserIds.size(),
-                        event.buildingId());
+                 recipientUserIds.size(),
+                 event.buildingId());
     }
 
     @KafkaListener(
@@ -78,25 +71,24 @@ public class ShareAndHelpEventListener {
     public void onShareAndHelpCommentCreated(final ShareAndHelpCommentCreatedEvent event) {
 
         log.info("Received share and help comment created event: commentId={}, postId={}, buildingId={}",
-                        event.commentId(),
-                        event.postId(),
-                        event.buildingId());
+                 event.commentId(),
+                 event.postId(),
+                 event.buildingId());
 
         if (event.postOwnerUserId().equals(event.commentCreatedByUserId())) {
             log.info("Skipping self comment notification for userId={}",
-                            event.postOwnerUserId());
+                     event.postOwnerUserId());
             return;
         }
 
         createNotificationUseCase.createNotification(
-                        new CreateNotificationCommand(
-                                        event.postOwnerUserId(),
-                                        event.buildingId(),
-                                        NotificationType.SHARE_AND_HELP,
-                                        "New comment on your post",
-                                        event.postTitle()));
+                        new CreateNotificationCommand(event.postOwnerUserId(),
+                                                      event.buildingId(),
+                                                      NotificationType.SHARE_AND_HELP,
+                                                      "New comment on your post",
+                                                      event.postTitle()));
 
         log.info("Created share and help comment notification for postOwnerUserId={}",
-                        event.postOwnerUserId());
+                 event.postOwnerUserId());
     }
 }
