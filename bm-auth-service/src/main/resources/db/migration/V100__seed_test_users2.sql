@@ -79,5 +79,17 @@ VALUES
     'MANAGER',
      true,
      NOW()
-)
+),
+(
+     3006,
+     'admin',
+     'admin@joritna.com',
+     '$2a$10$vXFAT8W/HQrs0OzRNNpEX.MJx3xhsi3LSZBw73upIaqc0MaJFsSSu',
+     'Joritna-Admin',
+     '+3200000000',
+     '/api/files/PROFILE_AVATAR/avatar_emma.png',
+     'ADMIN',
+     true,
+     now()
+ )
 ON CONFLICT DO NOTHING;

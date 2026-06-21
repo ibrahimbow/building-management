@@ -58,9 +58,11 @@ services:
       AUTH_DB_PASSWORD: ${AUTH_DB_PASSWORD}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
       AUTH_JWT_EXPIRATION_MINUTES: ${AUTH_JWT_EXPIRATION_MINUTES}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
 
     depends_on:
       - postgres
+      - kafka
 
   bm-building-service:
     build: ./bm-building-service
@@ -97,6 +99,26 @@ services:
     depends_on:
       - postgres
       - bm-building-service
+
+
+  bm-audit-service:
+    build: ./bm-audit-service
+    container_name: bm-audit-service
+    restart: unless-stopped
+
+    expose:
+      - "8089"
+
+    environment:
+      AUDIT_SERVICE_PORT: ${AUDIT_SERVICE_PORT}
+      AUDIT_DB_URL: ${AUDIT_DB_URL}
+      AUDIT_DB_USERNAME: ${AUDIT_DB_USERNAME}
+      AUDIT_DB_PASSWORD: ${AUDIT_DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+
+    depends_on:
+      - postgres
+      - kafka
 
   bm-share-and-help-service:
     build: ./bm-share-and-help-service
@@ -189,6 +211,7 @@ services:
       FILE_SERVICE_URL: ${FILE_SERVICE_URL}
       CHAT_SERVICE_URL: ${CHAT_SERVICE_URL}
       NOTIFICATION_SERVICE_URL: ${NOTIFICATION_SERVICE_URL}
+      AUDIT_SERVICE_URL: ${AUDIT_SERVICE_URL}
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
 
     depends_on:
@@ -199,6 +222,7 @@ services:
       - bm-file-service
       - bm-chat-service
       - bm-notification-service
+      - bm-audit-service
 
 volumes:
   postgres_data:

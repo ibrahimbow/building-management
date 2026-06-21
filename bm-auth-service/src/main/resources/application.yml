@@ -5,6 +5,12 @@ spring:
   application:
     name: bm-auth-service
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:bm-kafka:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
   datasource:
     url: ${AUTH_DB_URL}
     username: ${AUTH_DB_USERNAME}
@@ -15,6 +21,7 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    open-in-view: false
 
   flyway:
     enabled: true

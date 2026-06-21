@@ -27,8 +27,7 @@ class BuildingPersistenceAdapterTest {
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getManagerId()).isEqualTo(12L);
 
-        final Optional<Building> found =
-                buildingRepositoryPort.findByCode("BM-999999");
+        final Optional<Building> found = buildingRepositoryPort.findByCode("BM-999999");
 
         assertThat(found).isPresent();
         assertThat(found.get().getBuildingName()).isEqualTo("Test Building");
@@ -39,16 +38,14 @@ class BuildingPersistenceAdapterTest {
     void existsByCode_shouldReturnTrue_whenExists() {
         buildingRepositoryPort.save(createBuilding("BM-888888", 13L));
 
-        final boolean exists =
-                buildingRepositoryPort.existsByCode("BM-888888");
+        final boolean exists = buildingRepositoryPort.existsByCode("BM-888888");
 
         assertThat(exists).isTrue();
     }
 
     @Test
     void findByCode_shouldReturnEmpty_whenNotFound() {
-        final Optional<Building> found =
-                buildingRepositoryPort.findByCode("BM-NOT-EXIST");
+        final Optional<Building> found = buildingRepositoryPort.findByCode("BM-NOT-EXIST");
 
         assertThat(found).isEmpty();
     }
@@ -60,8 +57,7 @@ class BuildingPersistenceAdapterTest {
         buildingRepositoryPort.save(createBuilding("BM-777777", managerId));
         buildingRepositoryPort.save(createBuilding("BM-555555", 100L));
 
-        final Optional<Building> building =
-                buildingRepositoryPort.findByManagerId(managerId);
+        final Optional<Building> building = buildingRepositoryPort.findByManagerId(managerId);
 
         assertThat(building).isPresent();
         assertThat(building.get().getManagerId()).isEqualTo(managerId);
@@ -71,22 +67,20 @@ class BuildingPersistenceAdapterTest {
 
     @Test
     void findByManagerId_shouldReturnEmpty_whenManagerHasNoBuilding() {
-        final Optional<Building> building =
-                buildingRepositoryPort.findByManagerId(404L);
+        final Optional<Building> building = buildingRepositoryPort.findByManagerId(404L);
 
         assertThat(building).isEmpty();
     }
 
     private Building createBuilding(
-            final String code,
-            final Long managerId) {
-        return Building.createNew(
-                "Test Building",
-                code,
-                "Antwerp",
-                managerId,
-                10,
-                "+320000000"
+                    final String code,
+                    final Long managerId) {
+        return Building.createNew("Test Building",
+                                  code,
+                                  "Antwerp",
+                                  managerId,
+                                  10,
+                                  "+320000000"
         );
     }
 }

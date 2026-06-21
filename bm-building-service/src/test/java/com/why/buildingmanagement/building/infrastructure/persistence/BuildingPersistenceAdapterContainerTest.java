@@ -22,10 +22,10 @@ class BuildingPersistenceAdapterContainerTest {
 
     @Container
     static final org.testcontainers.postgresql.PostgreSQLContainer postgres =
-            new PostgreSQLContainer("postgres:16")
-                    .withDatabaseName("building_test_db")
-                    .withUsername("test")
-                    .withPassword("test");
+                    new PostgreSQLContainer("postgres:16")
+                                    .withDatabaseName("building_test_db")
+                                    .withUsername("test")
+                                    .withPassword("test");
 
     @DynamicPropertySource
     static void configure(final DynamicPropertyRegistry registry) {
@@ -50,8 +50,7 @@ class BuildingPersistenceAdapterContainerTest {
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getManagerId()).isEqualTo(12L);
 
-        final Optional<Building> found =
-                buildingRepositoryPort.findByCode("BM-123456");
+        final Optional<Building> found = buildingRepositoryPort.findByCode("BM-123456");
 
         assertThat(found).isPresent();
         assertThat(found.get().getBuildingName()).isEqualTo("Test Building");
@@ -59,12 +58,11 @@ class BuildingPersistenceAdapterContainerTest {
     }
 
     private Building createBuilding(final String code) {
-        return Building.createNew(
-                "Test Building",
-                code,
-                "Antwerp",
-                12L,
-                10,
-                "+320000000");
+        return Building.createNew("Test Building",
+                                  code,
+                                  "Antwerp",
+                                  12L,
+                                  10,
+                                  "+320000000");
     }
 }

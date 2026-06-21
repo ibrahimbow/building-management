@@ -12,6 +12,8 @@ CREATE DATABASE notification_db;
 
 CREATE DATABASE file_db;
 
+CREATE DATABASE audit_db;
+
 
 
 GRANT ALL PRIVILEGES ON DATABASE auth_db TO bm_user;
@@ -27,4 +29,6 @@ GRANT ALL PRIVILEGES ON DATABASE chat_db TO bm_user;
 GRANT ALL PRIVILEGES ON DATABASE notification_db TO bm_user;
 
 GRANT ALL PRIVILEGES ON DATABASE file_db TO bm_user;
+
+GRANT ALL PRIVILEGES ON DATABASE audit_db TO bm_user;
 

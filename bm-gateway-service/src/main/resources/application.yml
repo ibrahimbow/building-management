@@ -43,6 +43,11 @@ spring:
           predicates:
             - Path=/api/notifications/**
 
+        - id: bm-audit-service
+          uri: ${AUDIT_SERVICE_URL:http://bm-audit-service:8089}
+          predicates:
+            - Path=/api/admin/audit/**
+
         - id: notification-websocket
           uri: ${NOTIFICATION_SERVICE_URL:http://bm-notification-service:8088}
           predicates:

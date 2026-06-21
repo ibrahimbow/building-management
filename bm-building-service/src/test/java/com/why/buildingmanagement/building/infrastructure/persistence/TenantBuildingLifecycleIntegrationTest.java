@@ -48,7 +48,6 @@ class TenantBuildingLifecycleIntegrationTest {
     private static final String SECOND_BUILDING_CODE = "BM-999111";
 
     @Container
-
     static final PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16")
                     .withDatabaseName("building_test_db")
                     .withUsername("test")
@@ -96,8 +95,7 @@ class TenantBuildingLifecycleIntegrationTest {
                         .thenAnswer(invocation -> {
                             final Long managerId = invocation.getArgument(0);
 
-                            return new ManagerInfoResult(
-                                            managerId,
+                            return new ManagerInfoResult(managerId,
                                             "Manager " + managerId,
                                             "manager" + managerId + "@example.com",
                                             null);
@@ -120,8 +118,7 @@ class TenantBuildingLifecycleIntegrationTest {
 
     @Test
     void tenantShouldJoinViewLeaveAndThenNoLongerHaveActiveBuilding() throws Exception {
-        when(currentUserService.getCurrentUser())
-                        .thenReturn(currentTenant());
+        when(currentUserService.getCurrentUser()).thenReturn(currentTenant());
 
         mockMvc.perform(post("/api/tenant/buildings/join")
                                         .with(user("tenant").roles("TENANT"))

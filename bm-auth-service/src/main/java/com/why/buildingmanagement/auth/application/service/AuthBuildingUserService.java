@@ -14,13 +14,17 @@ import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsExcept
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.BuildingUserRole;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
+import com.why.buildingmanagement.auth.infrastructure.kafka.event.AuditEventType;
+import com.why.buildingmanagement.auth.infrastructure.kafka.publisher.AuditEventPublisher;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -36,20 +40,36 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
     private final TokenProviderPort tokenProviderPort;
     private final PasswordEncoderPort passwordEncoderPort;
     private final RefreshTokenService refreshTokenService;
+    private final AuditEventPublisher auditEventPublisher;
 
     @Override
     @Transactional
     public LoginResult login(final LoginBuildingUserCommand command) {
         Objects.requireNonNull(command, "LoginBuildingUserCommand must not be null");
 
-        final BuildingUser buildingUser = loadActiveUserByUsernameOrEmail(command.usernameOrEmail());
+        try {
+            final BuildingUser buildingUser = loadActiveUserByUsernameOrEmail(command.usernameOrEmail());
 
-        validatePassword(command.password(), buildingUser.getPasswordHash());
+            validatePassword(command.password(), buildingUser.getPasswordHash());
 
-        final String accessToken = tokenProviderPort.generateToken(buildingUser);
-        final RefreshToken refreshToken = refreshTokenService.createForUser(buildingUser.getId());
+            final String accessToken = tokenProviderPort.generateToken(buildingUser);
+            final RefreshToken refreshToken = refreshTokenService.createForUser(buildingUser.getId());
 
-        return new LoginResult(accessToken, refreshToken.getToken());
+            publishAuditEventSafely(buildingUser.getId(),
+                                    buildingUser.getUsername(),
+                                    AuditEventType.USER_LOGIN_SUCCESS,
+                                    "User logged in successfully");
+
+            return new LoginResult(accessToken, refreshToken.getToken());
+
+        } catch (final InvalidCredentialsException exception) {
+            publishAuditEventSafely(null,
+                                    command.usernameOrEmail(),
+                                    AuditEventType.USER_LOGIN_FAILED,
+                                    "Failed login attempt");
+
+            throw exception;
+        }
     }
 
     @Override
@@ -64,14 +84,22 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         final String passwordHash = passwordEncoderPort.encode(command.password());
 
-        final BuildingUser newBuildingUser = BuildingUser.createNew(command.username(),
-                                                                    command.email(),
-                                                                    passwordHash,
-                                                                    command.displayName(),
-                                                                    command.phoneNumber(),
-                                                                    role);
+        final BuildingUser newBuildingUser = BuildingUser.createNew(
+                        command.username(),
+                        command.email(),
+                        passwordHash,
+                        command.displayName(),
+                        command.phoneNumber(),
+                        role);
 
-        return saveBuildingUserPort.save(newBuildingUser).getId();
+        final BuildingUser savedUser = saveBuildingUserPort.save(newBuildingUser);
+
+        publishAuditEventSafely(savedUser.getId(),
+                                savedUser.getUsername(),
+                                AuditEventType.USER_REGISTERED,
+                                "User registered successfully");
+
+        return savedUser.getId();
     }
 
     @Override
@@ -81,11 +109,17 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         final BuildingUser existingUser = loadUserOrThrow(command.userId());
 
-        final BuildingUser updatedUser = existingUser.updateProfile(command.displayName(),
-                                                                    command.phoneNumber(),
-                                                                    command.avatarUrl());
+        final BuildingUser updatedUser = existingUser.updateProfile(
+                        command.displayName(),
+                        command.phoneNumber(),
+                        command.avatarUrl());
 
         final BuildingUser savedUser = saveBuildingUserPort.save(updatedUser);
+
+        publishAuditEventSafely(savedUser.getId(),
+                                savedUser.getUsername(),
+                                AuditEventType.PROFILE_UPDATED,
+                                "User profile updated successfully");
 
         return toProfileResult(savedUser,
                                command.preferredLanguage(),
@@ -126,13 +160,31 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
 
         final String newPasswordHash = passwordEncoderPort.encode(command.newPassword());
 
-        saveBuildingUserPort.save(existingUser.changePassword(newPasswordHash));
+        final BuildingUser savedUser = saveBuildingUserPort.save(existingUser.changePassword(newPasswordHash));
+
+        publishAuditEventSafely(savedUser.getId(),
+                                savedUser.getUsername(),
+                                AuditEventType.PASSWORD_CHANGED,
+                                "User password changed successfully");
+    }
+
+    private void publishAuditEventSafely(final Long userId,
+                                         final String username,
+                                         final AuditEventType eventType,
+                                         final String description) {
+        try {
+            auditEventPublisher.publish(userId, username, eventType, description);
+        } catch (final Exception exception) {
+            log.warn("Failed to publish audit event. Type: {}, UserId: {}",
+                     eventType,
+                     userId,
+                     exception);
+        }
     }
 
     private BuildingUser loadActiveUserByUsernameOrEmail(final String usernameOrEmail) {
-        final BuildingUser buildingUser = loadBuildingUserPort
-                        .loadByUsernameOrEmail(usernameOrEmail)
-                        .orElseThrow(InvalidCredentialsException::new);
+        final BuildingUser buildingUser = loadBuildingUserPort.loadByUsernameOrEmail(usernameOrEmail)
+                                                              .orElseThrow(InvalidCredentialsException::new);
 
         ensureUserIsEnabled(buildingUser);
 

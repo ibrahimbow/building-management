@@ -22,6 +22,7 @@
         <module>bm-file-service</module>
         <module>bm-chat-service</module>
         <module>bm-notification-service</module>
+        <module>bm-audit-service</module>
     </modules>
 
     <properties>
