@@ -13,6 +13,8 @@ import com.why.buildingmanagement.auth.domain.exception.DuplicateUsernameExcepti
 import com.why.buildingmanagement.auth.domain.exception.InvalidCredentialsException;
 import com.why.buildingmanagement.auth.domain.model.BuildingUser;
 import com.why.buildingmanagement.auth.domain.model.RefreshToken;
+import com.why.buildingmanagement.auth.infrastructure.kafka.event.AuditEventType;
+import com.why.buildingmanagement.auth.infrastructure.kafka.publisher.AuditEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -58,6 +60,9 @@ class AuthBuildingUserServiceTest {
 
     @InjectMocks
     private AuthBuildingUserService authService;
+
+    @Mock
+    private AuditEventPublisher auditEventPublisher;
 
     @Test
     void register_shouldCreateUserSuccessfully() {
@@ -139,8 +144,7 @@ class AuthBuildingUserServiceTest {
                                                                                     "+32000000000",
                                                                                     ADMIN.name());
 
-        assertThatThrownBy(() -> authService.register(command))
-                        .isInstanceOf(AccessDeniedException.class);
+        assertThatThrownBy(() -> authService.register(command)).isInstanceOf(AccessDeniedException.class);
 
         verifyNoInteractions(loadBuildingUserPort);
         verifyNoInteractions(passwordEncoderPort);
@@ -184,8 +188,7 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
                         .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.login(command))
-                        .isInstanceOf(InvalidCredentialsException.class);
+        assertThatThrownBy(() -> authService.login(command)).isInstanceOf(InvalidCredentialsException.class);
 
         verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
         verifyNoInteractions(passwordEncoderPort, tokenProviderPort, refreshTokenService, saveBuildingUserPort);
@@ -198,8 +201,7 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadByUsernameOrEmail(command.usernameOrEmail()))
                         .thenReturn(Optional.of(disabledUser()));
 
-        assertThatThrownBy(() -> authService.login(command))
-                        .isInstanceOf(InvalidCredentialsException.class);
+        assertThatThrownBy(() -> authService.login(command)).isInstanceOf(InvalidCredentialsException.class);
 
         verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
         verifyNoInteractions(passwordEncoderPort, tokenProviderPort, refreshTokenService, saveBuildingUserPort);
@@ -216,8 +218,7 @@ class AuthBuildingUserServiceTest {
         when(passwordEncoderPort.matches(command.password(), user.getPasswordHash()))
                         .thenReturn(false);
 
-        assertThatThrownBy(() -> authService.login(command))
-                        .isInstanceOf(InvalidCredentialsException.class);
+        assertThatThrownBy(() -> authService.login(command)).isInstanceOf(InvalidCredentialsException.class);
 
         verify(loadBuildingUserPort).loadByUsernameOrEmail(command.usernameOrEmail());
         verify(passwordEncoderPort).matches(command.password(), user.getPasswordHash());
@@ -258,10 +259,9 @@ class AuthBuildingUserServiceTest {
         assertThat(result.role()).isEqualTo(TENANT.name());
 
         verify(loadBuildingUserPort).loadById(command.userId());
-        verify(saveBuildingUserPort).save(argThat(user ->
-                                                                  user.getDisplayName().equals(command.displayName())
-                                                                                  && user.getPhoneNumber().equals(command.phoneNumber())
-                                                                                  && user.getAvatarUrl().equals(command.avatarUrl())));
+        verify(saveBuildingUserPort).save(argThat(user -> user.getDisplayName().equals(command.displayName())
+                        && user.getPhoneNumber().equals(command.phoneNumber())
+                        && user.getAvatarUrl().equals(command.avatarUrl())));
     }
 
     @Test
@@ -307,8 +307,7 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadById(command.userId()))
                         .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.updateProfile(command))
-                        .isInstanceOf(BuildingUserNotFoundException.class);
+        assertThatThrownBy(() -> authService.updateProfile(command)).isInstanceOf(BuildingUserNotFoundException.class);
 
         verify(loadBuildingUserPort).loadById(command.userId());
         verify(saveBuildingUserPort, never()).save(any());
@@ -316,6 +315,7 @@ class AuthBuildingUserServiceTest {
 
     @Test
     void changePassword_shouldChangePassword_whenCurrentPasswordIsValid() {
+
         final BuildingUser existingUser = managerUser();
 
         when(loadBuildingUserPort.loadById(USER_ID))
@@ -327,6 +327,9 @@ class AuthBuildingUserServiceTest {
         when(passwordEncoderPort.encode("NewPassword123!"))
                         .thenReturn("NEW_HASH");
 
+        when(saveBuildingUserPort.save(any(BuildingUser.class)))
+                        .thenAnswer(invocation -> invocation.getArgument(0));
+
         authService.changePassword(new ChangePasswordCommand(USER_ID,
                                                              "OldPassword123!",
                                                              "NewPassword123!"));
@@ -335,10 +338,14 @@ class AuthBuildingUserServiceTest {
         verify(passwordEncoderPort).matches("OldPassword123!", "OLD_HASH");
         verify(passwordEncoderPort).encode("NewPassword123!");
 
-        verify(saveBuildingUserPort).save(argThat(user ->
-                                                                  user.getPasswordHash().equals("NEW_HASH")
-                                                                                  && user.getUsername().equals(existingUser.getUsername())
-                                                                                  && user.getRole() == MANAGER));
+        verify(saveBuildingUserPort).save(argThat(user -> user.getPasswordHash().equals("NEW_HASH")
+                        && user.getUsername().equals(existingUser.getUsername())
+                        && user.getRole() == MANAGER));
+
+        verify(auditEventPublisher).publish(USER_ID,
+                                            existingUser.getUsername(),
+                                            AuditEventType.PASSWORD_CHANGED,
+                                            "User password changed successfully");
     }
 
     @Test
@@ -351,11 +358,9 @@ class AuthBuildingUserServiceTest {
         when(passwordEncoderPort.matches("WrongPassword", "OLD_HASH"))
                         .thenReturn(false);
 
-        assertThatThrownBy(() -> authService.changePassword(
-                        new ChangePasswordCommand(
-                                        USER_ID,
-                                        "WrongPassword",
-                                        "NewPassword123!")))
+        assertThatThrownBy(() -> authService.changePassword(new ChangePasswordCommand(USER_ID,
+                                                                                      "WrongPassword",
+                                                                                      "NewPassword123!")))
                         .isInstanceOf(InvalidCredentialsException.class);
 
         verify(loadBuildingUserPort).loadById(USER_ID);
@@ -369,11 +374,9 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadById(USER_ID))
                         .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.changePassword(
-                        new ChangePasswordCommand(
-                                        USER_ID,
-                                        "OldPassword123!",
-                                        "NewPassword123!")))
+        assertThatThrownBy(() -> authService.changePassword(new ChangePasswordCommand(USER_ID,
+                                                                                      "OldPassword123!",
+                                                                                      "NewPassword123!")))
                         .isInstanceOf(BuildingUserNotFoundException.class);
 
         verify(loadBuildingUserPort).loadById(USER_ID);
@@ -394,8 +397,7 @@ class AuthBuildingUserServiceTest {
         when(tokenProviderPort.generateToken(user))
                         .thenReturn(ACCESS_TOKEN);
 
-        final LoginResult result = authService.refresh(
-                        new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE));
+        final LoginResult result = authService.refresh(new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE));
 
         assertThat(result.accessToken()).isEqualTo(ACCESS_TOKEN);
         assertThat(result.refreshToken()).isEqualTo(REFRESH_TOKEN_VALUE);
@@ -416,8 +418,7 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadById(USER_ID))
                         .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> authService.refresh(
-                        new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE)))
+        assertThatThrownBy(() -> authService.refresh(new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE)))
                         .isInstanceOf(InvalidCredentialsException.class);
 
         verify(refreshTokenService).validate(REFRESH_TOKEN_VALUE);
@@ -435,8 +436,7 @@ class AuthBuildingUserServiceTest {
         when(loadBuildingUserPort.loadById(USER_ID))
                         .thenReturn(Optional.of(disabledUser()));
 
-        assertThatThrownBy(() -> authService.refresh(
-                        new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE)))
+        assertThatThrownBy(() -> authService.refresh(new RefreshAccessTokenCommand(REFRESH_TOKEN_VALUE)))
                         .isInstanceOf(InvalidCredentialsException.class);
 
         verify(refreshTokenService).validate(REFRESH_TOKEN_VALUE);
