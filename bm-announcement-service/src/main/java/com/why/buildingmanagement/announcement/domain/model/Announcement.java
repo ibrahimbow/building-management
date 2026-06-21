@@ -35,15 +35,15 @@ public class Announcement {
                          final Instant updatedAt) {
 
         this.id = id;
-        this.buildingId = buildingId;
-        this.createdByManagerId = createdByManagerId;
-        this.createdBy = createdBy;
-        this.title = title;
-        this.message = message;
-        this.category = category;
+        this.buildingId = AnnouncementValidator.validateBuildingId(buildingId);
+        this.createdByManagerId = AnnouncementValidator.validateManagerId(createdByManagerId);
+        this.createdBy = AnnouncementValidator.validateCreatedBy(createdBy);
+        this.title = AnnouncementValidator.validateTitle(title);
+        this.message = AnnouncementValidator.validateMessage(message);
+        this.category = AnnouncementValidator.validateCategory(category);
         this.icon = icon;
-        this.imageUrl = imageUrl;
-        this.createdAt = createdAt;
+        this.imageUrl = AnnouncementValidator.validateImageUrl(imageUrl);
+        this.createdAt = Objects.requireNonNull(createdAt);
         this.updatedAt = updatedAt;
     }
 
@@ -55,13 +55,6 @@ public class Announcement {
                                          final AnnouncementCategory category,
                                          final String imageUrl) {
 
-        validateNewAnnouncement(buildingId,
-                                managerId,
-                                createdBy,
-                                title,
-                                message,
-                                category,
-                                imageUrl);
 
         final Instant now = Instant.now();
 
@@ -107,13 +100,11 @@ public class Announcement {
                        final AnnouncementCategory category,
                        final String imageUrl) {
 
-        validateEditableFields(title, message, category, imageUrl);
-
-        this.title = title;
-        this.message = message;
-        this.category = category;
+        this.title = AnnouncementValidator.validateTitle(title);
+        this.message = AnnouncementValidator.validateMessage(message);
+        this.category = AnnouncementValidator.validateCategory(category);
         this.icon = resolveIcon(category);
-        this.imageUrl = imageUrl;
+        this.imageUrl = AnnouncementValidator.validateImageUrl(imageUrl);
         this.updatedAt = Instant.now();
     }
 
@@ -125,28 +116,6 @@ public class Announcement {
         return Objects.equals(this.createdByManagerId, managerId);
     }
 
-    private static void validateNewAnnouncement(final UUID buildingId,
-                                                final Long managerId,
-                                                final String createdBy,
-                                                final String title,
-                                                final String message,
-                                                final AnnouncementCategory category,
-                                                final String imageUrl) {
-        AnnouncementValidator.validateBuildingId(buildingId);
-        AnnouncementValidator.validateManagerId(managerId);
-        AnnouncementValidator.validateCreatedBy(createdBy);
-        validateEditableFields(title, message, category, imageUrl);
-    }
-
-    private static void validateEditableFields(final String title,
-                                               final String message,
-                                               final AnnouncementCategory category,
-                                               final String imageUrl) {
-        AnnouncementValidator.validateTitle(title);
-        AnnouncementValidator.validateMessage(message);
-        AnnouncementValidator.validateCategory(category);
-        AnnouncementValidator.validateImageUrl(imageUrl);
-    }
 
     private static String resolveIcon(final AnnouncementCategory category) {
         return switch (category) {

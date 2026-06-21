@@ -1,5 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.domain.model;
 
+import com.why.buildingmanagement.shareandhelp.domain.exception.InvalidUserRoleException;
+
 public enum UserRole {
 
     ADMIN,
@@ -11,6 +13,15 @@ public enum UserRole {
     }
 
     public static UserRole from(final String role) {
-        return UserRole.valueOf(role.toUpperCase());
+
+        if (role == null || role.isBlank()) {
+            throw new InvalidUserRoleException(role);
+        }
+
+        try {
+            return UserRole.valueOf(role.toUpperCase());
+        } catch (final IllegalArgumentException ex) {
+            throw new InvalidUserRoleException(role);
+        }
     }
 }

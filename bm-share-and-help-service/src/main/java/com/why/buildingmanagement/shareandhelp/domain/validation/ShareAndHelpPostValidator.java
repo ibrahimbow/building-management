@@ -48,7 +48,7 @@ public final class ShareAndHelpPostValidator {
         final String trimmedDisplayName = displayName.trim();
 
         if (trimmedDisplayName.length() > MAX_DISPLAY_NAME_LENGTH) {
-            throw new InvalidShareAndHelpPostException("Post creator display name cannot exceed 100 characters");
+            throw new InvalidShareAndHelpPostException("Post creator display name cannot exceed 500 characters");
         }
 
         return trimmedDisplayName;
@@ -76,7 +76,7 @@ public final class ShareAndHelpPostValidator {
         final String trimmedTitle = title.trim();
 
         if (trimmedTitle.length() > MAX_TITLE_LENGTH) {
-            throw new InvalidShareAndHelpPostException("Post title cannot exceed 120 characters");
+            throw new InvalidShareAndHelpPostException("Post title cannot exceed 150 characters");
         }
 
         return trimmedTitle;
@@ -90,7 +90,7 @@ public final class ShareAndHelpPostValidator {
         final String trimmedDescription = description.trim();
 
         if (trimmedDescription.length() > MAX_DESCRIPTION_LENGTH) {
-            throw new InvalidShareAndHelpPostException("Post description cannot exceed 2000 characters");
+            throw new InvalidShareAndHelpPostException("Post description cannot exceed 5000 characters");
         }
 
         return trimmedDescription;

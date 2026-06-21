@@ -74,7 +74,7 @@ public final class ShareAndHelpCommentValidator {
         final String trimmedComment = comment.trim();
 
         if (trimmedComment.length() > MAX_COMMENT_LENGTH) {
-            throw new InvalidShareAndHelpCommentException("Comment cannot exceed 1000 characters");
+            throw new InvalidShareAndHelpCommentException("Comment cannot exceed 2000 characters");
         }
 
         return trimmedComment;
