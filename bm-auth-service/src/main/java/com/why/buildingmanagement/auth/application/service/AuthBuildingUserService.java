@@ -33,7 +33,8 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
                                                 RefreshAccessTokenUseCase,
                                                 LogoutUseCase,
                                                 UpdateBuildingUserProfileUseCase,
-                                                ChangePasswordUseCase {
+                                                ChangePasswordUseCase,
+                                                GetBuildingUserProfileUseCase {
 
     private final LoadBuildingUserPort loadBuildingUserPort;
     private final SaveBuildingUserPort saveBuildingUserPort;
@@ -124,6 +125,15 @@ public class AuthBuildingUserService implements RegisterBuildingUserUseCase,
         return toProfileResult(savedUser,
                                command.preferredLanguage(),
                                command.notificationsEnabled());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BuildingUserProfileResult getProfile(final Long userId) {
+
+        final BuildingUser existingUser = loadUserOrThrow(userId);
+
+        return toProfileResult(existingUser, "EN", true);
     }
 
     @Override

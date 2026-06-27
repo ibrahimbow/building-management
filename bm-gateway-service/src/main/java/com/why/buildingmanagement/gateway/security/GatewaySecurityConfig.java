@@ -43,6 +43,9 @@ public class GatewaySecurityConfig {
                         "http://127.0.0.1:*",
                         "http://167.233.48.218",
 
+                        "http://10.0.2.2:*",
+                        "http://10.0.2.2:8080",
+
                         "http://joritna.com",
                         "https://joritna.com",
 

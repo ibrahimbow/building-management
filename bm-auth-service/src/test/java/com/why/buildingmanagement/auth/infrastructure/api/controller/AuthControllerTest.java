@@ -58,6 +58,9 @@ class AuthControllerTest {
     @MockitoBean
     private ChangePasswordUseCase changePasswordUseCase;
 
+    @MockitoBean
+    private GetBuildingUserProfileUseCase getBuildingUserProfileUseCase;
+
     @Test
     void register_shouldReturnCreatedUserId() throws Exception {
 

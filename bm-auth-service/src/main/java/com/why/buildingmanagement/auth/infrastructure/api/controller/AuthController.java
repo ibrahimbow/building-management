@@ -6,17 +6,14 @@ import com.why.buildingmanagement.auth.application.result.LoginResult;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.request.*;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.AuthResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.BuildingUserProfileResponse;
-import com.why.buildingmanagement.auth.infrastructure.api.dto.response.CurrentBuildingUserResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.dto.response.RegisterResponse;
 import com.why.buildingmanagement.auth.infrastructure.api.mapper.BuildingUserProfileResponseMapper;
 import com.why.buildingmanagement.auth.infrastructure.security.CurrentBuildingUserService;
-import com.why.buildingmanagement.auth.infrastructure.security.JwtTokenProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RequiredArgsConstructor
 @RestController
@@ -29,9 +26,9 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
     private final UpdateBuildingUserProfileUseCase updateBuildingUserProfileUseCase;
     private final BuildingUserProfileResponseMapper buildingUserProfileResponseMapper;
-    private final JwtTokenProvider jwtTokenProvider;
     private final CurrentBuildingUserService currentBuildingUserService;
     private final ChangePasswordUseCase changePasswordUseCase;
+    private final GetBuildingUserProfileUseCase getBuildingUserProfileUseCase;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponse> register(@Valid @RequestBody final RegisterRequest request) {
@@ -60,19 +57,13 @@ public class AuthController {
     }
 
     @GetMapping("/profile")
-    public CurrentBuildingUserResponse me(@RequestHeader("Authorization") final String authorizationHeader) {
+    public ResponseEntity<BuildingUserProfileResponse> profile() {
 
-        final String token = extractValidToken(authorizationHeader);
+        final Long userId = currentBuildingUserService.getCurrentUserId();
 
-        return new CurrentBuildingUserResponse(jwtTokenProvider.getUserId(token),
-                                               jwtTokenProvider.getUsername(token),
-                                               jwtTokenProvider.getEmail(token),
-                                               jwtTokenProvider.getDisplayName(token),
-                                               jwtTokenProvider.getPhoneNumber(token),
-                                               jwtTokenProvider.getAvatarUrl(token),
-                                               "EN",
-                                               true,
-                                               jwtTokenProvider.getRole(token));
+        final BuildingUserProfileResult result = getBuildingUserProfileUseCase.getProfile(userId);
+
+        return ResponseEntity.ok(buildingUserProfileResponseMapper.toResponse(result));
     }
 
     @PutMapping("/profile")
@@ -117,21 +108,5 @@ public class AuthController {
                                                                        request.newPassword()));
 
         return ResponseEntity.noContent().build();
-    }
-
-
-    private String extractValidToken(final String authorizationHeader) {
-
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
-        }
-
-        final String token = authorizationHeader.substring(7);
-
-        if (!jwtTokenProvider.isTokenValid(token)) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid or expired token");
-        }
-
-        return token;
     }
 }

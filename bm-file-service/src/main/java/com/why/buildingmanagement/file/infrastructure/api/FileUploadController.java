@@ -8,6 +8,7 @@ import com.why.buildingmanagement.file.infrastructure.storage.LocalFileStorageAd
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/api/files")
@@ -29,9 +31,12 @@ public class FileUploadController {
     private final UploadFileUseCase uploadFileUseCase;
     private final LocalFileStorageAdapter localFileStorageAdapter;
 
-    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(
+                    value = "/upload",
+                    consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public UploadedFileResult upload(@RequestParam("file") final MultipartFile file,
                                      @RequestParam("type") final FileType type) {
+
         return uploadFileUseCase.upload(new UploadFileCommand(file, type));
     }
 
@@ -40,6 +45,7 @@ public class FileUploadController {
                                             @PathVariable("fileName") final String fileName) throws MalformedURLException {
 
         final Path filePath = localFileStorageAdapter.load(type, fileName);
+
         final Resource resource = new UrlResource(filePath.toUri());
 
         if (!resource.exists() || !resource.isReadable()) {
@@ -47,8 +53,9 @@ public class FileUploadController {
         }
 
         return ResponseEntity.ok()
-                .contentType(resolveMediaType(fileName))
-                .body(resource);
+                             .contentType(resolveMediaType(fileName))
+                             .cacheControl(CacheControl.maxAge(30, TimeUnit.DAYS))
+                             .body(resource);
     }
 
     private MediaType resolveMediaType(final String fileName) {
@@ -62,6 +69,10 @@ public class FileUploadController {
             return MediaType.parseMediaType("image/webp");
         }
 
-        return MediaType.IMAGE_JPEG;
+        if (lowerCaseFileName.endsWith(".jpg") || lowerCaseFileName.endsWith(".jpeg")) {
+            return MediaType.IMAGE_JPEG;
+        }
+
+        return MediaType.APPLICATION_OCTET_STREAM;
     }
 }
