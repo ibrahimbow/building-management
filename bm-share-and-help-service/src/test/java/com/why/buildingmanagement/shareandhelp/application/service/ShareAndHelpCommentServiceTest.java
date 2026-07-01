@@ -8,8 +8,10 @@ import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAnd
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
 import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
+import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostResolvedException;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpComment;
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPostStatus;
 import com.why.buildingmanagement.shareandhelp.infrastructure.kafka.publisher.ShareAndHelpEventPublisher;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,33 +56,33 @@ class ShareAndHelpCommentServiceTest {
         final ShareAndHelpPost post = createPost(postId);
 
         final ShareAndHelpPostResult result =
-                createResult(postId, post.getBuildingId());
+                        createResult(postId, post.getBuildingId());
 
         final AddCommentCommand command = new AddCommentCommand(
-                postId,
-                1001L,
-                "Tenant One",
-                null,
-                "I can help you with that.");
+                        postId,
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "I can help you with that.");
 
         when(loadShareAndHelpPostPort.loadById(postId))
-                .thenReturn(Optional.of(post));
+                        .thenReturn(Optional.of(post));
 
         when(saveShareAndHelpPostPort.save(post))
-                .thenReturn(post);
+                        .thenReturn(post);
 
         when(shareAndHelpResultMapper.toResult(post))
-                .thenReturn(result);
+                        .thenReturn(result);
 
         final ShareAndHelpPostResult actual =
-                shareAndHelpCommentService.addComment(command);
+                        shareAndHelpCommentService.addComment(command);
 
         assertThat(actual).isEqualTo(result);
         assertThat(post.getComments()).hasSize(1);
         assertThat(post.getComments().getFirst().getComment())
-                .isEqualTo("I can help you with that.");
+                        .isEqualTo("I can help you with that.");
         assertThat(post.getComments().getFirst().getCreatedByUserId())
-                .isEqualTo(1001L);
+                        .isEqualTo(1001L);
 
         verify(shareAndHelpEventPublisher).publishCommentCreated(any());
         verify(loadShareAndHelpPostPort).loadById(postId);
@@ -94,17 +96,17 @@ class ShareAndHelpCommentServiceTest {
         final UUID postId = UUID.randomUUID();
 
         final AddCommentCommand command = new AddCommentCommand(
-                postId,
-                1001L,
-                "Tenant One",
-                null,
-                "I can help you with that.");
+                        postId,
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "I can help you with that.");
 
         when(loadShareAndHelpPostPort.loadById(postId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> shareAndHelpCommentService.addComment(command))
-                .isInstanceOf(ShareAndHelpPostNotFoundException.class);
+                        .isInstanceOf(ShareAndHelpPostNotFoundException.class);
 
         verify(loadShareAndHelpPostPort).loadById(postId);
     }
@@ -117,24 +119,24 @@ class ShareAndHelpCommentServiceTest {
         final ShareAndHelpPost post = createPost(postId);
 
         post.addComment(ShareAndHelpComment.createNew(
-                postId,
-                1001L,
-                "Tenant One",
-                null,
-                "This comment should be deleted."));
+                        postId,
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "This comment should be deleted."));
 
         final UUID commentId = post.getComments().getFirst().getId();
 
         final DeleteCommentCommand command = new DeleteCommentCommand(
-                postId,
-                commentId,
-                1001L);
+                        postId,
+                        commentId,
+                        1001L);
 
         when(loadShareAndHelpPostPort.loadById(postId))
-                .thenReturn(Optional.of(post));
+                        .thenReturn(Optional.of(post));
 
         when(saveShareAndHelpPostPort.save(post))
-                .thenReturn(post);
+                        .thenReturn(post);
 
         shareAndHelpCommentService.deleteComment(command);
 
@@ -152,15 +154,15 @@ class ShareAndHelpCommentServiceTest {
         final ShareAndHelpPost post = createPost(postId);
 
         final DeleteCommentCommand command = new DeleteCommentCommand(
-                postId,
-                UUID.randomUUID(),
-                1001L);
+                        postId,
+                        UUID.randomUUID(),
+                        1001L);
 
         when(loadShareAndHelpPostPort.loadById(postId))
-                .thenReturn(Optional.of(post));
+                        .thenReturn(Optional.of(post));
 
         assertThatThrownBy(() -> shareAndHelpCommentService.deleteComment(command))
-                .isInstanceOf(ShareAndHelpCommentNotFoundException.class);
+                        .isInstanceOf(ShareAndHelpCommentNotFoundException.class);
 
         verify(loadShareAndHelpPostPort).loadById(postId);
     }
@@ -171,50 +173,74 @@ class ShareAndHelpCommentServiceTest {
         final UUID postId = UUID.randomUUID();
 
         final DeleteCommentCommand command = new DeleteCommentCommand(
-                postId,
-                UUID.randomUUID(),
-                1001L);
+                        postId,
+                        UUID.randomUUID(),
+                        1001L);
 
         when(loadShareAndHelpPostPort.loadById(postId))
-                .thenReturn(Optional.empty());
+                        .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> shareAndHelpCommentService.deleteComment(command))
-                .isInstanceOf(ShareAndHelpPostNotFoundException.class);
+                        .isInstanceOf(ShareAndHelpPostNotFoundException.class);
 
         verify(loadShareAndHelpPostPort).loadById(postId);
     }
 
+    @Test
+    void shouldThrowExceptionWhenAddingCommentToResolvedPost() {
+
+        final UUID postId = UUID.randomUUID();
+        final ShareAndHelpPost post = createPost(postId);
+
+        post.resolve();
+
+        final AddCommentCommand command = new AddCommentCommand(postId,
+                                                                1001L,
+                                                                "Tenant One",
+                                                                null,
+                                                                "I can help you with that.");
+
+        when(loadShareAndHelpPostPort.loadById(postId))
+                        .thenReturn(Optional.of(post));
+
+        assertThatThrownBy(() -> shareAndHelpCommentService.addComment(command))
+                        .isInstanceOf(ShareAndHelpPostResolvedException.class);
+
+        verify(loadShareAndHelpPostPort).loadById(postId);
+    }
+
+
     private static ShareAndHelpPost createPost(final UUID postId) {
 
-        return ShareAndHelpPost.restore(
-                postId,
-                UUID.randomUUID(),
-                1001L,
-                "Tenant One",
-                null,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                null,
-                List.of());
+        return ShareAndHelpPost.restore(postId,
+                                        UUID.randomUUID(),
+                                        1001L,
+                                        "Tenant One",
+                                        null,
+                                        "Need a ladder",
+                                        "Does anyone have a ladder I can borrow this weekend?",
+                                        null,
+                                        ShareAndHelpPostStatus.OPEN,
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        null,
+                                        List.of());
     }
 
     private static ShareAndHelpPostResult createResult(final UUID postId,
                                                        final UUID buildingId) {
 
-        return new ShareAndHelpPostResult(
-                postId,
-                buildingId,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                1001L,
-                "Tenant One",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                null,
-                List.of());
+        return new ShareAndHelpPostResult(postId,
+                                          buildingId,
+                                          "Need a ladder",
+                                          "Does anyone have a ladder I can borrow this weekend?",
+                                          1001L,
+                                          "Tenant One",
+                                          null,
+                                          Instant.parse("2026-05-14T10:00:00Z"),
+                                          Instant.parse("2026-05-14T10:00:00Z"),
+                                          null,
+                                          ShareAndHelpPostStatus.OPEN,
+                                          List.of());
     }
 }

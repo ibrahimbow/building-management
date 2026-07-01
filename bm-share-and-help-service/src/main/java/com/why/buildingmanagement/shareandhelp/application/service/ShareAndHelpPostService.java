@@ -24,7 +24,8 @@ public class ShareAndHelpPostService implements CreateShareAndHelpPostUseCase,
                                                 UpdateShareAndHelpPostUseCase,
                                                 DeleteShareAndHelpPostUseCase,
                                                 AdminDeleteShareAndHelpPostUseCase,
-                                                AdminGetShareAndHelpPostsUseCase {
+                                                AdminGetShareAndHelpPostsUseCase,
+                                                ResolveShareAndHelpPostUseCase {
 
     private final LoadShareAndHelpPostPort loadShareAndHelpPostPort;
     private final SaveShareAndHelpPostPort saveShareAndHelpPostPort;
@@ -108,5 +109,23 @@ public class ShareAndHelpPostService implements CreateShareAndHelpPostUseCase,
                                        .stream()
                                        .map(shareAndHelpResultMapper::toResult)
                                        .toList();
+    }
+
+    @Override
+    public ShareAndHelpPostResult resolvePost(final ResolveShareAndHelpPostCommand command) {
+
+        final ShareAndHelpPost post = loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(command.postId(),
+                                                                                          command.currentUserId())
+                                                              .orElseThrow(() -> new ShareAndHelpPostNotFoundException(command.postId()));
+
+        if (!post.getBuildingId().equals(command.buildingId())) {
+            throw new ShareAndHelpPostNotFoundException(command.postId());
+        }
+
+        post.resolve();
+
+        final ShareAndHelpPost savedPost = saveShareAndHelpPostPort.save(post);
+
+        return shareAndHelpResultMapper.toResult(savedPost);
     }
 }

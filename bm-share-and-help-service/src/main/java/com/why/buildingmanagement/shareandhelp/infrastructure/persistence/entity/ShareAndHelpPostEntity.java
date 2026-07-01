@@ -1,16 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderBy;
-import jakarta.persistence.Table;
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPostStatus;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -57,6 +48,10 @@ public class ShareAndHelpPostEntity {
 
     @Column(name = "image_url", length = 500)
     private String imageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private ShareAndHelpPostStatus status = ShareAndHelpPostStatus.OPEN;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

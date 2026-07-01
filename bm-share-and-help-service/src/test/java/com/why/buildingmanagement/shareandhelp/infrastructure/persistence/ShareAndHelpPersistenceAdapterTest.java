@@ -1,6 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.persistence;
 
 import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPost;
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPostStatus;
 import com.why.buildingmanagement.shareandhelp.infrastructure.persistence.entity.ShareAndHelpPostEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -156,6 +157,7 @@ class ShareAndHelpPersistenceAdapterTest {
                         "Need a ladder",
                         "Does anyone have a ladder I can borrow this weekend?",
                         null,
+                        ShareAndHelpPostStatus.OPEN,
                         Instant.parse("2026-05-14T10:00:00Z"),
                         Instant.parse("2026-05-14T10:00:00Z"),
                         null,
@@ -173,6 +175,7 @@ class ShareAndHelpPersistenceAdapterTest {
                         post.getTitle(),
                         post.getDescription(),
                         post.getImageUrl(),
+                        post.getStatus(),
                         post.getCreatedAt(),
                         post.getUpdatedAt(),
                         post.getDeletedAt(),

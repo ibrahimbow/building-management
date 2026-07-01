@@ -1,5 +1,7 @@
 package com.why.buildingmanagement.shareandhelp.application.result;
 
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPostStatus;
+
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -14,5 +16,6 @@ public record ShareAndHelpPostResult(UUID id,
                                      Instant createdAt,
                                      Instant updatedAt,
                                      String imageUrl,
+                                     ShareAndHelpPostStatus status,
                                      List<ShareAndHelpCommentResult> comments) {
 }

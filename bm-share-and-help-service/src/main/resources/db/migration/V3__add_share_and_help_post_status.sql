@@ -1,0 +1,2 @@
+ALTER TABLE share_and_help_posts
+    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'OPEN';

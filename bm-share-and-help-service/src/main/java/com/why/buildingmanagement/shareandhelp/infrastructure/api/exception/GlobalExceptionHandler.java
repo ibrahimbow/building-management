@@ -1,9 +1,6 @@
 package com.why.buildingmanagement.shareandhelp.infrastructure.api.exception;
 
-import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentAlreadyDeletedException;
-import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpCommentNotFoundException;
-import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostDeletedException;
-import com.why.buildingmanagement.shareandhelp.domain.exception.ShareAndHelpPostNotFoundException;
+import com.why.buildingmanagement.shareandhelp.domain.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -37,6 +34,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({
                     ShareAndHelpPostDeletedException.class,
+                    ShareAndHelpPostResolvedException.class,
                     ShareAndHelpCommentAlreadyDeletedException.class
     })
     public ProblemDetail handleConflictExceptions(final RuntimeException exception) {

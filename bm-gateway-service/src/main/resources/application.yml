@@ -36,7 +36,7 @@ spring:
         - id: bm-chat-service
           uri: ${CHAT_SERVICE_URL:http://bm-chat-service:8087}
           predicates:
-            - Path=/api/tenant/chat/**,/api/manager/chat/**,/api/admin/chat/**,/ws/chat/**
+            - Path=/api/tenant/chat/**,/api/manager/chat/**,/api/admin/chat/**
 
         - id: bm-notification-service
           uri: ${NOTIFICATION_SERVICE_URL:http://bm-notification-service:8088}

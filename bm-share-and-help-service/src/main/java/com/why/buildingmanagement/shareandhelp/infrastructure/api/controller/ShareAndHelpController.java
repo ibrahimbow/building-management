@@ -3,6 +3,7 @@ package com.why.buildingmanagement.shareandhelp.infrastructure.api.controller;
 import com.why.buildingmanagement.shareandhelp.application.port.in.*;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
+import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 import com.why.buildingmanagement.shareandhelp.domain.model.UserRole;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.CreateShareAndHelpPostRequest;
@@ -35,6 +36,7 @@ public class ShareAndHelpController {
     private final ShareAndHelpApiMapper shareAndHelpApiMapper;
     private final LoadTenantBuildingPort loadTenantBuildingPort;
     private final LoadManagerBuildingPort loadManagerBuildingPort;
+    private final ResolveShareAndHelpPostUseCase resolveShareAndHelpPostUseCase;
 
     @PostMapping
     public ResponseEntity<ShareAndHelpPostResponse> create(@Valid @RequestBody final CreateShareAndHelpPostRequest request) {
@@ -122,6 +124,21 @@ public class ShareAndHelpController {
                                         currentUser.userId()));
 
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PatchMapping("/{postId}/resolve")
+    public ResponseEntity<ShareAndHelpPostResponse> resolvePost(@PathVariable("postId") final UUID postId) {
+
+        final CurrentUser currentUser = currentUserService.getCurrentUser();
+        final UUID buildingId = resolveBuildingIdForCurrentUser(currentUser);
+
+        final ShareAndHelpPostResult result = resolveShareAndHelpPostUseCase.resolvePost(
+                        new ResolveShareAndHelpPostCommand(postId,
+                                                           buildingId,
+                                                           currentUser.userId()));
+
+        return ResponseEntity.ok(shareAndHelpApiMapper.toResponse(result));
     }
 
 

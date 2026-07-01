@@ -5,6 +5,7 @@ import com.why.buildingmanagement.shareandhelp.application.port.in.*;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadManagerBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadTenantBuildingPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
+import com.why.buildingmanagement.shareandhelp.domain.model.ShareAndHelpPostStatus;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.AddShareAndHelpCommentRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.request.CreateShareAndHelpPostRequest;
 import com.why.buildingmanagement.shareandhelp.infrastructure.api.dto.response.ShareAndHelpPostResponse;
@@ -29,8 +30,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ShareAndHelpController.class)
@@ -61,6 +61,9 @@ class ShareAndHelpControllerTest {
     private DeleteCommentUseCase deleteCommentUseCase;
 
     @MockitoBean
+    private ResolveShareAndHelpPostUseCase resolveShareAndHelpPostUseCase;
+
+    @MockitoBean
     private CurrentUserService currentUserService;
 
     @MockitoBean
@@ -80,61 +83,63 @@ class ShareAndHelpControllerTest {
         final UUID postId = UUID.randomUUID();
 
         final CurrentUser currentUser = new CurrentUser(
-                1001L,
-                "tenant@test.com",
-                "TENANT",
-                "Tenant One",
-                null);
+                        1001L,
+                        "tenant@test.com",
+                        "TENANT",
+                        "Tenant One",
+                        null);
 
         final CreateShareAndHelpPostRequest request = new CreateShareAndHelpPostRequest(
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                null);
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        null);
 
         final ShareAndHelpPostResult result = new ShareAndHelpPostResult(
-                postId,
-                buildingId,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                1001L,
-                "Tenant One",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                null,
-                List.of());
+                        postId,
+                        buildingId,
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        1001L,
+                        "Tenant One",
+                        null,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        null,
+                        ShareAndHelpPostStatus.OPEN,
+                        List.of());
 
         final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
-                postId,
-                1001L,
-                "Tenant One",
-                null,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                List.of());
+                        postId,
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        null,
+                        ShareAndHelpPostStatus.OPEN,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+
+                        List.of());
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
         when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(1001L))
-                .thenReturn(buildingId);
+                        .thenReturn(buildingId);
 
         when(createShareAndHelpPostUseCase.create(any(CreateShareAndHelpPostCommand.class)))
-                .thenReturn(result);
+                        .thenReturn(result);
         when(shareAndHelpApiMapper.toResponse(result)).thenReturn(response);
 
 
-
         mockMvc.perform(post("/api/tenant/share-and-help/posts")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+               .andExpect(status().isCreated());
 
         final ArgumentCaptor<CreateShareAndHelpPostCommand> commandCaptor =
-                ArgumentCaptor.forClass(CreateShareAndHelpPostCommand.class);
+                        ArgumentCaptor.forClass(CreateShareAndHelpPostCommand.class);
 
         verify(createShareAndHelpPostUseCase).create(commandCaptor.capture());
 
@@ -157,55 +162,57 @@ class ShareAndHelpControllerTest {
         final UUID postId = UUID.randomUUID();
 
         final CurrentUser currentUser = new CurrentUser(
-                1001L,
-                "tenant@test.com",
-                "TENANT",
-                "Tenant One",
-                null);
+                        1001L,
+                        "tenant@test.com",
+                        "TENANT",
+                        "Tenant One",
+                        null);
 
         final AddShareAndHelpCommentRequest request =
-                new AddShareAndHelpCommentRequest(
-                        "I can help you with that.");
+                        new AddShareAndHelpCommentRequest(
+                                        "I can help you with that.");
 
         final ShareAndHelpPostResult result = new ShareAndHelpPostResult(
-                postId,
-                buildingId,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                1001L,
-                "Tenant One",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                null,
-                List.of());
+                        postId,
+                        buildingId,
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        1001L,
+                        "Tenant One",
+                        null,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        null,
+                        ShareAndHelpPostStatus.OPEN,
+                        List.of());
 
         final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
-                postId,
-                1001L,
-                "Tenant One",
-                null,
-                "Need a ladder",
-                "Does anyone have a ladder I can borrow this weekend?",
-                null,
-                Instant.parse("2026-05-14T10:00:00Z"),
-                Instant.parse("2026-05-14T10:00:00Z"),
-                List.of());
+                        postId,
+                        1001L,
+                        "Tenant One",
+                        null,
+                        "Need a ladder",
+                        "Does anyone have a ladder I can borrow this weekend?",
+                        null,
+                        ShareAndHelpPostStatus.OPEN,
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        Instant.parse("2026-05-14T10:00:00Z"),
+                        List.of());
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
         when(addCommentUseCase.addComment(any(AddCommentCommand.class)))
-                .thenReturn(result);
+                        .thenReturn(result);
         when(shareAndHelpApiMapper.toResponse(result))
-                .thenReturn(response);
+                        .thenReturn(response);
 
         mockMvc.perform(post("/api/tenant/share-and-help/posts/{postId}/comments", postId)
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isCreated());
+                                        .with(csrf())
+                                        .contentType(MediaType.APPLICATION_JSON)
+                                        .content(objectMapper.writeValueAsString(request)))
+               .andExpect(status().isCreated());
 
         final ArgumentCaptor<AddCommentCommand> commandCaptor =
-                ArgumentCaptor.forClass(AddCommentCommand.class);
+                        ArgumentCaptor.forClass(AddCommentCommand.class);
 
         verify(addCommentUseCase).addComment(commandCaptor.capture());
 
@@ -226,23 +233,23 @@ class ShareAndHelpControllerTest {
         final UUID commentId = UUID.randomUUID();
 
         final CurrentUser currentUser = new CurrentUser(
-                1001L,
-                "tenant@test.com",
-                "TENANT",
-                "Tenant One",
-                null);
+                        1001L,
+                        "tenant@test.com",
+                        "TENANT",
+                        "Tenant One",
+                        null);
 
         when(currentUserService.getCurrentUser()).thenReturn(currentUser);
 
         mockMvc.perform(delete(
-                        "/api/tenant/share-and-help/posts/{postId}/comments/{commentId}",
-                        postId,
-                        commentId)
-                        .with(csrf()))
-                .andExpect(status().isNoContent());
+                               "/api/tenant/share-and-help/posts/{postId}/comments/{commentId}",
+                               postId,
+                               commentId)
+                                        .with(csrf()))
+               .andExpect(status().isNoContent());
 
         final ArgumentCaptor<DeleteCommentCommand> commandCaptor =
-                ArgumentCaptor.forClass(DeleteCommentCommand.class);
+                        ArgumentCaptor.forClass(DeleteCommentCommand.class);
 
         verify(deleteCommentUseCase).deleteComment(commandCaptor.capture());
 
@@ -284,6 +291,7 @@ class ShareAndHelpControllerTest {
                         Instant.parse("2026-05-14T10:00:00Z"),
                         Instant.parse("2026-05-14T10:00:00Z"),
                         null,
+                        ShareAndHelpPostStatus.OPEN,
                         List.of());
 
         final ShareAndHelpPostResponse response = new ShareAndHelpPostResponse(
@@ -294,6 +302,7 @@ class ShareAndHelpControllerTest {
                         "Building update",
                         "I can help residents with this topic.",
                         null,
+                        ShareAndHelpPostStatus.OPEN,
                         Instant.parse("2026-05-14T10:00:00Z"),
                         Instant.parse("2026-05-14T10:00:00Z"),
                         List.of());
@@ -313,7 +322,7 @@ class ShareAndHelpControllerTest {
                                         .with(csrf())
                                         .contentType(MediaType.APPLICATION_JSON)
                                         .content(objectMapper.writeValueAsString(request)))
-                        .andExpect(status().isCreated());
+               .andExpect(status().isCreated());
 
         final ArgumentCaptor<CreateShareAndHelpPostCommand> commandCaptor =
                         ArgumentCaptor.forClass(CreateShareAndHelpPostCommand.class);
@@ -328,5 +337,76 @@ class ShareAndHelpControllerTest {
         assertThat(command.title()).isEqualTo("Building update");
         assertThat(command.description()).isEqualTo("I can help residents with this topic.");
     }
+
+    @Test
+    @WithMockUser(roles = "TENANT")
+    void shouldResolvePost() throws Exception {
+
+        final UUID buildingId = UUID.randomUUID();
+        final UUID postId = UUID.randomUUID();
+
+        final CurrentUser currentUser = new CurrentUser(
+                        1001L,
+                        "tenant@test.com",
+                        "TENANT",
+                        "Tenant One",
+                        null);
+
+        final ShareAndHelpPostResult result =
+                        new ShareAndHelpPostResult(
+                                        postId,
+                                        buildingId,
+                                        "Need a ladder",
+                                        "Does anyone have a ladder I can borrow this weekend?",
+                                        1001L,
+                                        "Tenant One",
+                                        null,
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        null,
+                                        ShareAndHelpPostStatus.RESOLVED,
+                                        List.of());
+
+        final ShareAndHelpPostResponse response =
+                        new ShareAndHelpPostResponse(
+                                        postId,
+                                        1001L,
+                                        "Tenant One",
+                                        null,
+                                        "Need a ladder",
+                                        "Does anyone have a ladder I can borrow this weekend?",
+                                        null,
+                                        ShareAndHelpPostStatus.RESOLVED,
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        Instant.parse("2026-05-14T10:00:00Z"),
+                                        List.of());
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+
+        when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(1001L))
+                        .thenReturn(buildingId);
+
+        when(resolveShareAndHelpPostUseCase.resolvePost(any(ResolveShareAndHelpPostCommand.class)))
+                        .thenReturn(result);
+
+        when(shareAndHelpApiMapper.toResponse(result))
+                        .thenReturn(response);
+
+        mockMvc.perform(patch("/api/tenant/share-and-help/posts/{postId}/resolve", postId)
+                                        .with(csrf()))
+               .andExpect(status().isOk());
+
+        final ArgumentCaptor<ResolveShareAndHelpPostCommand> commandCaptor =
+                        ArgumentCaptor.forClass(ResolveShareAndHelpPostCommand.class);
+
+        verify(resolveShareAndHelpPostUseCase).resolvePost(commandCaptor.capture());
+
+        final ResolveShareAndHelpPostCommand command = commandCaptor.getValue();
+
+        assertThat(command.postId()).isEqualTo(postId);
+        assertThat(command.buildingId()).isEqualTo(buildingId);
+        assertThat(command.currentUserId()).isEqualTo(1001L);
+    }
+
 
 }

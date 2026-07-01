@@ -184,8 +184,7 @@ class ShareAndHelpIntegrationTest {
                 .content(objectMapper.writeValueAsString(request)));
     }
 
-    private static MockHttpServletRequestBuilder withTenantHeaders(
-            final MockHttpServletRequestBuilder request) {
+    private static MockHttpServletRequestBuilder withTenantHeaders(final MockHttpServletRequestBuilder request) {
 
         return request
                 .header("X-User-Id", "1001")
