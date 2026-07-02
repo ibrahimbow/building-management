@@ -156,6 +156,16 @@ public final class ShareAndHelpPost {
         return ShareAndHelpPostStatus.RESOLVED.equals(status);
     }
 
+    public void updateStatus(final ShareAndHelpPostStatus status) {
+
+        if (this.status == status) {
+            return;
+        }
+
+        this.status = status;
+        this.updatedAt = Instant.now();
+    }
+
     public boolean canReceiveComments() {
         return ShareAndHelpPostStatus.OPEN.equals(status) && !isDeleted();
     }

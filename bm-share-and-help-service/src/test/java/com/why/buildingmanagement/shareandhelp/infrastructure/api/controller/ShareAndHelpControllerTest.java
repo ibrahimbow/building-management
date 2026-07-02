@@ -61,7 +61,7 @@ class ShareAndHelpControllerTest {
     private DeleteCommentUseCase deleteCommentUseCase;
 
     @MockitoBean
-    private ResolveShareAndHelpPostUseCase resolveShareAndHelpPostUseCase;
+    private UpdateShareAndHelpPostStatusUseCase updateShareAndHelpPostStatusUseCase;
 
     @MockitoBean
     private CurrentUserService currentUserService;
@@ -386,7 +386,7 @@ class ShareAndHelpControllerTest {
         when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(1001L))
                         .thenReturn(buildingId);
 
-        when(resolveShareAndHelpPostUseCase.resolvePost(any(ResolveShareAndHelpPostCommand.class)))
+        when(updateShareAndHelpPostStatusUseCase.updatePostStatus(any(UpdateShareAndHelpPostStatusCommand.class)))
                         .thenReturn(result);
 
         when(shareAndHelpApiMapper.toResponse(result))
@@ -396,17 +396,85 @@ class ShareAndHelpControllerTest {
                                         .with(csrf()))
                .andExpect(status().isOk());
 
-        final ArgumentCaptor<ResolveShareAndHelpPostCommand> commandCaptor =
-                        ArgumentCaptor.forClass(ResolveShareAndHelpPostCommand.class);
+        final ArgumentCaptor<UpdateShareAndHelpPostStatusCommand> commandCaptor =
+                        ArgumentCaptor.forClass(UpdateShareAndHelpPostStatusCommand.class);
 
-        verify(resolveShareAndHelpPostUseCase).resolvePost(commandCaptor.capture());
+        verify(updateShareAndHelpPostStatusUseCase).updatePostStatus(commandCaptor.capture());
 
-        final ResolveShareAndHelpPostCommand command = commandCaptor.getValue();
+        final UpdateShareAndHelpPostStatusCommand command = commandCaptor.getValue();
 
         assertThat(command.postId()).isEqualTo(postId);
         assertThat(command.buildingId()).isEqualTo(buildingId);
         assertThat(command.currentUserId()).isEqualTo(1001L);
     }
 
+    @Test
+    @WithMockUser(roles = "TENANT")
+    void shouldReopenPost() throws Exception {
 
+        final UUID buildingId = UUID.randomUUID();
+        final UUID postId = UUID.randomUUID();
+
+        final CurrentUser currentUser = new CurrentUser(1001L,
+                                                        "tenant@test.com",
+                                                        "TENANT",
+                                                        "Tenant One",
+                                                        null);
+
+        final ShareAndHelpPostResult result =
+                        new ShareAndHelpPostResult(postId,
+                                                   buildingId,
+                                                   "Need a ladder",
+                                                   "Does anyone have a ladder I can borrow this weekend?",
+                                                   1001L,
+                                                   "Tenant One",
+                                                   null,
+                                                   Instant.parse("2026-05-14T10:00:00Z"),
+                                                   Instant.parse("2026-05-14T10:00:00Z"),
+                                                   null,
+                                                   ShareAndHelpPostStatus.OPEN,
+                                                   List.of());
+
+        final ShareAndHelpPostResponse response =
+                        new ShareAndHelpPostResponse(postId,
+                                                     1001L,
+                                                     "Tenant One",
+                                                     null,
+                                                     "Need a ladder",
+                                                     "Does anyone have a ladder I can borrow this weekend?",
+                                                     null,
+                                                     ShareAndHelpPostStatus.OPEN,
+                                                     Instant.parse("2026-05-14T10:00:00Z"),
+                                                     Instant.parse("2026-05-14T10:00:00Z"),
+                                                     List.of());
+
+        when(currentUserService.getCurrentUser()).thenReturn(currentUser);
+
+        when(loadTenantBuildingPort.loadActiveBuildingIdByTenantUserId(1001L))
+                        .thenReturn(buildingId);
+
+        when(updateShareAndHelpPostStatusUseCase.updatePostStatus(
+                        any(UpdateShareAndHelpPostStatusCommand.class)))
+                        .thenReturn(result);
+
+        when(shareAndHelpApiMapper.toResponse(result))
+                        .thenReturn(response);
+
+        mockMvc.perform(patch("/api/tenant/share-and-help/posts/{postId}/reopen", postId)
+                                        .with(csrf()))
+               .andExpect(status().isOk());
+
+        final ArgumentCaptor<UpdateShareAndHelpPostStatusCommand> commandCaptor =
+                        ArgumentCaptor.forClass(UpdateShareAndHelpPostStatusCommand.class);
+
+        verify(updateShareAndHelpPostStatusUseCase)
+                        .updatePostStatus(commandCaptor.capture());
+
+        final UpdateShareAndHelpPostStatusCommand command = commandCaptor.getValue();
+
+        assertThat(command.postId()).isEqualTo(postId);
+        assertThat(command.buildingId()).isEqualTo(buildingId);
+        assertThat(command.currentUserId()).isEqualTo(1001L);
+        assertThat(command.status()).isEqualTo(ShareAndHelpPostStatus.OPEN);
+    }
 }

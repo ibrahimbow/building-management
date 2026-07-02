@@ -3,8 +3,8 @@ package com.why.buildingmanagement.shareandhelp.application.service;
 import com.why.buildingmanagement.shareandhelp.application.mapper.ShareAndHelpResultMapper;
 import com.why.buildingmanagement.shareandhelp.application.port.in.CreateShareAndHelpPostCommand;
 import com.why.buildingmanagement.shareandhelp.application.port.in.DeleteShareAndHelpPostCommand;
-import com.why.buildingmanagement.shareandhelp.application.port.in.ResolveShareAndHelpPostCommand;
 import com.why.buildingmanagement.shareandhelp.application.port.in.UpdateShareAndHelpPostCommand;
+import com.why.buildingmanagement.shareandhelp.application.port.in.UpdateShareAndHelpPostStatusCommand;
 import com.why.buildingmanagement.shareandhelp.application.port.out.LoadShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.port.out.SaveShareAndHelpPostPort;
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
@@ -224,18 +224,21 @@ class ShareAndHelpPostServiceTest {
     }
 
     @Test
-    void shouldResolveShareAndHelpPost() {
+    void shouldUpdateShareAndHelpPostStatusToResolved() {
 
         final UUID postId = UUID.randomUUID();
         final UUID buildingId = UUID.randomUUID();
 
         final ShareAndHelpPost post = createPost(buildingId);
 
-        final ResolveShareAndHelpPostCommand command = new ResolveShareAndHelpPostCommand(postId,
-                                                                                          buildingId,
-                                                                                          1001L);
+        final UpdateShareAndHelpPostStatusCommand command =
+                        new UpdateShareAndHelpPostStatusCommand(postId,
+                                                                buildingId,
+                                                                1001L,
+                                                                ShareAndHelpPostStatus.RESOLVED);
 
-        final ShareAndHelpPostResult result = createResult(post.getId(), post.getBuildingId());
+        final ShareAndHelpPostResult result =
+                        createResult(post.getId(), post.getBuildingId());
 
         when(loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(postId, 1001L))
                         .thenReturn(Optional.of(post));
@@ -246,32 +249,33 @@ class ShareAndHelpPostServiceTest {
         when(shareAndHelpResultMapper.toResult(post))
                         .thenReturn(result);
 
-        final ShareAndHelpPostResult actual = shareAndHelpPostService.resolvePost(command);
+        final ShareAndHelpPostResult actual = shareAndHelpPostService.updatePostStatus(command);
 
         assertThat(actual).isEqualTo(result);
         assertThat(post.isResolved()).isTrue();
 
-        verify(loadShareAndHelpPostPort)
-                        .loadByIdAndCreatedByUserId(postId, 1001L);
+        verify(loadShareAndHelpPostPort).loadByIdAndCreatedByUserId(postId, 1001L);
 
         verify(saveShareAndHelpPostPort).save(post);
         verify(shareAndHelpResultMapper).toResult(post);
     }
 
     @Test
-    void shouldThrowExceptionWhenResolvingUnknownPost() {
+    void shouldThrowExceptionWhenUpdatingStatusForUnknownPost() {
 
         final UUID postId = UUID.randomUUID();
         final UUID buildingId = UUID.randomUUID();
 
-        final ResolveShareAndHelpPostCommand command = new ResolveShareAndHelpPostCommand(postId,
-                                                                                          buildingId,
-                                                                                          1001L);
+        final UpdateShareAndHelpPostStatusCommand command =
+                        new UpdateShareAndHelpPostStatusCommand(postId,
+                                                                buildingId,
+                                                                1001L,
+                                                                ShareAndHelpPostStatus.RESOLVED);
 
         when(loadShareAndHelpPostPort.loadByIdAndCreatedByUserId(postId, 1001L))
                         .thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> shareAndHelpPostService.resolvePost(command))
+        assertThatThrownBy(() -> shareAndHelpPostService.updatePostStatus(command))
                         .isInstanceOf(ShareAndHelpPostNotFoundException.class);
 
         verify(loadShareAndHelpPostPort).loadByIdAndCreatedByUserId(postId, 1001L);

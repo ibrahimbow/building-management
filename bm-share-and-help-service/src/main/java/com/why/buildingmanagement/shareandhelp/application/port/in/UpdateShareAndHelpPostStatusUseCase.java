@@ -2,8 +2,8 @@ package com.why.buildingmanagement.shareandhelp.application.port.in;
 
 import com.why.buildingmanagement.shareandhelp.application.result.ShareAndHelpPostResult;
 
-public interface ResolveShareAndHelpPostUseCase {
+public interface UpdateShareAndHelpPostStatusUseCase {
 
-    ShareAndHelpPostResult resolvePost(ResolveShareAndHelpPostCommand command);
+    ShareAndHelpPostResult updatePostStatus(UpdateShareAndHelpPostStatusCommand command);
 
 }
